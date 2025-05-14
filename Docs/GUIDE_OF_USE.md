@@ -7,13 +7,13 @@ Welcome to the Chorderizer user guide! This document will walk you through all t
 Before you begin, ensure you have:
 
 * Python 3.7+ installed.
-* The `mido` library installed (`pip install mido`).
+* Chorderizer installed (see `README.md` for installation instructions). The `mido` dependency will be installed automatically with Chorderizer.
 
 To start Chorderizer:
 
 1. Open your terminal or command prompt.
-2. Navigate to the directory where `chorderizer.py` is located.
-3. Execute the script using the command:
+2. Once Chorderizer is installed, you can run it from any location in your terminal.
+3. Execute the command:
 
     ```bash
     python chorderizer.py

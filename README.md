@@ -41,7 +41,6 @@ pip install chorderizer
 ### From Source (Current Method)
 
 1. **Clone the repository:**
-    (If you have a Git URL, replace `https://your-repo-url/Chorderizer.git` with it)
 
     ```bash
     git clone https://your-repo-url/Chorderizer.git
@@ -95,4 +94,4 @@ Contributions are welcome! If you have suggestions for improvements or find any 
 
 ## License
 
-This project is licensed under the MIT License - see the `LICENSE` file for details (if one is provided with the project).
+This project is licensed under the MIT License - see the LICENSE.md file for details.

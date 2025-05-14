@@ -1,5 +1,10 @@
 # Chorderizer: Advanced Chord Generator & MIDI Exporter
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://your-repo-url/Chorderizer)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://your-repo-url/Chorderizer/issues)
+
 Chorderizer is a Python-based command-line tool designed for music enthusiasts, composers, and students. It empowers you to explore diatonic chords within various musical scales, customize chord voicings with extensions and inversions, view simple guitar tablatures, and export your chord progressions as MIDI files.
 
 ## Features

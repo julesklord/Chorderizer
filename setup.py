@@ -11,17 +11,17 @@ except FileNotFoundError:
 setup(
     name="Chorderizer",
     version="0.1.0",  # Versión inicial de tu proyecto
-    author="Tu Nombre",  # Reemplaza con tu nombre
-    author_email="tuemail@example.com",  # Reemplaza con tu email
+    author="Julio César Martinez", 
+    author_email="julioglez.93@gmail.com",  
     description="Un generador avanzado de progresiones de acordes MIDI.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/tu_usuario/Chorderizer",  # URL de tu proyecto (opcional)
+    url="https://github.com/tu_usuario/Chorderizer",  # URL del proyecto
     package_dir={"": "src"},  # Le dice a setuptools que los paquetes están en src/
-    packages=find_packages(where="src"),  # Encuentra automáticamente tu paquete 'chorderizer' en src/
+    packages=find_packages(where="src"),  # Encuentra automáticamente el paquete 'chorderizer' en src/
     python_requires=">=3.7",  # Basado en el uso de type hints y f-strings
     install_requires=[
-        "mido>=1.2.9",  # Dependencia principal de tu script
+        "mido>=1.2.9",  # Dependencia principal
     ],
     entry_points={
         "console_scripts": [

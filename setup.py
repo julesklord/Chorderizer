@@ -16,7 +16,7 @@ setup(
     description="Un generador avanzado de progresiones de acordes MIDI.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/tu_usuario/Chorderizer",  # URL del proyecto
+    url="https://github.com/julesklord/Chorderizer",  # URL del proyecto
     package_dir={"": "src"},  # Le dice a setuptools que los paquetes están en src/
     packages=find_packages(where="src"),  # Encuentra automáticamente el paquete 'chorderizer' en src/
     python_requires=">=3.7",  # Basado en el uso de type hints y f-strings

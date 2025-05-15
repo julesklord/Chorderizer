@@ -2,8 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://your-repo-url/Chorderizer)
-[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://your-repo-url/Chorderizer/issues)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/julesklord/Chorderizer)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/julesklord/Chorderizer/issues)
 
 Chorderizer is a Python-based command-line tool designed for music enthusiasts, composers, and students. It empowers you to explore diatonic chords within various musical scales, customize chord voicings with extensions and inversions, view simple guitar tablatures, and export your chord progressions as MIDI files.
 
@@ -33,10 +33,9 @@ Chorderizer is a Python-based command-line tool designed for music enthusiasts, 
 * Python 3.7 or higher.
 * `pip` (Python package installer).
 
-### From PyPI (Hypothetical Future Release)
+### From PyPI (Recommended)
 
-Once Chorderizer is published on the Python Package Index (PyPI), you will be able to install it using pip:
-
+Chorderizer is available on the Python Package Index (PyPI). You can install it using pip:
 ```bash
 pip install chorderizer
 ```

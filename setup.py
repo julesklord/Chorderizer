@@ -9,8 +9,8 @@ except FileNotFoundError:
     long_description = "Un generador avanzado de progresiones de acordes MIDI basado en teoría musical."
 
 setup(
-    name="Chorderizer",
-    version="0.1.0",  # Versión inicial de tu proyecto
+    name="chorderizer",
+    version="0.1.1",  # Versión inicial de tu proyecto
     author="Julio César Martinez", 
     author_email="julioglez.93@gmail.com",  
     description="Un generador avanzado de progresiones de acordes MIDI.",

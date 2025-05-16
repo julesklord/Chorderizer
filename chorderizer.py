@@ -1,27 +1,38 @@
+# =============================================================================
+#  Chorderizer - ¡Generador avanzado de acordes y progresiones MIDI!
+#  (Sí, este código fue hecho a mano... con ayuda de café y algo de IA)
+# =============================================================================
+
 import os
 import random
-from typing import List, Dict, Tuple, Optional, Any, Union
+from typing import List, Dict, Tuple, Optional, Any, Union, Mapping
 
 from mido import MidiFile, MidiTrack, Message, bpm2tempo, MetaMessage
 
 
 # -----------------------------------------------------------------------------
-# Class MusicTheoryUtils: Utility functions for music theory
+# Clase MusicTheoryUtils: Utilidades para teoría musical
 # -----------------------------------------------------------------------------
 class MusicTheoryUtils:
+    # Nombres de notas en bemol (para los amantes del jazz y la confusión)
+    _FLAT_NOTE_NAMES: List[str] = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
+    # Equivalencias de bemoles a sostenidos (porque la vida es complicada)
+    _FLAT_TO_SHARP_EQUIVALENTS: Dict[str, str] = {
+        "DB": "C#", "EB": "D#", "FB": "E", "GB": "F#", "AB": "G#", "BB": "A#", "CB": "B"
+    }
+
     @staticmethod
     def get_note_name(note_index: int, use_flats: bool = False) -> str:
+        # Devuelve el nombre de la nota según el índice y si se prefiere bemoles
         if use_flats:
-            flat_names = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
-            return flat_names[note_index % 12]
+            return MusicTheoryUtils._FLAT_NOTE_NAMES[note_index % 12]
         return MusicTheory.CHROMATIC_NOTES[note_index % 12]
 
     @staticmethod
     def get_note_index(note_name: str) -> int:
+        # Convierte el nombre de la nota a su índice cromático (C=0, C#=1, ..., B=11)
         base_note = note_name.upper()
-        flat_to_sharp_equivalents = {"DB": "C#", "EB": "D#", "FB": "E", "GB": "F#", "AB": "G#", "BB": "A#",
-                                     "CB": "B"}
-        for flat, sharp in flat_to_sharp_equivalents.items():
+        for flat, sharp in MusicTheoryUtils._FLAT_TO_SHARP_EQUIVALENTS.items():
             if base_note.startswith(flat):
                 base_note = sharp + base_note[len(flat):]
                 break
@@ -38,12 +49,15 @@ class MusicTheoryUtils:
 
 
 # -----------------------------------------------------------------------------
-# Class MusicTheory: Constants and basic music theory definitions
+# Clase MusicTheory: Constantes y definiciones básicas de teoría musical
+# (¡Aquí vive la magia de los acordes y escalas!)
 # -----------------------------------------------------------------------------
 class MusicTheory:
+    # Notas cromáticas (¡sin bemoles, por favor!)
     CHROMATIC_NOTES: List[str] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-    MIDI_BASE_OCTAVE: int = 60  # C4
+    MIDI_BASE_OCTAVE: int = 60  # C4 (el famoso "middle C")
 
+    # Intervalos musicales (¡no, no son intervalos de gimnasio!)
     INTERVALS: Dict[str, int] = {
         "R": 0, "m2": 1, "M2": 2, "m3": 3, "M3": 4, "P4": 5, "A4": 6, "TRITONE": 6, "d5": 6, "P5": 7, "A5": 8,
         "m6": 8, "M6": 9, "d7": 9, "m7": 10, "M7": 11, "P8": 12,
@@ -52,6 +66,7 @@ class MusicTheory:
         "m13": 20, "M13": 21
     }
 
+    # Estructuras de acordes (¡aquí se define el sabor!)
     CHORD_STRUCTURES: Dict[str, List[int]] = {
         "major": [INTERVALS["R"], INTERVALS["M3"], INTERVALS["P5"]],
         "minor": [INTERVALS["R"], INTERVALS["m3"], INTERVALS["P5"]],
@@ -89,7 +104,7 @@ class MusicTheory:
                   INTERVALS["M13"]],
     }
 
-    # Scale Definitions
+    # Definiciones de escalas y grados diatónicos (¡para todos los gustos!)
     SCALE_MAJOR: str = "Major"
     SCALE_NATURAL_MINOR: str = "Natural Minor"
     SCALE_HARMONIC_MINOR: str = "Harmonic Minor"
@@ -97,7 +112,7 @@ class MusicTheory:
     SCALE_MAJOR_PENTATONIC: str = "Major Pentatonic"
     SCALE_MINOR_PENTATONIC: str = "Minor Pentatonic"
 
-    # Diatonic Chords for Scales
+    # Grados diatónicos para cada escala (¡no te pierdas!)
     MAJOR_SCALE_DEGREES: Dict[str, Dict[str, Any]] = {
         "I": {"root_interval": 0, "base_quality": "major", "full_quality": "maj7", "display_suffix": "maj7"},
         "ii": {"root_interval": 2, "base_quality": "minor", "full_quality": "min7", "display_suffix": "m7"},
@@ -156,6 +171,7 @@ class MusicTheory:
         "VII_p": {"root_interval": 10, "base_quality": "major", "full_quality": "major", "display_suffix": ""}
     }
 
+    # Escalas disponibles (¡elige tu veneno!)
     AVAILABLE_SCALES: Dict[str, Dict[str, Any]] = {
         "1": {"name": SCALE_MAJOR, "degrees": MAJOR_SCALE_DEGREES, "tonic_suffix": ""},
         "2": {"name": SCALE_NATURAL_MINOR, "degrees": NATURAL_MINOR_SCALE_DEGREES, "tonic_suffix": "m"},
@@ -165,6 +181,7 @@ class MusicTheory:
         "6": {"name": SCALE_MINOR_PENTATONIC, "degrees": MINOR_PENTATONIC_SCALE_DEGREES, "tonic_suffix": "m"},
     }
 
+    # Programas MIDI (instrumentos, ¡no confundir con programas de TV!)
     MIDI_PROGRAMS: Dict[int, str] = {
         0: "Acoustic Grand Piano", 1: "Bright Acoustic Piano", 2: "Electric Grand Piano", 3: "Honky-tonk Piano",
         4: "Electric Piano 1 (Rhodes)", 5: "Electric Piano 2 (Chorused)", 6: "Harpsichord", 7: "Clavinet",
@@ -184,40 +201,65 @@ class MusicTheory:
 
 
 # -----------------------------------------------------------------------------
-# UI Helper Functions
+# Funciones auxiliares para la UI (¡colores y validaciones para humanos!)
 # -----------------------------------------------------------------------------
 def print_welcome_message() -> None:
-    print("\033[32mWelcome to the Advanced Chord Generator!\033[0m")
-    print("\033[33mModularized Version\033[0m")
+    # Arte ASCII de bienvenida con colores y datos del desarrollador/versión
+    ascii_art = (
+        "\033[1;35m"
+        "   ******  **      **   *******   *******   *******                  **\n"
+        "\033[1;36m"
+        "  **////**/**     /**  **/////** /**////** /**////**                //                           ******   **   **\n"
+        "\033[1;34m"
+        " **    // /**     /** **     //**/**   /** /**    /**  *****  ****** ** ******  *****  ******   /**///** //** **\n"
+        "\033[1;32m"
+        "/**       /**********/**      /**/*******  /**    /** **///**//**//*/**////**  **///**//**//*   /**  /**  //***\n"
+        "\033[1;33m"
+        "/**       /**//////**/**      /**/**///**  /**    /**/******* /** / /**   **  /******* /** /    /******    /**\n"
+        "\033[1;31m"
+        "//**    **/**     /**//**     ** /**  //** /**    ** /**////  /**   /**  **   /**////  /**    **/**///     **\n"
+        "\033[1;37m"
+        " //****** /**     /** //*******  /**   //**/*******  //******/***   /** ******//******/***   /**/**       **\n"
+        "\033[1;30m"
+        "  //////  //      //   ///////   //     // ///////    ////// ///    // //////  ////// ///    // //       //\n"
+        "\033[0m"
+    )
+    print(ascii_art)
+    print("\033[32mBienvenido a Chorderizer v1.0.1\033[0m")
+    print("\033[36mDesarrollador: Julio César Martinez\033[0m")
+    print("\033[33m¡Genera progresiones de acordes MIDI como un pro!\033[0m")
+    print("\033[37m------------------------------------------------------------\033[0m")
 
 
 def print_operation_cancelled() -> None:
-    print("\n\033[31mOperation cancelled by the user.\033[0m")
+    print("\n\033[41m\033[97m¡Operación cancelada por el usuario!\033[0m")
 
 
 def get_yes_no_answer(prompt: str) -> bool:
+    # Pregunta sí/no (acepta "si", "s", "yes", "y", etc.)
     while True:
-        response = input(f"\033[34m{prompt} (yes/no): \033[0m").strip().lower()
-        if response in ["yes", "y", "si", "s"]: return True  # Added si/s for convenience if user slips
+        response = input(f"\033[34m{prompt} \033[1;33m(yes/no):\033[0m ").strip().lower()
+        if response in ["yes", "y", "si", "s"]: return True  # ¡Por si escribes en español sin querer!
         if response in ["no", "n"]: return False
-        print("\033[31mInvalid response. Please enter 'yes' or 'no'.\033[0m")
+        print("\033[41m\033[97mRespuesta inválida. Escribe 'yes' o 'no'.\033[0m")
 
 
-def get_numbered_option(prompt: str, options: Dict[Union[str, int], Any],
+def get_numbered_option(prompt: str, options: Mapping[str, Any],
                         allow_cancel: bool = True, cancel_key: str = "0") -> Optional[str]:
-    print(f"\n\033[36m{prompt}\033[0m")
+    # Muestra opciones numeradas y pide al usuario elegir una
+    print(f"\n\033[1;36m{prompt}\033[0m")
     display_options = {str(k): v for k, v in options.items()}
 
     for key_str, value in display_options.items():
         display_name = value.get('name', value) if isinstance(value, dict) else str(value)
-        print(f"  {key_str}. {display_name}")
+        print(f"\033[1;33m  {key_str}.\033[0m \033[1;37m{display_name}\033[0m")
 
     if allow_cancel:
-        print(f"  {cancel_key}. Cancel / Back")
+        print(f"\033[1;31m  {cancel_key}. Cancelar / Volver\033[0m")
 
     while True:
         try:
-            user_input_str = input("Choose an option number: ").strip()
+            user_input_str = input("\033[1;34mElige una opción:\033[0m ").strip()
             if not user_input_str:
                 continue
 
@@ -227,13 +269,14 @@ def get_numbered_option(prompt: str, options: Dict[Union[str, int], Any],
             if user_input_str in display_options:
                 return user_input_str
             else:
-                print("\033[31mInvalid option.\033[0m")
+                print("\033[41m\033[97mOpción inválida.\033[0m")
         except (EOFError, KeyboardInterrupt):
             print_operation_cancelled()
             return None
 
 
 def get_chord_settings() -> Tuple[Optional[int], Optional[int]]:
+    # Configuración de acordes: extensión e inversión (¡elige sabiamente!)
     print("\n\033[36m--- Chord Settings ---\033[0m")
     extension_map = {"1": 0, "2": 1, "3": 2, "4": 3, "5": 4, "6": 5}
     extension_options = {
@@ -254,6 +297,7 @@ def get_chord_settings() -> Tuple[Optional[int], Optional[int]]:
 
 
 def get_tablature_filter() -> str:
+    # Filtro para mostrar tablaturas (¡no todos quieren verlas!)
     tab_filter_options = {
         "1": "All tablatures", "2": "Only Minor chords (minor base quality)",
         "3": "Only chords with Seventh", "4": "Only chords with Ninth",
@@ -266,7 +310,7 @@ def get_tablature_filter() -> str:
 
 
 # -----------------------------------------------------------------------------
-# Class UIManager: Manages console user interface
+# Clase UIManager: Maneja la interfaz de usuario por consola
 # -----------------------------------------------------------------------------
 class UIManager:
     def __init__(self, theory: MusicTheory):
@@ -321,15 +365,23 @@ class UIManager:
             except ValueError:
                 print(f"\033[31mInvalid range, using 0.\033[0m")
 
-        chord_instr_key = get_numbered_option("Instrument for chords:", self.theory.MIDI_PROGRAMS,
+        midi_programs_str_keys = {str(k): v for k, v in self.theory.MIDI_PROGRAMS.items()}
+        chord_instr_key = get_numbered_option("Instrument for chords:", midi_programs_str_keys,
                                               allow_cancel=False)  # Must select an instrument
-        options["chord_instrument"] = int(chord_instr_key)
+        if chord_instr_key is not None:
+            options["chord_instrument"] = int(chord_instr_key)
+        else:
+            options["chord_instrument"] = 0  # Default to Acoustic Grand Piano if somehow None
 
         options["add_bass_track"] = get_yes_no_answer("Add bass track (root notes)?")
         if options["add_bass_track"]:
-            bass_instr_key = get_numbered_option("Instrument for bass:", self.theory.MIDI_PROGRAMS,
+            midi_programs_str_keys = {str(k): v for k, v in self.theory.MIDI_PROGRAMS.items()}
+            bass_instr_key = get_numbered_option("Instrument for bass:", midi_programs_str_keys,
                                                  allow_cancel=False)
-            options["bass_instrument"] = int(bass_instr_key)
+            if bass_instr_key is not None:
+                options["bass_instrument"] = int(bass_instr_key)
+            else:
+                options["bass_instrument"] = 33  # Default to Acoustic Bass if None
 
         if get_yes_no_answer("Arpeggiate chords? (Otherwise, they will be block chords)"):
             arp_styles = {"1": "up", "2": "down", "3": "updown"}
@@ -357,7 +409,7 @@ class UIManager:
 
 
 # -----------------------------------------------------------------------------
-# Chord Transposition Function
+# Función para transponer nombres de acordes (¡cambia de tonalidad sin dolor!)
 # -----------------------------------------------------------------------------
 def transpose_chord_names(original_chords_dict: Dict[str, str],
                           original_scale_tonic_str: str, new_scale_tonic_str: str
@@ -399,7 +451,7 @@ def transpose_chord_names(original_chords_dict: Dict[str, str],
 
 
 # -----------------------------------------------------------------------------
-# Class ChordGenerator
+# Clase ChordGenerator: Genera acordes para una escala dada
 # -----------------------------------------------------------------------------
 class ChordGenerator:
     def __init__(self, theory: MusicTheory):
@@ -461,14 +513,17 @@ class ChordGenerator:
                         degree_display_suffix = suffix_map_dict.get(chord_type_to_use, degree_display_suffix)
 
             # Get intervals for the determined chord type
+            # Ensure keys are strings and not None
+            chord_type_key = chord_type_to_use if isinstance(chord_type_to_use, str) else ""
+            base_quality_key = base_quality if isinstance(base_quality, str) else ""
             chord_intervals_relative = list(
-                self.theory.CHORD_STRUCTURES.get(chord_type_to_use, self.theory.CHORD_STRUCTURES.get(base_quality, [])))
+                self.theory.CHORD_STRUCTURES.get(chord_type_key, self.theory.CHORD_STRUCTURES.get(base_quality_key, [])))
             if not chord_intervals_relative:  # Fallback if type is unknown
                 print(
                     f"\033[33mWarning: Chord structure for '{chord_type_to_use}' or '{base_quality}' not found. Skipping chord for degree {degree_roman}.\033[0m")
                 continue
 
-            final_chord_display_name = chord_root_name + degree_display_suffix
+            final_chord_display_name = chord_root_name + (degree_display_suffix if degree_display_suffix is not None else "")
 
             # Apply inversion
             if 0 < inversion < len(chord_intervals_relative):
@@ -535,7 +590,7 @@ class ChordGenerator:
 
 
 # -----------------------------------------------------------------------------
-# Class TablatureGenerator
+# Clase TablatureGenerator: Genera tablaturas simples para guitarra
 # -----------------------------------------------------------------------------
 class TablatureGenerator:
     def __init__(self, theory: MusicTheory):
@@ -553,13 +608,13 @@ class TablatureGenerator:
         return None
 
     def generate_simple_tab(self, chord_display_name: str, chord_midi_notes: List[int]) -> List[str]:
-        # This is a very basic tablature generator, prioritizing lower frets and one note per string.
+        # This is a basic tablature generator, one note per string, prioritizing lower frets.
         frets_on_strings = {name: "-" for name in self.TAB_STRING_NAMES}
         sorted_midi_notes = sorted(list(set(chord_midi_notes)))  # Ascending MIDI notes
         notes_placed_in_tab = [False] * len(sorted_midi_notes)
         max_allowable_frets = 15  # Arbitrary limit for simplicity
 
-        # Iterate from highest string (e1) to lowest (E6) to try and place notes
+        # Iterate from the lowest sounding string (Low E - E6) to the highest (high e - e1) to try and place notes
         for string_name in reversed(self.TAB_STRING_NAMES):  # e.g. E6, A5, D4, G3, B2, e1
             open_string_note_midi = self.GUITAR_OPEN_STRINGS_MIDI[string_name]
             # Try to place an unplaced chord note on this string
@@ -581,7 +636,7 @@ class TablatureGenerator:
 
 
 # -----------------------------------------------------------------------------
-# Class MidiGenerator
+# Clase MidiGenerator: Genera archivos MIDI con los acordes y progresiones
 # -----------------------------------------------------------------------------
 class MidiGenerator:
     def __init__(self, theory: MusicTheory):
@@ -732,7 +787,7 @@ class MidiGenerator:
 
 
 # -----------------------------------------------------------------------------
-# Main Program Logic
+# Lógica principal del programa (¡el gran show!)
 # -----------------------------------------------------------------------------
 def _generate_midi_filename_helper(tonic: str, scale_info: Dict[str, Any], base_dir: str, prefix: str = "prog_") -> str:
     safe_tonic = tonic.replace('#', 'sharp').replace('b', 'flat')
@@ -763,6 +818,10 @@ def main():
         if chord_settings_tuple is None:
             continue  # User cancelled
         selected_extension_lvl, selected_inversion_idx = chord_settings_tuple
+
+        # Ensure both extension and inversion are not None before proceeding
+        if selected_extension_lvl is None or selected_inversion_idx is None:
+            continue  # Skip if user cancelled or input was invalid
 
         # Generate chords for the selected scale
         gen_chord_names, gen_note_names, gen_midi_notes, gen_base_qualities = \

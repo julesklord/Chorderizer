@@ -10,7 +10,7 @@ except FileNotFoundError:
 
 setup(
     name="chorderizer",
-    version="0.1.1",  # Versión inicial de tu proyecto
+    version="1.0.1",  # Versión inicial de tu proyecto
     author="Julio César Martinez", 
     author_email="julioglez.93@gmail.com",  
     description="Un generador avanzado de progresiones de acordes MIDI.",

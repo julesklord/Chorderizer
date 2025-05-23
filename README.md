@@ -51,7 +51,7 @@ pip install chorderizer
     cd Chorderizer
     ```
 
-    If you just have the `main.py` file, ensure it's in a dedicated directory.
+    If you are running directly from source, ensure it's in a dedicated directory.
 
 2. **Install dependencies:**
     Chorderizer relies on the `mido` library for MIDI manipulation.
@@ -59,6 +59,18 @@ pip install chorderizer
     ```bash
     pip install mido
     ```
+    To run it from the source directory (after navigating to the root of the project):
+    ```bash
+    python -m src.chorderizer.chorderizer
+    ```
+
+## Project Structure
+
+The project code is organized into several modules within the `src/chorderizer` directory, including:
+*   `chorderizer.py`: Main script with the `main()` function and overall orchestration.
+*   `theory_utils.py`: Handles core music theory logic (scales, chords, intervals).
+*   `generators.py`: Contains classes for generating chords, tablatures, and MIDI files.
+*   `ui.py`: Manages command-line user interactions.
 
 ## Quick Start
 
@@ -70,8 +82,13 @@ pip install chorderizer
 
 2. **Run the script:**
 
+    If you have installed the package, you can run:
     ```bash
-    python main.py
+    chorderizer
+    ```
+    Alternatively, to run it from the source directory (after navigating to the root of the project):
+    ```bash
+    python -m src.chorderizer.chorderizer
     ```
 
 3. **Follow on-screen prompts:**
@@ -95,6 +112,12 @@ For detailed step-by-step instructions on using all features of Chorderizer, ple
 ## Contributing
 
 Contributions are welcome! If you have suggestions for improvements or find any bugs, please feel free to open an issue or submit a pull request on the project's repository (if applicable).
+
+Some areas for potential contributions include:
+*   Adding a comprehensive suite of automated unit tests to ensure code quality and facilitate easier refactoring.
+*   Expanding the range of supported musical scales or chord types.
+*   Enhancing the tablature generation with more sophisticated options.
+*   Developing a graphical user interface (GUI).
 
 ## License
 

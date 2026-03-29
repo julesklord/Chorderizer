@@ -12,6 +12,20 @@ class MusicTheoryUtils:
         return MusicTheory.CHROMATIC_NOTES[note_index % 12]
 
     @staticmethod
+    def should_use_flats(tonic_str: str) -> bool:
+        """Heuristic to determine if a scale/key should conventionally use flats."""
+        tonic_upper = tonic_str.upper()
+        # Explicit flat in name ('b') or known flat keys (F is the classic one)
+        # We check for 'b' in lowercase string.
+        if 'b' in tonic_str.lower():
+            return True
+        # Check start of the string for keys that use flats but don't have 'b' in name (F Major)
+        for flat_key in ["F", "BB", "EB", "AB", "DB", "GB"]:
+            if tonic_upper.startswith(flat_key):
+                return True
+        return False
+
+    @staticmethod
     def get_note_index(note_name: str) -> int:
         base_note = note_name.upper()
         flat_to_sharp_equivalents = {"DB": "C#", "EB": "D#", "FB": "E", "GB": "F#", "AB": "G#", "BB": "A#",
@@ -71,8 +85,7 @@ class MusicTheoryUtils:
 
             new_root_idx = (original_root_idx + transposition_interval) % 12
             # Determine whether to use flats based on the new tonic
-            use_flats = 'b' in new_scale_tonic_str.lower() or \
-                        new_scale_tonic_str.upper() in ["F", "Bb", "Eb", "Ab", "Db", "Gb"]
+            use_flats = MusicTheoryUtils.should_use_flats(new_scale_tonic_str)
             
             new_root_name = MusicTheoryUtils.get_note_name(new_root_idx, use_flats)
             transposed_chords_dict[degree] = new_root_name + suffix

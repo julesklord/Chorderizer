@@ -29,9 +29,12 @@ from .generators import ChordGenerator, TablatureGenerator, MidiGenerator
 # Main Program Logic (Remains in chorderizer.py)
 # -----------------------------------------------------------------------------
 def _generate_midi_filename_helper(tonic: str, scale_info: Dict[str, Any], base_dir: str, prefix: str = "prog_") -> str:
-    safe_tonic = tonic.replace('#', 'sharp').replace('b', 'flat')
+    # Cleaner filename: keep the b/sharp symbols but make them filename-safe if needed
+    # or use 'b' and '#' directly as most modern OS handle them fine. 
+    # Let's keep it simple and clean.
+    clean_tonic = tonic.replace(' ', '_')
     safe_scale_name = scale_info['name'].replace(' ', '_').replace('(', '').replace(')', '')
-    filename = f"{prefix}{safe_tonic}_{safe_scale_name}.mid"
+    filename = f"{prefix}{clean_tonic}_{safe_scale_name}.mid"
     return os.path.join(base_dir, filename)
 
 
@@ -75,25 +78,24 @@ def main():
             continue
 
         print(
-            f"\n\033[32mChords generated for the scale of {selected_scale_tonic} ({selected_scale_info['name']}):\033[0m")
+            f"\n{Fore.GREEN}Chords generated for the scale of {selected_scale_tonic} ({selected_scale_info['name']}):{Style.RESET_ALL}")
 
         tab_display_filter_key = get_tablature_filter()
 
         for degree, chord_name_display in gen_chord_names.items():
             base_qual = gen_base_qualities.get(degree)
-            color_code = "\033[32m"
+            color_code = Fore.GREEN
             if base_qual == "minor":
-                color_code = "\033[34m"
+                color_code = Fore.BLUE
             elif base_qual == "diminished" or "ø" in chord_name_display or "m7b5" in chord_name_display:
-                color_code = "\033[35m"
+                color_code = Fore.MAGENTA
             elif base_qual == "augmented" or "+" in chord_name_display:
-                color_code = "\033[33m"
-            reset_color_code = "\033[0m"
+                color_code = Fore.YELLOW
 
             note_names_str = ", ".join(gen_note_names.get(degree, []))
             midi_notes_str = ", ".join(map(str, gen_midi_notes.get(degree, [])))
             print(
-                f"  {degree.ljust(5)}: {color_code}{chord_name_display.ljust(15)}{reset_color_code} "
+                f"  {degree.ljust(5)}: {color_code}{chord_name_display.ljust(15)}{Style.RESET_ALL} "
                 f"(Notes: {note_names_str.ljust(25)}) (MIDI: {midi_notes_str})")
 
             show_this_tab = False
@@ -216,7 +218,7 @@ def main():
                                                                 advanced_midi_opts)
 
         if not get_yes_no_answer("Perform another operation?"):
-            print("\033[32mThank you for using the Advanced Chord Generator. Goodbye!\033[0m")
+            print(f"{Fore.GREEN}Thank you for using the Advanced Chord Generator. Goodbye!{Style.RESET_ALL}")
             break
 
 

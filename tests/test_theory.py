@@ -16,6 +16,13 @@ def test_get_note_name():
     assert MusicTheoryUtils.get_note_name(1, use_flats=True) == "Db"
     assert MusicTheoryUtils.get_note_name(13) == "C#"
 
+def test_should_use_flats():
+    assert MusicTheoryUtils.should_use_flats("F") is True
+    assert MusicTheoryUtils.should_use_flats("Bb") is True
+    assert MusicTheoryUtils.should_use_flats("C") is False
+    assert MusicTheoryUtils.should_use_flats("G") is False
+    assert MusicTheoryUtils.should_use_flats("Eb Major") is True
+
 def test_split_chord_name():
     assert MusicTheoryUtils.split_chord_name("Cmaj7") == ("C", "maj7")
     assert MusicTheoryUtils.split_chord_name("F#m7") == ("F#", "m7")

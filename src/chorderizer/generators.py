@@ -28,10 +28,11 @@ class ChordGenerator:
             return {}, {}, {}, {}
 
         scale_degrees_info = scale_info["degrees"]
+        use_flats = MusicTheoryUtils.should_use_flats(scale_tonic_str)
 
         for degree_roman, degree_definition in scale_degrees_info.items():
             chord_root_abs_idx = (scale_tonic_index + degree_definition["root_interval"]) % 12
-            chord_root_name = MusicTheoryUtils.get_note_name(chord_root_abs_idx)
+            chord_root_name = MusicTheoryUtils.get_note_name(chord_root_abs_idx, use_flats)
             base_quality = degree_definition["base_quality"]
             degree_display_suffix = degree_definition["display_suffix"]
             chord_type_to_use = degree_definition["full_quality"]  # Default to full quality (e.g., 7ths)
@@ -132,7 +133,7 @@ class ChordGenerator:
                     last_added_midi_note = candidate_midi_note
 
             current_midi_notes = sorted(list(set(current_midi_notes)))  # Final sort and unique
-            current_chord_note_names = [MusicTheoryUtils.get_note_name(n) for n in current_midi_notes]
+            current_chord_note_names = [MusicTheoryUtils.get_note_name(n, use_flats) for n in current_midi_notes]
 
             generated_chords[degree_roman] = final_chord_display_name
             notes_per_chord_names[degree_roman] = current_chord_note_names

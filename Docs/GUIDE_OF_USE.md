@@ -16,7 +16,13 @@ To start Chorderizer:
 3. Execute the command:
 
     ```bash
-    python chorderizer.py
+    chorderizer
+    ```
+    
+    Or, if you are running it from the source directory:
+
+    ```bash
+    python -m chorderizer.chorderizer
     ```
 
 ## 2. Main Workflow

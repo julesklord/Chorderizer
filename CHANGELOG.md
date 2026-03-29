@@ -1,5 +1,19 @@
 # Historial de Cambios (Chorderizer)
 
+## [1.2.0] - 2026-03-29
+
+### Añadido
+- Archivo `tests/__init__.py` para mejorar la detección de pruebas.
+- Reglas detalladas en `.gitignore` para ignorar archivos MIDI y carpetas de salida de pruebas.
+
+### Cambiado
+- Actualizada la dependencia `mido` a version `>=1.3.3`.
+- Actualizada la guía de uso (`Docs/GUIDE_OF_USE.md`) con instrucciones de ejecución modernas.
+- Realizada una auditoría completa del repositorio para asegurar las mejores prácticas de empaquetado.
+
+### Corregido
+- Corregida la inconsistencia en las instrucciones de ejecución del CLI en la documentación.
+
 ## [1.1.0] - 2026-03-29
 
 ### Añadido

@@ -49,3 +49,7 @@ MANIFEST
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Local test outputs
+output_tests/
+*.mid

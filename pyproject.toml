@@ -1,3 +1,44 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "chorderizer"
+version = "1.1.0"
+authors = [
+  { name="Julio César Martinez", email="julioglez.93@gmail.com" },
+]
+description = "Un generador avanzado de progresiones de acordes MIDI basado en teoría musical."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: MIDI",
+    "Topic :: Artistic Software",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "mido>=1.2.9",
+    "colorama>=0.4.6",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/julesklord/Chorderizer"
+"Bug Tracker" = "https://github.com/julesklord/Chorderizer/issues"
+
+[project.scripts]
+chorderizer = "chorderizer.chorderizer:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["chorderizer*"]

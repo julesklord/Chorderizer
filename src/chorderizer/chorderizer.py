@@ -1,6 +1,8 @@
 import os
-import random # Keep for now, might be used in main logic not yet fully reviewed
-from typing import List, Dict, Tuple, Optional, Any, Union # Keep Union for transpose_chord_names if needed
+import random
+from typing import List, Dict, Tuple, Optional, Any
+import colorama
+from colorama import Fore, Style
 
 # Imports from new modules
 from .theory_utils import MusicTheory, MusicTheoryUtils
@@ -20,46 +22,7 @@ from .generators import ChordGenerator, TablatureGenerator, MidiGenerator
 # For now, assuming they are encapsulated in MidiGenerator.
 
 
-# -----------------------------------------------------------------------------
-# Chord Transposition Function (Remains in chorderizer.py for now)
-# -----------------------------------------------------------------------------
-def transpose_chord_names(original_chords_dict: Dict[str, str],
-                          original_scale_tonic_str: str, new_scale_tonic_str: str
-                          ) -> Optional[Dict[str, str]]:
-    try:
-        original_tonic_idx = MusicTheoryUtils.get_note_index(original_scale_tonic_str)
-        new_tonic_idx = MusicTheoryUtils.get_note_index(new_scale_tonic_str)
-    except ValueError as e:
-        print(f"\033[31mError parsing tonic for transposition: {e}\033[0m")
-        return None
-
-    transposition_interval = new_tonic_idx - original_tonic_idx
-    transposed_chords_dict = {}
-
-    for degree, original_chord_name in original_chords_dict.items():
-        original_chord_root_str, chord_suffix, parsed = "", "", False
-        # Basic parsing for root and suffix
-        if len(original_chord_name) > 1 and original_chord_name[1] in ['#', 'b', 'B']:  # e.g. C#, Bb
-            if original_chord_name[0].isalpha():
-                original_chord_root_str, chord_suffix, parsed = original_chord_name[:2], original_chord_name[2:], True
-        if not parsed and len(original_chord_name) > 0 and original_chord_name[0].isalpha():  # e.g. C, G
-            original_chord_root_str, chord_suffix, parsed = original_chord_name[0], original_chord_name[1:], True
-
-        if not parsed:  # Could not parse, keep original
-            transposed_chords_dict[degree] = original_chord_name
-            continue
-        try:
-            original_root_idx = MusicTheoryUtils.get_note_index(original_chord_root_str)
-        except ValueError:  # Could not parse root of this specific chord
-            transposed_chords_dict[degree] = original_chord_name
-            continue
-
-        new_root_idx = (original_root_idx + transposition_interval) % 12
-        use_flats_for_new_key = 'b' in new_scale_tonic_str.upper() or \
-                                new_scale_tonic_str.upper() in ["F", "Bb", "Eb", "Ab", "Db", "Gb"]
-        new_root_name = MusicTheoryUtils.get_note_name(new_root_idx, use_flats_for_new_key)
-        transposed_chords_dict[degree] = new_root_name + chord_suffix
-    return transposed_chords_dict
+# Transposition logic moved to theory_utils.py
 
 
 # -----------------------------------------------------------------------------
@@ -73,14 +36,18 @@ def _generate_midi_filename_helper(tonic: str, scale_info: Dict[str, Any], base_
 
 
 def main():
+    # Initialize colorama for cross-platform color support
+    colorama.init()
+    
     theory = MusicTheory()
-    ui = UIManager(theory) # UIManager now imported
-    chord_builder = ChordGenerator(theory) # ChordGenerator now imported
-    tab_builder = TablatureGenerator(theory) # TablatureGenerator now imported
-    midi_builder = MidiGenerator(theory) # MidiGenerator now imported
+    ui = UIManager(theory)
+    chord_builder = ChordGenerator(theory)
+    tab_builder = TablatureGenerator(theory)
+    midi_builder = MidiGenerator(theory)
 
-    print_welcome_message() # Imported from ui.py
+    print_welcome_message()
     home_directory = os.path.expanduser("~")
+    # Improved directory creation logic is handled inside MidiGenerator.generate_midi_file
     midi_export_default_dir = os.path.join(home_directory, "chord_generator_midi_exports")
 
     while True:
@@ -211,12 +178,12 @@ def main():
         midi_builder.generate_midi_file(chords_for_midi_processing, output_midi_filename, advanced_midi_opts)
 
         if get_yes_no_answer("Transpose these chord names to another scale tonic?"):
-            print("\n\033[36m--- Transposition ---\033[0m")
+            print(f"\n{Fore.CYAN}--- Transposition ---{Style.RESET_ALL}")
             new_tonic, new_scale_data = ui.select_tonic_and_scale()
             if new_tonic and new_scale_data:
-                transposed_chord_display_names = transpose_chord_names(gen_chord_names, selected_scale_tonic, new_tonic)
+                transposed_chord_display_names = MusicTheoryUtils.transpose_chords(gen_chord_names, selected_scale_tonic, new_tonic)
                 if transposed_chord_display_names:
-                    print(f"\n\033[32mChord names transposed to the tonic of {new_tonic}:\033[0m")
+                    print(f"\n{Fore.GREEN}Chord names transposed to the tonic of {new_tonic}:{Style.RESET_ALL}")
                     for degree, trans_name in transposed_chord_display_names.items():
                         print(f"  {degree.ljust(5)}: {trans_name}")
 

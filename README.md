@@ -1,9 +1,8 @@
 # Chorderizer: Advanced Chord Generator & MIDI Exporter
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/julesklord/Chorderizer)
-[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/julesklord/Chorderizer/issues)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://badge.fury.io/py/chorderizer.svg)](https://badge.fury.io/py/chorderizer)
 
 Chorderizer is a Python-based command-line tool designed for music enthusiasts, composers, and students. It empowers you to explore diatonic chords within various musical scales, customize chord voicings with extensions and inversions, view simple guitar tablatures, and export your chord progressions as MIDI files.
 
@@ -40,8 +39,6 @@ Chorderizer is available on the Python Package Index (PyPI). You can install it 
 pip install chorderizer
 ```
 
-*(Note: This package is not yet available on PyPI. This is a placeholder for future publication.)*
-
 ### From Source (Current Method)
 
 1. **Clone the repository:**
@@ -54,14 +51,14 @@ pip install chorderizer
     If you are running directly from source, ensure it's in a dedicated directory.
 
 2. **Install dependencies:**
-    Chorderizer relies on the `mido` library for MIDI manipulation.
-
+    
+    To install the project and its dependencies (from the root of the project):
     ```bash
-    pip install mido
+    pip install .
     ```
-    To run it from the source directory (after navigating to the root of the project):
+    To run it from the source directory:
     ```bash
-    python -m src.chorderizer.chorderizer
+    python -m chorderizer.chorderizer
     ```
 
 ## Project Structure
@@ -88,7 +85,7 @@ The project code is organized into several modules within the `src/chorderizer` 
     ```
     Alternatively, to run it from the source directory (after navigating to the root of the project):
     ```bash
-    python -m src.chorderizer.chorderizer
+    python -m chorderizer.chorderizer
     ```
 
 3. **Follow on-screen prompts:**
@@ -108,6 +105,7 @@ For detailed step-by-step instructions on using all features of Chorderizer, ple
 ## Dependencies
 
 * mido: A Python library for working with MIDI messages and files.
+* colorama: Cross-platform colored terminal text support.
 
 ## Contributing
 

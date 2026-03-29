@@ -31,6 +31,54 @@ class MusicTheoryUtils:
         except ValueError:
             raise ValueError(f"Base note '{root_note_str}' from '{note_name}' not recognized.")
 
+    @staticmethod
+    def split_chord_name(chord_name: str) -> Tuple[str, str]:
+        """Splits a chord name into its root and its suffix (e.g., 'C#maj7' -> ('C#', 'maj7'))."""
+        if not chord_name:
+            return "", ""
+        
+        # Check for two-character roots (C#, Bb, etc.)
+        if len(chord_name) > 1 and chord_name[1] in ['#', 'b', 'B']:
+            return chord_name[:2], chord_name[2:]
+        
+        # Default to one-character root
+        return chord_name[:1], chord_name[1:]
+
+    @staticmethod
+    def transpose_chords(original_chords_dict: Dict[str, str],
+                         original_scale_tonic_str: str,
+                         new_scale_tonic_str: str) -> Optional[Dict[str, str]]:
+        """Transposes a dictionary of chords to a new scale tonic."""
+        try:
+            original_tonic_idx = MusicTheoryUtils.get_note_index(original_scale_tonic_str)
+            new_tonic_idx = MusicTheoryUtils.get_note_index(new_scale_tonic_str)
+        except ValueError as e:
+            print(f"\033[31mError parsing tonic for transposition: {e}\033[0m")
+            return None
+
+        transposition_interval = new_tonic_idx - original_tonic_idx
+        transposed_chords_dict = {}
+
+        for degree, original_chord_name in original_chords_dict.items():
+            root_str, suffix = MusicTheoryUtils.split_chord_name(original_chord_name)
+            
+            try:
+                original_root_idx = MusicTheoryUtils.get_note_index(root_str)
+            except ValueError:
+                # If we can't parse the root, keep the original chord name
+                transposed_chords_dict[degree] = original_chord_name
+                continue
+
+            new_root_idx = (original_root_idx + transposition_interval) % 12
+            # Determine whether to use flats based on the new tonic
+            use_flats = 'b' in new_scale_tonic_str.lower() or \
+                        new_scale_tonic_str.upper() in ["F", "Bb", "Eb", "Ab", "Db", "Gb"]
+            
+            new_root_name = MusicTheoryUtils.get_note_name(new_root_idx, use_flats)
+            transposed_chords_dict[degree] = new_root_name + suffix
+            
+        return transposed_chords_dict
+
 
 # -----------------------------------------------------------------------------
 # Class MusicTheory: Constants and basic music theory definitions

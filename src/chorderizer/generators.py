@@ -237,6 +237,9 @@ class MidiGenerator:
                 # Slightly higher velocity for bass, or make it configurable
                 bass_velocity = max(0, min(127, midi_options["base_velocity"] + 10))
 
+                # Ensure bass note is within valid MIDI range [0, 127]
+                bass_note_midi = max(0, min(127, bass_note_midi))
+
                 # Bass note starts with the chord (time=0 relative to previous bass event)
                 bass_track.append(Message('note_on', note=bass_note_midi, velocity=bass_velocity, channel=1, time=0))
                 # Bass note lasts for the full duration of the chord
@@ -305,6 +308,9 @@ class MidiGenerator:
                         strum_delay_ticks = int(strum_delay_beats * ticks_per_beat)
                         delta_t_for_this_note_on = strum_delay_ticks
                         time_offset_for_strum_completion += strum_delay_ticks
+
+                    # Ensure chord note is within valid MIDI range [0, 127]
+                    note_val = max(0, min(127, note_val))
 
                     # First note_on of the block chord has time=0 (relative to previous chord's end)
                     # Subsequent note_on events in the strum have their respective strum_delay_ticks

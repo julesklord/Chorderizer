@@ -1,3 +1,4 @@
+import copy
 import os
 import random
 from typing import List, Dict, Tuple, Optional, Any
@@ -26,7 +27,7 @@ class ChordGenerator:
 
         # Return cached result if available
         if cache_key in self._chord_cache:
-            return self._chord_cache[cache_key]
+            return copy.deepcopy(self._chord_cache[cache_key])
 
         generated_chords: Dict[str, str] = {}
         notes_per_chord_names: Dict[str, List[str]] = {}
@@ -154,7 +155,8 @@ class ChordGenerator:
 
         result = (generated_chords, notes_per_chord_names, notes_per_chord_midi, generated_base_qualities)
         self._chord_cache[cache_key] = result
-        return result
+        # Return a deep copy to prevent callers from mutating the shared cache
+        return copy.deepcopy(result)
 
 
 # -----------------------------------------------------------------------------

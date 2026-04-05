@@ -25,9 +25,17 @@ class MusicTheoryUtils:
                 return True
         return False
 
+    # Pre-calculated cache for get_note_index to improve performance
+    _NOTE_INDEX_CACHE = {}
+
     @staticmethod
     def get_note_index(note_name: str) -> int:
         base_note = note_name.upper()
+
+        # Check cache first for common notes
+        if base_note in MusicTheoryUtils._NOTE_INDEX_CACHE:
+            return MusicTheoryUtils._NOTE_INDEX_CACHE[base_note]
+
         flat_to_sharp_equivalents = {"DB": "C#", "EB": "D#", "FB": "E", "GB": "F#", "AB": "G#", "BB": "A#",
                                      "CB": "B"}
         for flat, sharp in flat_to_sharp_equivalents.items():
@@ -41,7 +49,10 @@ class MusicTheoryUtils:
             else:
                 break
         try:
-            return MusicTheory.CHROMATIC_NOTES.index(root_note_str)
+            res = MusicTheory.CHROMATIC_NOTES.index(root_note_str)
+            # Cache the result for future calls
+            MusicTheoryUtils._NOTE_INDEX_CACHE[note_name.upper()] = res
+            return res
         except ValueError:
             raise ValueError(f"Base note '{root_note_str}' from '{note_name}' not recognized.")
 

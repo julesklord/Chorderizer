@@ -16,6 +16,18 @@ class ChordGenerator:
     def generate_scale_chords(self, scale_tonic_str: str, scale_info: Dict[str, Any],
                               extension_level: int = 2, inversion: int = 0
                               ) -> Tuple[Dict[str, str], Dict[str, List[str]], Dict[str, List[int]], Dict[str, str]]:
+        # Initialize cache if it doesn't exist
+        if not hasattr(self, '_chord_cache'):
+            self._chord_cache = {}
+
+        # Create a cache key using scale_info's name (dicts aren't hashable)
+        scale_name = scale_info.get("name", "")
+        cache_key = (scale_tonic_str, scale_name, extension_level, inversion)
+
+        # Return cached result if available
+        if cache_key in self._chord_cache:
+            return self._chord_cache[cache_key]
+
         generated_chords: Dict[str, str] = {}
         notes_per_chord_names: Dict[str, List[str]] = {}
         notes_per_chord_midi: Dict[str, List[int]] = {}
@@ -140,7 +152,9 @@ class ChordGenerator:
             notes_per_chord_midi[degree_roman] = current_midi_notes
             generated_base_qualities[degree_roman] = base_quality
 
-        return generated_chords, notes_per_chord_names, notes_per_chord_midi, generated_base_qualities
+        result = (generated_chords, notes_per_chord_names, notes_per_chord_midi, generated_base_qualities)
+        self._chord_cache[cache_key] = result
+        return result
 
 
 # -----------------------------------------------------------------------------

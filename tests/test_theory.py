@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath('src'))
 import pytest
 
 from chorderizer.theory_utils import MusicTheoryUtils

@@ -1,9 +1,11 @@
-import sys
 import os
-sys.path.insert(0, os.path.abspath('src'))
+import sys
+
 import pytest
 
-from chorderizer.theory_utils import MusicTheoryUtils
+sys.path.insert(0, os.path.abspath('src'))  # noqa: E402
+
+from chorderizer.theory_utils import MusicTheoryUtils  # noqa: E402
 
 
 def test_get_note_index():

@@ -1,3 +1,4 @@
+import sys
 from typing import Optional, Tuple, Dict, Any, Union
 import colorama
 from colorama import Fore, Style
@@ -24,7 +25,7 @@ def get_yes_no_answer(prompt: str) -> bool:
             print(f"{Fore.RED}Invalid response. Please enter 'yes' or 'no'.{Style.RESET_ALL}")
         except (EOFError, KeyboardInterrupt):
             print_operation_cancelled()
-            return False
+            sys.exit(0)
 
 
 def get_numbered_option(prompt: str, options: Dict[Union[str, int], Any],

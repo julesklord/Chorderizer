@@ -42,3 +42,7 @@ chorderizer = "chorderizer.chorderizer:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["chorderizer*"]
+
+
+[tool.mypy]
+ignore_missing_imports = true

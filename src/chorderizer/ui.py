@@ -1,3 +1,4 @@
+import sys
 from typing import Optional, Tuple, Dict, Any, Union
 import colorama
 from colorama import Fore, Style
@@ -17,10 +18,14 @@ def print_operation_cancelled() -> None:
 
 def get_yes_no_answer(prompt: str) -> bool:
     while True:
-        response = input(f"{Fore.BLUE}{prompt} (yes/no): {Style.RESET_ALL}").strip().lower()
-        if response in ["yes", "y", "si", "s"]: return True
-        if response in ["no", "n"]: return False
-        print(f"{Fore.RED}Invalid response. Please enter 'yes' or 'no'.{Style.RESET_ALL}")
+        try:
+            response = input(f"{Fore.BLUE}{prompt} (yes/no): {Style.RESET_ALL}").strip().lower()
+            if response in ["yes", "y", "si", "s"]: return True
+            if response in ["no", "n"]: return False
+            print(f"{Fore.RED}Invalid response. Please enter 'yes' or 'no'.{Style.RESET_ALL}")
+        except (EOFError, KeyboardInterrupt):
+            print_operation_cancelled()
+            sys.exit(0)
 
 
 def get_numbered_option(prompt: str, options: Dict[Union[str, int], Any],

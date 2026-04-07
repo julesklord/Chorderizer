@@ -234,6 +234,11 @@ class MidiGenerator:
             # Bass track also needs tempo if it's the first event-producing track for it
             bass_track.append(MetaMessage('set_tempo', tempo=bpm2tempo(midi_options["bpm"]), time=0))
 
+        # Pre-calculate arpeggio individual note duration since it is constant across chords
+        arp_note_indiv_duration_ticks = 0
+        if "arpeggio_note_duration_beats" in midi_options:
+            arp_note_indiv_duration_ticks = int(midi_options["arpeggio_note_duration_beats"] * ticks_per_beat)
+
         for i_chord, chord_data in enumerate(chords_to_process):
             chord_midi_notes = chord_data["notas_midi"]
             if not chord_midi_notes:
@@ -276,7 +281,6 @@ class MidiGenerator:
                     if len(arp_notes_sequence) > 1:
                         arp_notes_sequence += arp_notes_sequence[len(arp_notes_sequence) - 2::-1]
 
-                arp_note_indiv_duration_ticks = int(midi_options["arpeggio_note_duration_beats"] * ticks_per_beat)
                 num_arp_notes = len(arp_notes_sequence)
 
                 if num_arp_notes > 0:

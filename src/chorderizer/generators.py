@@ -99,11 +99,11 @@ class ChordGenerator:
                     if not temp_intervals: break
                     bass_relative_interval = temp_intervals.pop(0)
                     temp_intervals.append(bass_relative_interval + 12)  # Add to top, an octave higher
-                chord_intervals_relative = sorted(list(set(temp_intervals)))  # Remove duplicates and sort
+                chord_intervals_relative = sorted(set(temp_intervals))  # Remove duplicates and sort
 
             # Generate MIDI notes for the chord
             current_midi_notes: List[int] = []
-            unique_sorted_intervals = sorted(list(set(chord_intervals_relative)))
+            unique_sorted_intervals = sorted(set(chord_intervals_relative))
             last_added_midi_note = -1  # To ensure ascending notes in voicing
 
             # Determine a base octave offset to keep chords roughly around C4
@@ -145,7 +145,7 @@ class ChordGenerator:
                     current_midi_notes.append(candidate_midi_note)
                     last_added_midi_note = candidate_midi_note
 
-            current_midi_notes = sorted(list(set(current_midi_notes)))  # Final sort and unique
+            current_midi_notes = sorted(set(current_midi_notes))  # Final sort and unique
             current_chord_note_names = [MusicTheoryUtils.get_note_name(n, use_flats) for n in current_midi_notes]
 
             generated_chords[degree_roman] = final_chord_display_name
@@ -180,7 +180,7 @@ class TablatureGenerator:
     def generate_simple_tab(self, chord_display_name: str, chord_midi_notes: List[int]) -> List[str]:
         # This is a very basic tablature generator, prioritizing lower frets and one note per string.
         frets_on_strings = {name: "-" for name in self.TAB_STRING_NAMES}
-        sorted_midi_notes = sorted(list(set(chord_midi_notes)))  # Ascending MIDI notes
+        sorted_midi_notes = sorted(set(chord_midi_notes))  # Ascending MIDI notes
         notes_placed_in_tab = [False] * len(sorted_midi_notes)
         max_allowable_frets = 15  # Arbitrary limit for simplicity
 

@@ -215,6 +215,12 @@ class MidiGenerator:
     def generate_midi_file(self, chords_to_process: List[Dict[str, Any]], output_filename: str,
                            midi_options: Dict[str, Any]) -> None:
         ticks_per_beat = 480  # Standard resolution
+        strum_delay_ticks = 0
+        if midi_options.get("strum_delay_ms", 0) > 0:
+            strum_delay_seconds = midi_options["strum_delay_ms"] / 1000.0
+            strum_delay_beats = strum_delay_seconds * (midi_options.get("bpm", 120) / 60.0)
+            strum_delay_ticks = int(strum_delay_beats * ticks_per_beat)
+
         midi_file = MidiFile(ticks_per_beat=ticks_per_beat)
 
         # Chord Track
@@ -320,9 +326,6 @@ class MidiGenerator:
                     delta_t_for_this_note_on = 0
                     if idx > 0 and midi_options["strum_delay_ms"] > 0:
                         # Calculate strum delay in ticks
-                        strum_delay_seconds = midi_options["strum_delay_ms"] / 1000.0
-                        strum_delay_beats = strum_delay_seconds * (midi_options["bpm"] / 60.0)
-                        strum_delay_ticks = int(strum_delay_beats * ticks_per_beat)
                         delta_t_for_this_note_on = strum_delay_ticks
                         time_offset_for_strum_completion += strum_delay_ticks
 

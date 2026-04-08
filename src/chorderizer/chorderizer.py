@@ -185,8 +185,11 @@ def main():
 
         suggested_midi_path = _generate_midi_filename_helper(selected_scale_tonic, selected_scale_info, midi_export_default_dir)
 
-        output_midi_filename_in = input(f"Enter MIDI filename [default: {suggested_midi_path}]: ").strip()
-        output_midi_filename = _sanitize_midi_path(output_midi_filename_in, suggested_midi_path, midi_export_default_dir)
+        output_midi_filename = input(f"Enter MIDI filename [default: {suggested_midi_path}]: ").strip()
+        if not output_midi_filename:
+            output_midi_filename = suggested_midi_path
+        else:
+            output_midi_filename = os.path.join(midi_export_default_dir, os.path.basename(output_midi_filename))
 
         midi_builder.generate_midi_file(chords_for_midi_processing, output_midi_filename, advanced_midi_opts)
 
@@ -223,7 +226,10 @@ def main():
 
                                 trans_midi_fname_out_in = input(
                                     f"Enter transposed MIDI filename [default: {sugg_trans_path}]: ").strip()
-                                trans_midi_fname_out = _sanitize_midi_path(trans_midi_fname_out_in, sugg_trans_path, midi_export_default_dir)
+                                if not trans_midi_fname_out:
+                                    trans_midi_fname_out = sugg_trans_path
+                                else:
+                                    trans_midi_fname_out = os.path.join(midi_export_default_dir, os.path.basename(trans_midi_fname_out))
                                 midi_builder.generate_midi_file(transposed_chords_for_midi, trans_midi_fname_out,
                                                                 advanced_midi_opts)
 

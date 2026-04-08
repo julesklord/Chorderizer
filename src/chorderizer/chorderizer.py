@@ -224,7 +224,7 @@ def main():
                             if transposed_chords_for_midi:
                                 sugg_trans_path = _generate_midi_filename_helper(new_tonic, new_scale_data, midi_export_default_dir, prefix="prog_TRANSP_")
 
-                                trans_midi_fname_out_in = input(
+                                trans_midi_fname_out = input(
                                     f"Enter transposed MIDI filename [default: {sugg_trans_path}]: ").strip()
                                 if not trans_midi_fname_out:
                                     trans_midi_fname_out = sugg_trans_path

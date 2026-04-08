@@ -98,7 +98,7 @@ def main():
             base_qual = gen_base_qualities.get(degree)
             color_code = Fore.GREEN
             if base_qual == "minor":
-                color_code = Fore.BLUE
+                color_code = Fore.CYAN
             elif base_qual == "diminished" or "ø" in chord_name_display or "m7b5" in chord_name_display:
                 color_code = Fore.MAGENTA
             elif base_qual == "augmented" or "+" in chord_name_display:

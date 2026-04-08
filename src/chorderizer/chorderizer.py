@@ -38,6 +38,18 @@ def _generate_midi_filename_helper(tonic: str, scale_info: Dict[str, Any], base_
     return os.path.join(base_dir, filename)
 
 
+def _sanitize_midi_path(path_input: str, default_path: str, base_dir: str) -> str:
+    """
+    Sanitizes the user-provided path to prevent path traversal vulnerabilities.
+    If path_input is empty, it returns the default_path.
+    Otherwise, it extracts only the filename and joins it with the intended base directory.
+    """
+    if not path_input:
+        return default_path
+    filename = os.path.basename(path_input)
+    return os.path.join(base_dir, filename)
+
+
 def main():
     # Initialize colorama for cross-platform color support
     colorama.init()
@@ -212,7 +224,7 @@ def main():
                             if transposed_chords_for_midi:
                                 sugg_trans_path = _generate_midi_filename_helper(new_tonic, new_scale_data, midi_export_default_dir, prefix="prog_TRANSP_")
 
-                                trans_midi_fname_out = input(
+                                trans_midi_fname_out_in = input(
                                     f"Enter transposed MIDI filename [default: {sugg_trans_path}]: ").strip()
                                 if not trans_midi_fname_out:
                                     trans_midi_fname_out = sugg_trans_path

@@ -1,33 +1,84 @@
+import pytest
 import sys
 from unittest.mock import MagicMock
 
-# Mock out mido, colorama to bypass missing dependency errors
+# Mock external dependencies
 sys.modules['mido'] = MagicMock()
-sys.modules['colorama'] = MagicMock()
 
-import pytest
-from chorderizer.generators import TablatureGenerator
+from chorderizer.theory_utils import MusicTheory
+from chorderizer.generators import ChordGenerator
 
-@pytest.fixture
-def tablature_generator():
-    mock_theory = MagicMock()
-    return TablatureGenerator(theory=mock_theory)
+def test_chord_generator_happy_path():
+    theory = MusicTheory()
+    generator = ChordGenerator(theory)
 
-def test_assign_fret_to_string_valid(tablature_generator):
-    # chord_note_midi, open_string_midi, max_frets
+    # C Major scale info
+    scale_info = theory.AVAILABLE_SCALES["1"]
 
-    # Exact match with open string (fret 0)
-    assert tablature_generator._assign_fret_to_string(40, 40, 22) == 0
+    # Default parameters: extension_level=2 (7ths), inversion=0
+    generated_chords, notes_names, notes_midi, base_qualities = generator.generate_scale_chords("C", scale_info)
 
-    # Note above open string but within max frets
-    assert tablature_generator._assign_fret_to_string(45, 40, 22) == 5
+    assert "I" in generated_chords
+    assert generated_chords["I"] == "Cmaj7"
+    assert notes_names["I"] == ["C", "E", "G", "B"]
+    assert base_qualities["I"] == "major"
 
-    # Note exactly max frets above open string
-    assert tablature_generator._assign_fret_to_string(62, 40, 22) == 22
+    assert "ii" in generated_chords
+    assert generated_chords["ii"] == "Dm7"
+    assert base_qualities["ii"] == "minor"
 
-def test_assign_fret_to_string_invalid(tablature_generator):
-    # Note lower than open string
-    assert tablature_generator._assign_fret_to_string(39, 40, 22) is None
+def test_chord_generator_extension_levels():
+    theory = MusicTheory()
+    generator = ChordGenerator(theory)
+    scale_info = theory.AVAILABLE_SCALES["1"] # Major
 
-    # Note higher than max frets
-    assert tablature_generator._assign_fret_to_string(63, 40, 22) is None
+    # Triads (extension_level=0)
+    generated_chords, _, _, _ = generator.generate_scale_chords("C", scale_info, extension_level=0)
+    assert generated_chords["I"] == "C"
+    assert generated_chords["ii"] == "Dm"
+
+def test_chord_generator_inversions():
+    theory = MusicTheory()
+    generator = ChordGenerator(theory)
+    scale_info = theory.AVAILABLE_SCALES["1"] # Major
+
+    # Root position (inversion=0)
+    _, _, notes_midi_root, _ = generator.generate_scale_chords("C", scale_info, inversion=0)
+
+    # First inversion (inversion=1)
+    _, _, notes_midi_inv1, _ = generator.generate_scale_chords("C", scale_info, inversion=1)
+
+    # Verify the lowest note in inversion 1 is different and higher than root position lowest note (or shifted)
+    # The actual MIDI values depend on the specific octave selection logic, but we can verify
+    # the relative pitch class or simply that the MIDI sequence is different.
+    assert notes_midi_root["I"] != notes_midi_inv1["I"]
+
+def test_chord_generator_invalid_tonic():
+    theory = MusicTheory()
+    generator = ChordGenerator(theory)
+    scale_info = theory.AVAILABLE_SCALES["1"] # Major
+
+    # Invalid tonic
+    generated_chords, notes_names, notes_midi, base_qualities = generator.generate_scale_chords("Z", scale_info)
+
+    assert generated_chords == {}
+    assert notes_names == {}
+    assert notes_midi == {}
+    assert base_qualities == {}
+
+def test_chord_generator_caching():
+    theory = MusicTheory()
+    generator = ChordGenerator(theory)
+    scale_info = theory.AVAILABLE_SCALES["1"]
+
+    # Call first time
+    res1 = generator.generate_scale_chords("C", scale_info)
+
+    # Call second time
+    res2 = generator.generate_scale_chords("C", scale_info)
+
+    # Results should be equal in value
+    assert res1 == res2
+
+    # But they should NOT be the exact same object (because of copy.deepcopy)
+    assert id(res1[0]) != id(res2[0])

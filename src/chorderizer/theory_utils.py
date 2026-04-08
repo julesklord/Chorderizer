@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Optional, Any, Union, Mapping
+from typing import List, Dict, Tuple, Optional, Any
 
 # -----------------------------------------------------------------------------
 # Class MusicTheoryUtils: Utility functions for music theory
@@ -249,11 +249,3 @@ class MusicTheory:
         90: "Synth Pad 3 (polysynth)"
     }
 
-# Ensure Mapping is available if used by get_numbered_option if it were moved here.
-# For now, it's fine as MusicTheory itself does not use Mapping directly in its annotations.
-# If get_note_name or get_note_index were to use Mapping, it would be needed.
-# The original chorderizer.py used Union for get_numbered_option's `options` parameter,
-# which might be Dict[str, Any] or Dict[int, Any].
-# So, `Mapping` is a good general type hint for options in get_numbered_option.
-# `MusicTheory` uses `Dict[str, Any]` and `Dict[int, str]` which are compatible.
-# Adding `Mapping` to the import list for completeness, though not strictly used by these two classes directly.

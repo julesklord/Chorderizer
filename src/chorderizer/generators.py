@@ -7,6 +7,7 @@ from mido import MidiFile, MidiTrack, Message, bpm2tempo, MetaMessage
 
 from .theory_utils import MusicTheory, MusicTheoryUtils
 
+
 # -----------------------------------------------------------------------------
 # Class ChordGenerator
 # -----------------------------------------------------------------------------
@@ -93,13 +94,7 @@ class ChordGenerator:
             final_chord_display_name = chord_root_name + degree_display_suffix
 
             # Apply inversion
-            if 0 < inversion < len(chord_intervals_relative):
-                temp_intervals = list(chord_intervals_relative)  # Make a mutable copy
-                for _ in range(inversion):
-                    if not temp_intervals: break
-                    bass_relative_interval = temp_intervals.pop(0)
-                    temp_intervals.append(bass_relative_interval + 12)  # Add to top, an octave higher
-                chord_intervals_relative = sorted(list(set(temp_intervals)))  # Remove duplicates and sort
+            chord_intervals_relative = self._apply_inversion(chord_intervals_relative, inversion)
 
             # Generate MIDI notes for the chord
             current_midi_notes: List[int] = []
@@ -117,8 +112,7 @@ class ChordGenerator:
                 if tentative_first_midi_note < self.theory.MIDI_BASE_OCTAVE - 6 and unique_sorted_intervals[0] >= 0:
                     initial_octave_offset = 12
                 # If the first note is too high for a root/low interval, shift down (less common for root)
-                elif tentative_first_midi_note > self.theory.MIDI_BASE_OCTAVE + 6 and unique_sorted_intervals[
-                    0] <= 7:  # Heuristic
+                elif tentative_first_midi_note > self.theory.MIDI_BASE_OCTAVE + 6 and unique_sorted_intervals[0] <= 7:  # Heuristic
                     initial_octave_offset = -12
 
             for rel_interval in unique_sorted_intervals:
@@ -132,8 +126,10 @@ class ChordGenerator:
                     candidate_midi_note += 12
 
                 # MIDI range adjustments (heuristic to keep notes within a playable/sensible range)
-                if candidate_midi_note > 108: candidate_midi_note -= 12  # Too high, try octave lower
-                if candidate_midi_note < 21: candidate_midi_note += 12  # Too low, try octave higher
+                if candidate_midi_note > 108:
+                    candidate_midi_note -= 12  # Too high, try octave lower
+                if candidate_midi_note < 21:
+                    candidate_midi_note += 12  # Too low, try octave higher
 
                 # For wider chords, try to keep upper notes from going excessively high if a lower octave is available
                 if len(unique_sorted_intervals) > 4 and \
@@ -157,6 +153,18 @@ class ChordGenerator:
         self._chord_cache[cache_key] = result
         # Return a deep copy to prevent callers from mutating the shared cache
         return copy.deepcopy(result)
+
+    def _apply_inversion(self, chord_intervals_relative: List[int], inversion: int) -> List[int]:
+        if not (0 < inversion < len(chord_intervals_relative)):
+            return chord_intervals_relative
+
+        temp_intervals = list(chord_intervals_relative)  # Make a mutable copy
+        for _ in range(inversion):
+            if not temp_intervals:
+                break
+            bass_relative_interval = temp_intervals.pop(0)
+            temp_intervals.append(bass_relative_interval + 12)  # Add to top, an octave higher
+        return sorted(list(set(temp_intervals)))  # Remove duplicates and sort
 
 
 # -----------------------------------------------------------------------------

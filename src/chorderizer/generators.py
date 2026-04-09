@@ -99,11 +99,11 @@ class ChordGenerator:
                     if not temp_intervals: break
                     bass_relative_interval = temp_intervals.pop(0)
                     temp_intervals.append(bass_relative_interval + 12)  # Add to top, an octave higher
-                chord_intervals_relative = sorted(list(set(temp_intervals)))  # Remove duplicates and sort
+                chord_intervals_relative = sorted(set(temp_intervals))  # Remove duplicates and sort
 
             # Generate MIDI notes for the chord
             current_midi_notes: List[int] = []
-            unique_sorted_intervals = sorted(list(set(chord_intervals_relative)))
+            unique_sorted_intervals = sorted(set(chord_intervals_relative))
             last_added_midi_note = -1  # To ensure ascending notes in voicing
 
             # Determine a base octave offset to keep chords roughly around C4
@@ -145,7 +145,7 @@ class ChordGenerator:
                     current_midi_notes.append(candidate_midi_note)
                     last_added_midi_note = candidate_midi_note
 
-            current_midi_notes = sorted(list(set(current_midi_notes)))  # Final sort and unique
+            current_midi_notes = sorted(set(current_midi_notes))  # Final sort and unique
             current_chord_note_names = [MusicTheoryUtils.get_note_name(n, use_flats) for n in current_midi_notes]
 
             generated_chords[degree_roman] = final_chord_display_name
@@ -180,7 +180,7 @@ class TablatureGenerator:
     def generate_simple_tab(self, chord_display_name: str, chord_midi_notes: List[int]) -> List[str]:
         # This is a very basic tablature generator, prioritizing lower frets and one note per string.
         frets_on_strings = {name: "-" for name in self.TAB_STRING_NAMES}
-        sorted_midi_notes = sorted(list(set(chord_midi_notes)))  # Ascending MIDI notes
+        sorted_midi_notes = sorted(set(chord_midi_notes))  # Ascending MIDI notes
         notes_placed_in_tab = [False] * len(sorted_midi_notes)
         max_allowable_frets = 15  # Arbitrary limit for simplicity
 
@@ -313,46 +313,7 @@ class MidiGenerator:
                                                    time=current_arp_note_actual_duration))
 
             else:  # Block chords (with optional strum)
-                time_offset_for_strum_completion = 0  # Time from first note_on to last note_on in strum
-
-                # Add all note_on messages first, with strum delays
-                for idx, note_val in enumerate(chord_midi_notes):
-                    velocity = max(0, min(127, midi_options["base_velocity"] + random.randint(
-                        -midi_options["velocity_randomization_range"] // 2,
-                        midi_options["velocity_randomization_range"] // 2)))
-
-                    delta_t_for_this_note_on = 0
-                    if idx > 0 and midi_options["strum_delay_ms"] > 0:
-                        # Calculate strum delay in ticks
-                        strum_delay_seconds = midi_options["strum_delay_ms"] / 1000.0
-                        strum_delay_beats = strum_delay_seconds * (midi_options["bpm"] / 60.0)
-                        strum_delay_ticks = int(strum_delay_beats * ticks_per_beat)
-                        delta_t_for_this_note_on = strum_delay_ticks
-                        time_offset_for_strum_completion += strum_delay_ticks
-
-                    # Ensure chord note is within valid MIDI range [0, 127]
-                    note_val = max(0, min(127, note_val))
-
-                    # First note_on of the block chord has time=0 (relative to previous chord's end)
-                    # Subsequent note_on events in the strum have their respective strum_delay_ticks
-                    chord_track.append(Message('note_on', note=note_val, velocity=velocity, channel=0,
-                                               time=delta_t_for_this_note_on if idx > 0 else 0))
-
-                # Now add all note_off messages. They should all end effectively at the same time.
-                # The duration for the first note_off will be the total chord duration minus the time taken by the strum.
-                duration_for_first_note_off = chord_duration_ticks - time_offset_for_strum_completion
-                if duration_for_first_note_off < 0:
-                    # This means strum is longer than chord duration, which is problematic.
-                    print(f"\033[33mWarning: Strum effect for chord '{chord_data.get('nombre', '')}' "
-                          f"is longer than the chord's duration. Adjusting.\033[0m")
-                    duration_for_first_note_off = 0  # Or some small positive value
-
-                for idx, note_val in enumerate(chord_midi_notes):
-                    # The first note_off consumes the main duration.
-                    # Subsequent note_offs have time=0, meaning they happen at the same "absolute" time
-                    # as the end of the first note_off, relative to their own note_on.
-                    chord_track.append(Message('note_off', note=note_val, velocity=0, channel=0,
-                                               time=duration_for_first_note_off if idx == 0 else 0))
+                self._generate_block_track(chord_track, chord_midi_notes, chord_duration_ticks, midi_options, chord_data, ticks_per_beat)
         try:
             output_directory = os.path.dirname(output_filename)
             if output_directory and not os.path.exists(output_directory):
@@ -364,3 +325,86 @@ class MidiGenerator:
             print(f"\033[31mError saving MIDI file '{output_filename}': {e}\033[0m")
             import traceback
             traceback.print_exc()
+
+    def _generate_arpeggio_track(self, chord_track, chord_midi_notes, chord_duration_ticks, midi_options, chord_data, ticks_per_beat):
+        arp_notes_sequence = list(chord_midi_notes)  # Copy
+        if midi_options["arpeggio_style"] == "down":
+            arp_notes_sequence.reverse()
+        elif midi_options["arpeggio_style"] == "updown":
+            # e.g., [1,2,3,4] -> [1,2,3,4,3,2] (excluding first and last if len > 1)
+            if len(arp_notes_sequence) > 1:
+                arp_notes_sequence += arp_notes_sequence[len(arp_notes_sequence) - 2::-1]
+
+        arp_note_indiv_duration_ticks = int(midi_options["arpeggio_note_duration_beats"] * ticks_per_beat)
+        num_arp_notes = len(arp_notes_sequence)
+
+        if num_arp_notes > 0:
+            for idx, note_val in enumerate(arp_notes_sequence):
+                velocity = max(0, min(127, midi_options["base_velocity"] + random.randint(
+                    -midi_options["velocity_randomization_range"] // 2,
+                    midi_options["velocity_randomization_range"] // 2)))
+
+                # Each arpeggio note_on starts right after the previous one ends.
+                # So, delta time for note_on is 0 (relative to previous note_off).
+                chord_track.append(Message('note_on', note=note_val, velocity=velocity, channel=0, time=0))
+
+                current_arp_note_actual_duration = arp_note_indiv_duration_ticks
+                if idx == num_arp_notes - 1:  # This is the last note of the arpeggio sequence
+                    # Calculate total time taken by previous arpeggio notes in this chord
+                    time_taken_by_prev_arp_notes = (num_arp_notes - 1) * arp_note_indiv_duration_ticks
+                    # Remaining duration for this last arpeggio note to fill the chord slot
+                    remaining_slot_time = chord_duration_ticks - time_taken_by_prev_arp_notes
+                    current_arp_note_actual_duration = max(0, remaining_slot_time)
+
+                    if arp_note_indiv_duration_ticks > 0 and num_arp_notes * arp_note_indiv_duration_ticks > chord_duration_ticks + (
+                            arp_note_indiv_duration_ticks / 2):  # Allow some slack
+                        print(f"\033[33mWarning: Arpeggio for chord '{chord_data.get('nombre', '')}' "
+                              f"({num_arp_notes} notes * {arp_note_indiv_duration_ticks} ticks) "
+                              f"may exceed chord slot duration ({chord_duration_ticks} ticks). "
+                              f"Last note duration adjusted to {current_arp_note_actual_duration}.\033[0m")
+
+                chord_track.append(Message('note_off', note=note_val, velocity=0, channel=0,
+                                           time=current_arp_note_actual_duration))
+
+    def _generate_block_track(self, chord_track, chord_midi_notes, chord_duration_ticks, midi_options, chord_data, ticks_per_beat):
+        time_offset_for_strum_completion = 0  # Time from first note_on to last note_on in strum
+
+        # Add all note_on messages first, with strum delays
+        for idx, note_val in enumerate(chord_midi_notes):
+            velocity = max(0, min(127, midi_options["base_velocity"] + random.randint(
+                -midi_options["velocity_randomization_range"] // 2,
+                midi_options["velocity_randomization_range"] // 2)))
+
+            delta_t_for_this_note_on = 0
+            if idx > 0 and midi_options["strum_delay_ms"] > 0:
+                # Calculate strum delay in ticks
+                strum_delay_seconds = midi_options["strum_delay_ms"] / 1000.0
+                strum_delay_beats = strum_delay_seconds * (midi_options["bpm"] / 60.0)
+                strum_delay_ticks = int(strum_delay_beats * ticks_per_beat)
+                delta_t_for_this_note_on = strum_delay_ticks
+                time_offset_for_strum_completion += strum_delay_ticks
+
+            # Ensure chord note is within valid MIDI range [0, 127]
+            note_val = max(0, min(127, note_val))
+
+            # First note_on of the block chord has time=0 (relative to previous chord's end)
+            # Subsequent note_on events in the strum have their respective strum_delay_ticks
+            chord_track.append(Message('note_on', note=note_val, velocity=velocity, channel=0,
+                                       time=delta_t_for_this_note_on if idx > 0 else 0))
+
+        # Now add all note_off messages. They should all end effectively at the same time.
+        # The duration for the first note_off will be the total chord duration minus the time taken by the strum.
+        duration_for_first_note_off = chord_duration_ticks - time_offset_for_strum_completion
+        if duration_for_first_note_off < 0:
+            # This means strum is longer than chord duration, which is problematic.
+            print(f"\033[33mWarning: Strum effect for chord '{chord_data.get('nombre', '')}' "
+                  f"is longer than the chord's duration. Adjusting.\033[0m")
+            duration_for_first_note_off = 0  # Or some small positive value
+
+        for idx, note_val in enumerate(chord_midi_notes):
+            # The first note_off consumes the main duration.
+            # Subsequent note_offs have time=0, meaning they happen at the same "absolute" time
+            # as the end of the first note_off, relative to their own note_on.
+            chord_track.append(Message('note_off', note=note_val, velocity=0, channel=0,
+                                       time=duration_for_first_note_off if idx == 0 else 0))
+

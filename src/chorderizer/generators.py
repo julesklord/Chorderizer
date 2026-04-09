@@ -234,6 +234,11 @@ class MidiGenerator:
             # Bass track also needs tempo if it's the first event-producing track for it
             bass_track.append(MetaMessage('set_tempo', tempo=bpm2tempo(midi_options["bpm"]), time=0))
 
+        # Pre-calculate arpeggio individual note duration since it is constant across chords
+        arp_note_indiv_duration_ticks = 0
+        if "arpeggio_note_duration_beats" in midi_options:
+            arp_note_indiv_duration_ticks = int(midi_options["arpeggio_note_duration_beats"] * ticks_per_beat)
+
         for i_chord, chord_data in enumerate(chords_to_process):
             chord_midi_notes = chord_data["notas_midi"]
             if not chord_midi_notes:
@@ -268,7 +273,45 @@ class MidiGenerator:
             # Mido handles advancing the track's internal time counter with each message's `time` attribute.
 
             if midi_options["arpeggio_style"]:
-                self._generate_arpeggio_track(chord_track, chord_midi_notes, chord_duration_ticks, midi_options, chord_data, ticks_per_beat)
+                arp_notes_sequence = list(chord_midi_notes)  # Copy
+                if midi_options["arpeggio_style"] == "down":
+                    arp_notes_sequence.reverse()
+                elif midi_options["arpeggio_style"] == "updown":
+                    # e.g., [1,2,3,4] -> [1,2,3,4,3,2] (excluding first and last if len > 1)
+                    if len(arp_notes_sequence) > 1:
+                        arp_notes_sequence += arp_notes_sequence[len(arp_notes_sequence) - 2::-1]
+
+                num_arp_notes = len(arp_notes_sequence)
+
+                if num_arp_notes > 0:
+                    for idx, note_val in enumerate(arp_notes_sequence):
+                        velocity = max(0, min(127, midi_options["base_velocity"] + random.randint(
+                            -midi_options["velocity_randomization_range"] // 2,
+                            midi_options["velocity_randomization_range"] // 2)))
+
+                        # Each arpeggio note_on starts right after the previous one ends.
+                        # So, delta time for note_on is 0 (relative to previous note_off).
+                        chord_track.append(Message('note_on', note=note_val, velocity=velocity, channel=0, time=0))
+
+                        current_arp_note_actual_duration = arp_note_indiv_duration_ticks
+                        if idx == num_arp_notes - 1:  # This is the last note of the arpeggio sequence
+                            # Calculate total time taken by previous arpeggio notes in this chord
+                            time_taken_by_prev_arp_notes = (num_arp_notes - 1) * arp_note_indiv_duration_ticks
+                            # Remaining duration for this last arpeggio note to fill the chord slot
+                            remaining_slot_time = chord_duration_ticks - time_taken_by_prev_arp_notes
+                            current_arp_note_actual_duration = max(0, remaining_slot_time)
+
+                            if arp_note_indiv_duration_ticks > 0 and \
+                                    num_arp_notes * arp_note_indiv_duration_ticks > chord_duration_ticks + (
+                                    arp_note_indiv_duration_ticks / 2):  # Allow some slack
+                                print(f"\033[33mWarning: Arpeggio for chord '{chord_data.get('nombre', '')}' "
+                                      f"({num_arp_notes} notes * {arp_note_indiv_duration_ticks} ticks) "
+                                      f"may exceed chord slot duration ({chord_duration_ticks} ticks). "
+                                      f"Last note duration adjusted to {current_arp_note_actual_duration}.\033[0m")
+
+                        chord_track.append(Message('note_off', note=note_val, velocity=0, channel=0,
+                                                   time=current_arp_note_actual_duration))
+
             else:  # Block chords (with optional strum)
                 self._generate_block_track(chord_track, chord_midi_notes, chord_duration_ticks, midi_options, chord_data, ticks_per_beat)
         try:

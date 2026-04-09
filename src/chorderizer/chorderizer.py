@@ -1,4 +1,5 @@
 import os
+import sys
 import random
 from typing import List, Dict, Tuple, Optional, Any
 import colorama
@@ -239,4 +240,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (EOFError, KeyboardInterrupt):
+        print_operation_cancelled()
+        sys.exit(0)

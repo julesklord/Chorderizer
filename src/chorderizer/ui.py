@@ -19,10 +19,11 @@ def print_operation_cancelled() -> None:
 def get_yes_no_answer(prompt: str) -> bool:
     while True:
         try:
-            response = input(f"{Fore.BLUE}{prompt} (yes/no): {Style.RESET_ALL}").strip().lower()
+            response = input(f"{Fore.CYAN}{prompt} [y/N]: {Style.RESET_ALL}").strip().lower()
+            if not response: return False
             if response in ["yes", "y", "si", "s"]: return True
             if response in ["no", "n"]: return False
-            print(f"{Fore.RED}Invalid response. Please enter 'yes' or 'no'.{Style.RESET_ALL}")
+            print(f"{Fore.RED}Invalid response. Please enter 'y' or 'n'.{Style.RESET_ALL}")
         except (EOFError, KeyboardInterrupt):
             print_operation_cancelled()
             sys.exit(0)

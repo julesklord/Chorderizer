@@ -98,7 +98,7 @@ def main():
             base_qual = gen_base_qualities.get(degree)
             color_code = Fore.GREEN
             if base_qual == "minor":
-                color_code = Fore.BLUE
+                color_code = Fore.CYAN
             elif base_qual == "diminished" or "ø" in chord_name_display or "m7b5" in chord_name_display:
                 color_code = Fore.MAGENTA
             elif base_qual == "augmented" or "+" in chord_name_display:
@@ -224,7 +224,7 @@ def main():
                             if transposed_chords_for_midi:
                                 sugg_trans_path = _generate_midi_filename_helper(new_tonic, new_scale_data, midi_export_default_dir, prefix="prog_TRANSP_")
 
-                                trans_midi_fname_out_in = input(
+                                trans_midi_fname_out = input(
                                     f"Enter transposed MIDI filename [default: {sugg_trans_path}]: ").strip()
                                 if not trans_midi_fname_out:
                                     trans_midi_fname_out = sugg_trans_path

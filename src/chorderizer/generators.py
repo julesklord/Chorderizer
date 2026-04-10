@@ -460,9 +460,6 @@ class MidiGenerator:
             )
         except Exception as e:
             print(f"\033[31mError saving MIDI file '{output_filename}': {e}\033[0m")
-            import traceback
-
-            traceback.print_exc()
 
     def _generate_arpeggio_track(
         self,

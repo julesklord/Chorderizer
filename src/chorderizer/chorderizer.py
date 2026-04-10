@@ -13,7 +13,8 @@ from .ui import (
     get_yes_no_answer,
     get_numbered_option, 
     get_chord_settings,
-    get_tablature_filter
+    get_tablature_filter,
+    safe_input
 )
 from .generators import ChordGenerator, TablatureGenerator, MidiGenerator
 
@@ -117,9 +118,9 @@ def process_single_run(ui, chord_builder, tab_builder, midi_builder, midi_export
     chords_for_midi_processing: List[Dict[str, Any]] = []
     if get_yes_no_answer(
             "Define a chord progression for MIDI? (If no, all diatonic chords will be used sequentially)"):
-        progression_input_str = input(
-            "Enter progression (degrees separated by '-', e.g., I-V-vi-IV). "
-            "Optional duration in beats (e.g., I:4-V:2-vi:2-IV:4 ): "
+        progression_input_str = safe_input(
+            f"{Fore.CYAN}Enter progression (degrees separated by '-', e.g., I-V-vi-IV). "
+            f"Optional duration in beats (e.g., I:4-V:2-vi:2-IV:4 ): {Style.RESET_ALL}"
         ).strip().upper()
         progression_items = progression_input_str.split('-')
         for item_str in progression_items:
@@ -162,7 +163,7 @@ def process_single_run(ui, chord_builder, tab_builder, midi_builder, midi_export
     advanced_midi_opts = ui.get_advanced_midi_options()
     suggested_midi_path = _generate_midi_filename_helper(selected_scale_tonic, selected_scale_info, midi_export_default_dir)
 
-    output_midi_filename = input(f"Enter MIDI filename [default: {suggested_midi_path}]: ").strip()
+    output_midi_filename = safe_input(f"{Fore.CYAN}Enter MIDI filename [default: {suggested_midi_path}]: {Style.RESET_ALL}").strip()
     if not output_midi_filename:
         output_midi_filename = suggested_midi_path
     else:
@@ -200,7 +201,7 @@ def process_single_run(ui, chord_builder, tab_builder, midi_builder, midi_export
                                 })
                         if transposed_chords_for_midi:
                             sugg_trans_path = _generate_midi_filename_helper(new_tonic, new_scale_data, midi_export_default_dir, prefix="prog_TRANSP_")
-                            trans_midi_fname_out = input(f"Enter transposed MIDI filename [default: {sugg_trans_path}]: ").strip()
+                            trans_midi_fname_out = safe_input(f"{Fore.CYAN}Enter transposed MIDI filename [default: {sugg_trans_path}]: {Style.RESET_ALL}").strip()
                             if not trans_midi_fname_out:
                                 trans_midi_fname_out = sugg_trans_path
                             else:

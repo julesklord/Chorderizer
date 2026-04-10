@@ -17,11 +17,19 @@ def print_operation_cancelled() -> None:
     print(f"\n{Fore.RED}Operation cancelled by the user.{Style.RESET_ALL}")
 
 
+def safe_input(prompt: str) -> str:
+    try:
+        return input(prompt)
+    except (EOFError, KeyboardInterrupt):
+        print_operation_cancelled()
+        sys.exit(130)
+
+
 def get_yes_no_answer(prompt: str) -> bool:
     while True:
         try:
             response = (
-                input(f"{Fore.CYAN}{prompt} [y/N]: {Style.RESET_ALL}").strip().lower()
+                safe_input(f"{Fore.CYAN}{prompt} [y/N]: {Style.RESET_ALL}").strip().lower()
             )
             if not response:
                 return False
@@ -34,7 +42,7 @@ def get_yes_no_answer(prompt: str) -> bool:
             )
         except (EOFError, KeyboardInterrupt):
             print_operation_cancelled()
-            sys.exit(0)
+            sys.exit(130)
 
 
 def get_numbered_option(
@@ -57,7 +65,7 @@ def get_numbered_option(
 
     while True:
         try:
-            user_input_str = input("Choose an option number: ").strip()
+            user_input_str = safe_input(f"{Fore.CYAN}Choose an option number: {Style.RESET_ALL}").strip()
             if not user_input_str:
                 continue
 
@@ -170,8 +178,8 @@ class UIManager:
         }
 
         try:
-            bpm_in = input(
-                f"BPM (tempo) for MIDI [default: {options['bpm']}]: "
+            bpm_in = safe_input(
+                f"{Fore.CYAN}BPM (tempo) for MIDI [default: {options['bpm']}]: {Style.RESET_ALL}"
             ).strip()
             if bpm_in:
                 options["bpm"] = int(bpm_in)
@@ -185,8 +193,8 @@ class UIManager:
             print(f"{Fore.RED}Invalid BPM, using {options['bpm']}.{Style.RESET_ALL}")
 
         try:
-            vel_in = input(
-                f"Base note velocity (0-127) [default: {options['base_velocity']}]: "
+            vel_in = safe_input(
+                f"{Fore.CYAN}Base note velocity (0-127) [default: {options['base_velocity']}]: {Style.RESET_ALL}"
             ).strip()
             if vel_in:
                 options["base_velocity"] = int(vel_in)
@@ -198,7 +206,7 @@ class UIManager:
 
         if get_yes_no_answer("Add slight randomization to velocity?"):
             try:
-                rand_in = input(f"Randomization range (+/-) [default: 5]: ").strip()
+                rand_in = safe_input(f"{Fore.CYAN}Randomization range (+/-) [default: 5]: {Style.RESET_ALL}").strip()
                 if rand_in:
                     options["velocity_randomization_range"] = int(rand_in)
                 options["velocity_randomization_range"] = max(
@@ -227,8 +235,8 @@ class UIManager:
             if style_key:
                 options["arpeggio_style"] = arp_styles[style_key]
                 try:
-                    arp_dur_in = input(
-                        f"Duration of each arpeggio note in beats [default: {options['arpeggio_note_duration_beats']}]: "
+                    arp_dur_in = safe_input(
+                        f"{Fore.CYAN}Duration of each arpeggio note in beats [default: {options['arpeggio_note_duration_beats']}]: {Style.RESET_ALL}"
                     ).strip()
                     if arp_dur_in:
                         options["arpeggio_note_duration_beats"] = float(arp_dur_in)
@@ -243,8 +251,8 @@ class UIManager:
             "Add strumming effect to block chords?"
         ):
             try:
-                strum_in = input(
-                    f"Strum delay between notes (milliseconds) [default: 15ms]: "
+                strum_in = safe_input(
+                    f"{Fore.CYAN}Strum delay between notes (milliseconds) [default: 15ms]: {Style.RESET_ALL}"
                 ).strip()
                 if strum_in:
                     options["strum_delay_ms"] = int(strum_in)

@@ -7,21 +7,21 @@ Chorderizer is a Python-based command-line tool designed for composers, and musi
 
 ## 🚀 Key Features
 
-*   **Versatile Scale Support**: Diatonic chords for Major, Minor, Harmonic, Melodic, and Pentatonic scales.
-*   **Deep Customization**: Extensions from Triads to 13ths and full support for Inversions (1st, 2nd, 3rd).
-*   **Advanced MIDI Engine**: Arpeggiation, strumming effects, humanization, and automated basslines.
-*   **Transposition Engine**: Instantly shift progressions between keys while retaining performance data.
-*   **Interactive CLI**: User-friendly colored terminal interface.
+* **Versatile Scale Support**: Diatonic chords for Major, Minor, Harmonic, Melodic, and Pentatonic scales.
+* **Deep Customization**: Extensions from Triads to 13ths and full support for Inversions (1st, 2nd, 3rd).
+* **Advanced MIDI Engine**: Arpeggiation, strumming effects, humanization, and automated basslines.
+* **Transposition Engine**: Instantly shift progressions between keys while retaining performance data.
+* **Interactive CLI**: User-friendly colored terminal interface.
 
 ## 📚 Documentation
 
 For a deep dive into Chorderizer, please refer to our dedicated documentation:
 
-*   📖 **[User Guide](Docs/USER_GUIDE.md)**: How to use Chorderizer from start to finish.
-*   🏗️ **[Architecture](Docs/ARCHITECTURE.md)**: Internal design and module overview.
-*   💻 **[Developer Guide](Docs/DEVELOPER_GUIDE.md)**: Setup, testing, and contribution details.
-*   🔧 **[API Reference](Docs/API_REFERENCE.md)**: Technical details for developers.
-*   🗺️ **[Roadmap](ROADMAP.md)**: Future vision and upcoming features.
+* 📖 **[User Guide](Docs/USER_GUIDE.md)**: How to use Chorderizer from start to finish.
+* 🏗️ **[Architecture](Docs/ARCHITECTURE.md)**: Internal design and module overview.
+* 💻 **[Developer Guide](Docs/DEVELOPER_GUIDE.md)**: Setup, testing, and contribution details.
+* 🔧 **[API Reference](Docs/API_REFERENCE.md)**: Technical details for developers.
+* 🗺️ **[Roadmap](ROADMAP.md)**: Future vision and upcoming features.
 
 ## 🛠️ Installation
 
@@ -30,6 +30,7 @@ pip install .
 ```
 
 To run from source:
+
 ```bash
 python -m chorderizer.chorderizer
 ```

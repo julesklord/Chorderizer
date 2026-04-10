@@ -125,7 +125,8 @@ class ChordGenerator:
             )
             if not chord_intervals_relative:  # Fallback if type is unknown
                 print(
-                    f"\033[33mWarning: Chord structure for '{chord_type_to_use}' or '{base_quality}' not found. Skipping chord for degree {degree_roman}.\033[0m"
+                    f"\033[33mWarning: Chord structure for '{chord_type_to_use}' or '{base_quality}' "
+                    f"not found. Skipping chord for degree {degree_roman}.\033[0m"
                 )
                 continue
 
@@ -315,7 +316,6 @@ class TablatureGenerator:
         return tab_lines
 
 
-
 # -----------------------------------------------------------------------------
 # Class VoiceLeader
 # -----------------------------------------------------------------------------
@@ -330,8 +330,9 @@ class VoiceLeader:
     MIDI range is clamped to [MIDI_MIN, MIDI_MAX] (C2 - C7) to keep
     voicings in a playable, musical register.
     """
-    MIDI_MIN: int = 36   # C2
-    MIDI_MAX: int = 96   # C7
+
+    MIDI_MIN: int = 36  # C2
+    MIDI_MAX: int = 96  # C7
 
     @staticmethod
     def apply(prev_notes: List[int], curr_notes: List[int]) -> List[int]:
@@ -369,7 +370,9 @@ class VoiceLeader:
             candidates = [
                 pitch_class + (octave * 12)
                 for octave in range(1, 9)
-                if max(VoiceLeader.MIDI_MIN, bass_note) <= pitch_class + (octave * 12) <= VoiceLeader.MIDI_MAX
+                if max(VoiceLeader.MIDI_MIN, bass_note)
+                <= pitch_class + (octave * 12)
+                <= VoiceLeader.MIDI_MAX
             ]
 
             if not candidates:
@@ -387,7 +390,9 @@ class VoiceLeader:
             if i < len(prev_notes):
                 best = min(candidates, key=lambda c: abs(c - prev_notes[i]))
             else:
-                best = min(candidates, key=lambda c: min(abs(c - p) for p in prev_notes))
+                best = min(
+                    candidates, key=lambda c: min(abs(c - p) for p in prev_notes)
+                )
             result.append(best)
 
         # Ensure the result is sorted ascending (good practice for MIDI block chords)
@@ -432,7 +437,9 @@ class MidiGenerator:
             )
         )
         chord_track.append(
-            MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0)
+            MetaMessage(
+                "set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0
+            )
         )
 
         # Bass Track (optional)
@@ -451,7 +458,9 @@ class MidiGenerator:
             )
             # Bass track also needs tempo if it's the first event-producing track for it
             bass_track.append(
-                MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0)
+                MetaMessage(
+                    "set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0
+                )
             )
 
         # Pre-calculate arpeggio individual note duration since it is constant across chords
@@ -490,7 +499,9 @@ class MidiGenerator:
                     bass_note_midi += 12
 
                 # Slightly higher velocity for bass, or make it configurable
-                bass_velocity = max(0, min(127, midi_options.get("base_velocity", 70) + 10))
+                bass_velocity = max(
+                    0, min(127, midi_options.get("base_velocity", 70) + 10)
+                )
 
                 # Ensure bass note is within valid MIDI range [0, 127]
                 bass_note_midi = max(0, min(127, bass_note_midi))

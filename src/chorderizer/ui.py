@@ -1,6 +1,5 @@
 import sys
 from typing import Optional, Tuple, Dict, Any, Union
-import colorama
 from colorama import Fore, Style
 from .theory_utils import MusicTheory
 
@@ -29,7 +28,9 @@ def get_yes_no_answer(prompt: str) -> bool:
     while True:
         try:
             response = (
-                safe_input(f"{Fore.CYAN}{prompt} [y/N]: {Style.RESET_ALL}").strip().lower()
+                safe_input(f"{Fore.CYAN}{prompt} [y/N]: {Style.RESET_ALL}")
+                .strip()
+                .lower()
             )
             if not response:
                 return False
@@ -65,7 +66,9 @@ def get_numbered_option(
 
     while True:
         try:
-            user_input_str = safe_input(f"{Fore.CYAN}Choose an option number: {Style.RESET_ALL}").strip()
+            user_input_str = safe_input(
+                f"{Fore.CYAN}Choose an option number: {Style.RESET_ALL}"
+            ).strip()
             if not user_input_str:
                 continue
 
@@ -179,13 +182,15 @@ class UIManager:
 
         try:
             bpm_in = safe_input(
-                f"{Fore.CYAN}BPM (tempo) for MIDI [default: {options['bpm']}]: {Style.RESET_ALL}"
+                f"{Fore.CYAN}BPM (tempo) for MIDI "
+                f"[default: {options['bpm']}]: {Style.RESET_ALL}"
             ).strip()
             if bpm_in:
                 options["bpm"] = int(bpm_in)
             if not (20 <= options["bpm"] <= 300):  # Reasonable range
                 print(
-                    f"{Fore.YELLOW}Warning: BPM {options['bpm']} is outside the typical range (20-300).{Style.RESET_ALL}"
+                    f"{Fore.YELLOW}Warning: BPM {options['bpm']} is outside "
+                    f"the typical range (20-300).{Style.RESET_ALL}"
                 )
             if options["bpm"] <= 0:
                 options["bpm"] = 120  # Fallback
@@ -194,7 +199,8 @@ class UIManager:
 
         try:
             vel_in = safe_input(
-                f"{Fore.CYAN}Base note velocity (0-127) [default: {options['base_velocity']}]: {Style.RESET_ALL}"
+                f"{Fore.CYAN}Base note velocity (0-127) "
+                f"[default: {options['base_velocity']}]: {Style.RESET_ALL}"
             ).strip()
             if vel_in:
                 options["base_velocity"] = int(vel_in)
@@ -206,7 +212,9 @@ class UIManager:
 
         if get_yes_no_answer("Add slight randomization to velocity?"):
             try:
-                rand_in = safe_input(f"{Fore.CYAN}Randomization range (+/-) [default: 5]: {Style.RESET_ALL}").strip()
+                rand_in = safe_input(
+                    f"{Fore.CYAN}Randomization range (+/-) [default: 5]: {Style.RESET_ALL}"
+                ).strip()
                 if rand_in:
                     options["velocity_randomization_range"] = int(rand_in)
                 options["velocity_randomization_range"] = max(
@@ -236,7 +244,8 @@ class UIManager:
                 options["arpeggio_style"] = arp_styles[style_key]
                 try:
                     arp_dur_in = safe_input(
-                        f"{Fore.CYAN}Duration of each arpeggio note in beats [default: {options['arpeggio_note_duration_beats']}]: {Style.RESET_ALL}"
+                        f"{Fore.CYAN}Duration of each arpeggio note in beats "
+                        f"[default: {options['arpeggio_note_duration_beats']}]: {Style.RESET_ALL}"
                     ).strip()
                     if arp_dur_in:
                         options["arpeggio_note_duration_beats"] = float(arp_dur_in)
@@ -244,7 +253,8 @@ class UIManager:
                         options["arpeggio_note_duration_beats"] = 0.25
                 except ValueError:
                     print(
-                        f"{Fore.RED}Invalid arpeggio note duration, using {options['arpeggio_note_duration_beats']}.{Style.RESET_ALL}"
+                        f"{Fore.RED}Invalid arpeggio note duration, using "
+                        f"{options['arpeggio_note_duration_beats']}.{Style.RESET_ALL}"
                     )
 
         if not options["arpeggio_style"] and get_yes_no_answer(
@@ -252,7 +262,8 @@ class UIManager:
         ):
             try:
                 strum_in = safe_input(
-                    f"{Fore.CYAN}Strum delay between notes (milliseconds) [default: 15ms]: {Style.RESET_ALL}"
+                    f"{Fore.CYAN}Strum delay between notes (milliseconds) "
+                    f"[default: 15ms]: {Style.RESET_ALL}"
                 ).strip()
                 if strum_in:
                     options["strum_delay_ms"] = int(strum_in)

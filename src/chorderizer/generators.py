@@ -1,3 +1,4 @@
+import logging
 import copy
 import os
 import random
@@ -548,7 +549,8 @@ class MidiGenerator:
                 f"\033[32mMIDI file '{output_filename}' generated successfully.\033[0m"
             )
         except Exception as e:
-            print(f"\033[31mError saving MIDI file '{output_filename}': {e}\033[0m")
+            logging.error(f"Failed to save MIDI file '{output_filename}': {e}")
+            print(f"\033[31mError saving MIDI file '{output_filename}'. Please check permissions and path validity.\033[0m")
 
     def _generate_arpeggio_track(
         self,

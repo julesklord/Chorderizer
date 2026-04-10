@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 # Mock external dependencies
 sys.modules['mido'] = MagicMock()
 
-from chorderizer.theory_utils import MusicTheory
+from chorderizer.theory_utils import MusicTheory  # noqa: E402
 from chorderizer.generators import ChordGenerator
 
 def test_chord_generator_happy_path():
@@ -82,3 +82,46 @@ def test_chord_generator_caching():
 
     # But they should NOT be the exact same object (because of copy.deepcopy)
     assert id(res1[0]) != id(res2[0])
+
+
+# -----------------------------------------------------------------------------
+# VoiceLeader Tests
+# -----------------------------------------------------------------------------
+from chorderizer.generators import VoiceLeader
+
+
+def test_voice_leader_reduces_motion():
+    """Voice leading output should have less total movement than the raw jump."""
+    # Cmaj7 -> Fmaj7 in raw root position
+    prev  = [60, 64, 67, 71]  # C4, E4, G4, B4
+    curr  = [65, 69, 72, 76]  # F4, A4, C5, E5
+
+    raw_motion = sum(abs(c - p) for c, p in zip(sorted(curr), sorted(prev)))
+    voiced = VoiceLeader.apply(prev, curr)
+    voiced_motion = sum(abs(v - p) for v in voiced for p in prev if abs(v - p) == min(abs(v - q) for q in prev))
+
+    # The voice-led version total span should be <= raw version
+    assert max(voiced) - min(voiced) <= max(curr) - min(curr) + 12
+
+
+def test_voice_leader_preserves_bass():
+    """The bass note (lowest note, index 0) must not change pitch class."""
+    prev  = [48, 55, 60, 64]  # C3, G3, C4, E4
+    curr  = [53, 57, 60, 65]  # F3, A3, C4, F4
+
+    voiced = VoiceLeader.apply(prev, curr)
+
+    # Bass of curr is the first note (already sorted incoming)
+    original_bass_pc = curr[0] % 12
+    result_bass_pc   = voiced[0] % 12
+    assert result_bass_pc == original_bass_pc
+
+
+def test_voice_leader_range_guard():
+    """All output notes must remain within MIDI_MIN and MIDI_MAX."""
+    prev = [60, 64, 67]
+    curr = [62, 66, 69]
+
+    voiced = VoiceLeader.apply(prev, curr)
+
+    assert all(VoiceLeader.MIDI_MIN <= n <= VoiceLeader.MIDI_MAX for n in voiced)

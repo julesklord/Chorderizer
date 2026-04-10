@@ -2,17 +2,17 @@
 
 Project roadmap and future vision for Chorderizer.
 
-## Phase 1: Stabilization & Documentation (Current)
+## Phase 1: Stabilization & Documentation (Completed)
 
 * [x] **Refactor Core Logic**: Complete extraction of helper methods in `generators.py`.
 * [x] **Logic Verification**: Ensure 100% pass rate in unit tests and verify core features.
 * [x] **Technical Documentation**: Establish official `ARCHITECTURE.md`, `DEVELOPER_GUIDE.md`, and `API_REFERENCE.md`.
-* [ ] **Version Alignment**: Standardize versioning across `pyproject.toml`, `ui.py`, and documentation.
+* [x] **Version Alignment**: Standardize versioning across `pyproject.toml`, `ui.py`, and documentation (Chorderizer v1.2.0).
 
-## Phase 2: User Experience & Theory
+## Phase 2: User Experience & Theory (Current)
 
+* [x] **Voice Leading Algorithm**: Implement "minimum motion" voice leading to create professional-sounding chord transitions.
 * [ ] **Modern TUI (Terminal User Interface)**: Transition from basic sequential prompts to an interactive dashboard using `Textual`.
-* [ ] **Voice Leading Algorithm**: Implement "minimum motion" voice leading to create professional-sounding chord transitions.
 * [ ] **In-App Preview**: Basic audio playback of generated chords using `fluidsynth` or `pyaudio`.
 * [ ] **Visual Feedback**: Real-time piano/guitar visualization of chords in the terminal.
 
@@ -25,4 +25,4 @@ Project roadmap and future vision for Chorderizer.
 
 ---
 
-*Last updated: 2026-04-09*
+*Last updated: 2026-04-10*

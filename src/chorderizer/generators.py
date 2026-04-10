@@ -315,6 +315,86 @@ class TablatureGenerator:
         return tab_lines
 
 
+
+# -----------------------------------------------------------------------------
+# Class VoiceLeader
+# -----------------------------------------------------------------------------
+class VoiceLeader:
+    """
+    Implements a greedy Minimum Motion voice leading algorithm.
+
+    For each note in the target chord, it finds the octave transposition that
+    minimizes the total semitone movement from the previous chord. The bass
+    note (index 0, lowest note) is anchored to preserve harmonic identity.
+
+    MIDI range is clamped to [MIDI_MIN, MIDI_MAX] (C2 - C7) to keep
+    voicings in a playable, musical register.
+    """
+    MIDI_MIN: int = 36   # C2
+    MIDI_MAX: int = 96   # C7
+
+    @staticmethod
+    def apply(prev_notes: List[int], curr_notes: List[int]) -> List[int]:
+        """
+        Re-voices curr_notes to minimize semitone motion from prev_notes.
+
+        Args:
+            prev_notes: MIDI note numbers of the previous chord (sorted ascending).
+            curr_notes: MIDI note numbers of the current chord (sorted ascending).
+
+        Returns:
+            A new list of MIDI note numbers for curr_notes, re-voiced for
+            smooth voice leading. Returns curr_notes unchanged if either
+            list is empty or sizes differ by more than 1.
+        """
+        if not prev_notes or not curr_notes:
+            return list(curr_notes)
+
+        # Allow graceful handling of chords with ±1 note difference
+        if abs(len(prev_notes) - len(curr_notes)) > 1:
+            return list(curr_notes)
+
+        result: List[int] = []
+
+        for i, note in enumerate(curr_notes):
+            # Anchor the bass (first/lowest note): keep it in its original register
+            if i == 0:
+                result.append(note)
+                continue
+
+            pitch_class = note % 12
+            # Generate candidate octave transpositions
+            # IMPORTANT: Lower bound by the bass note to ensure it stays as the lowest voice
+            bass_note = result[0]
+            candidates = [
+                pitch_class + (octave * 12)
+                for octave in range(1, 9)
+                if max(VoiceLeader.MIDI_MIN, bass_note) <= pitch_class + (octave * 12) <= VoiceLeader.MIDI_MAX
+            ]
+
+            if not candidates:
+                # If no octave fits the constraints, fallback to original note
+                # (but try to keep it above bass if possible)
+                fallback = note
+                while fallback < bass_note and fallback + 12 <= VoiceLeader.MIDI_MAX:
+                    fallback += 12
+                result.append(fallback)
+                continue
+
+            # Find the candidate with minimum distance to the corresponding voice in prev_notes
+            # Or if sizes differ, the best fit among all previous notes
+            # Here we preserve voice-to-voice mapping if possible
+            if i < len(prev_notes):
+                best = min(candidates, key=lambda c: abs(c - prev_notes[i]))
+            else:
+                best = min(candidates, key=lambda c: min(abs(c - p) for p in prev_notes))
+            result.append(best)
+
+        # Ensure the result is sorted ascending (good practice for MIDI block chords)
+        result.sort()
+        return result
+
+
 # -----------------------------------------------------------------------------
 # Class MidiGenerator
 # -----------------------------------------------------------------------------
@@ -346,32 +426,32 @@ class MidiGenerator:
         chord_track.append(
             Message(
                 "program_change",
-                program=midi_options["chord_instrument"],
+                program=midi_options.get("chord_instrument", 0),
                 channel=0,
                 time=0,
             )
         )
         chord_track.append(
-            MetaMessage("set_tempo", tempo=bpm2tempo(midi_options["bpm"]), time=0)
+            MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0)
         )
 
         # Bass Track (optional)
         bass_track: Optional[MidiTrack] = None
-        if midi_options["add_bass_track"]:
+        if midi_options.get("add_bass_track", False):
             bass_track = MidiTrack()
             midi_file.tracks.append(bass_track)
             bass_track.append(MetaMessage("track_name", name="Bass Track", time=0))
             bass_track.append(
                 Message(
                     "program_change",
-                    program=midi_options["bass_instrument"],
+                    program=midi_options.get("bass_instrument", 33),
                     channel=1,
                     time=0,
                 )
             )
             # Bass track also needs tempo if it's the first event-producing track for it
             bass_track.append(
-                MetaMessage("set_tempo", tempo=bpm2tempo(midi_options["bpm"]), time=0)
+                MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0)
             )
 
         # Pre-calculate arpeggio individual note duration since it is constant across chords
@@ -381,16 +461,25 @@ class MidiGenerator:
                 midi_options["arpeggio_note_duration_beats"] * ticks_per_beat
             )
 
+        use_voice_leading = midi_options.get("voice_leading", False)
+        prev_chord_midi: Optional[List[int]] = None
+
         for i_chord, chord_data in enumerate(chords_to_process):
             chord_midi_notes = chord_data["notas_midi"]
             if not chord_midi_notes:
                 continue
 
+            # Apply voice leading (skip first chord — it has no predecessor)
+            if use_voice_leading and prev_chord_midi is not None:
+                chord_midi_notes = VoiceLeader.apply(prev_chord_midi, chord_midi_notes)
+
+            prev_chord_midi = list(chord_midi_notes)
+
             chord_duration_beats = chord_data["duracion_beats"]
             chord_duration_ticks = int(chord_duration_beats * ticks_per_beat)
 
             # --- Bass Track ---
-            if bass_track and midi_options["add_bass_track"]:
+            if bass_track and midi_options.get("add_bass_track", False):
                 # Find the lowest note of the chord for the bass, then drop it to a bass register
                 bass_note_midi = min(chord_midi_notes)
                 while (
@@ -401,7 +490,7 @@ class MidiGenerator:
                     bass_note_midi += 12
 
                 # Slightly higher velocity for bass, or make it configurable
-                bass_velocity = max(0, min(127, midi_options["base_velocity"] + 10))
+                bass_velocity = max(0, min(127, midi_options.get("base_velocity", 70) + 10))
 
                 # Ensure bass note is within valid MIDI range [0, 127]
                 bass_note_midi = max(0, min(127, bass_note_midi))
@@ -428,7 +517,7 @@ class MidiGenerator:
                 )
 
             # --- Chord Track ---
-            if midi_options["arpeggio_style"]:
+            if midi_options.get("arpeggio_style"):
                 self._generate_arpeggio_track(
                     chord_track,
                     chord_midi_notes,
@@ -472,15 +561,17 @@ class MidiGenerator:
         arp_note_indiv_duration_ticks,
     ):
         arp_notes_sequence = list(chord_midi_notes)
-        if midi_options["arpeggio_style"] == "down":
+        if midi_options.get("arpeggio_style") == "down":
             arp_notes_sequence.reverse()
-        elif midi_options["arpeggio_style"] == "updown":
+        elif midi_options.get("arpeggio_style") == "updown":
             if len(arp_notes_sequence) > 1:
                 arp_notes_sequence += arp_notes_sequence[
                     len(arp_notes_sequence) - 2 :: -1
                 ]
 
         num_arp_notes = len(arp_notes_sequence)
+        base_vel = midi_options.get("base_velocity", 70)
+        vel_rand = midi_options.get("velocity_randomization_range", 0)
 
         if num_arp_notes > 0:
             for idx, note_val in enumerate(arp_notes_sequence):
@@ -488,10 +579,10 @@ class MidiGenerator:
                     0,
                     min(
                         127,
-                        midi_options["base_velocity"]
+                        base_vel
                         + random.randint(
-                            -midi_options["velocity_randomization_range"] // 2,
-                            midi_options["velocity_randomization_range"] // 2,
+                            -vel_rand // 2,
+                            max(1, vel_rand // 2),
                         ),
                     ),
                 )
@@ -533,16 +624,18 @@ class MidiGenerator:
         strum_delay_ticks,
     ):
         time_offset_for_strum_completion = 0
+        base_vel = midi_options.get("base_velocity", 70)
+        vel_rand = midi_options.get("velocity_randomization_range", 0)
 
         for idx, note_val in enumerate(chord_midi_notes):
             velocity = max(
                 0,
                 min(
                     127,
-                    midi_options["base_velocity"]
+                    base_vel
                     + random.randint(
-                        -midi_options["velocity_randomization_range"] // 2,
-                        midi_options["velocity_randomization_range"] // 2,
+                        -vel_rand // 2,
+                        max(1, vel_rand // 2),
                     ),
                 ),
             )

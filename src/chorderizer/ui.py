@@ -253,4 +253,9 @@ class UIManager:
                 )  # Cap delay
             except ValueError:
                 print(f"{Fore.RED}Invalid strum delay, using 0.{Style.RESET_ALL}")
+
+        options["voice_leading"] = get_yes_no_answer(
+            "Apply voice leading? (smooth note motion between chords)"
+        )
+
         return options

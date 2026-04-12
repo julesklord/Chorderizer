@@ -28,3 +28,4 @@ Always analyze loops iterating over user-provided data structures (like chords s
 - **What**: When calling `sorted()` on a set (e.g., `sorted(list(set(items)))`), the intermediate conversion to `list` is redundant. Python's built-in `sorted()` function directly accepts any iterable, including sets, and returns a sorted list.
 - **Why**: Removing the `list()` call avoids unnecessary object allocation and improves performance.
 - **When**: 2024-04-20
+- Hoisting invariant calculations out of inner loops is a safe and effective way to achieve significant performance gains, especially in high-frequency functions like MIDI event generators.

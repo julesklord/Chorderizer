@@ -7,6 +7,7 @@ sys.modules["mido"] = MagicMock()
 
 from chorderizer.ui import get_tablature_filter  # noqa: E402
 
+
 @patch("chorderizer.ui.get_numbered_option")
 def test_get_tablature_filter_valid_option(mock_get_numbered_option):
     """Test that when a user selects a valid option, it returns that option."""

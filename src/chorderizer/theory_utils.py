@@ -1,4 +1,6 @@
-from typing import List, Dict, Tuple, Optional, Any
+import logging
+from typing import Any, Dict, List, Optional, Tuple
+
 from colorama import Fore, Style
 
 
@@ -106,8 +108,9 @@ class MusicTheoryUtils:
             )
             new_tonic_idx = MusicTheoryUtils.get_note_index(new_scale_tonic_str)
         except ValueError as e:
+            logging.error(f"Error parsing tonic for transposition: {e}")
             print(
-                f"{Fore.RED}Error parsing tonic for transposition: {e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error parsing tonic for transposition. Please check your input.{Style.RESET_ALL}"
             )
             return None
 

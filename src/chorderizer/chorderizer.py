@@ -1,21 +1,23 @@
 import os
 import random
-from typing import List, Dict, Tuple, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
+
 import colorama
 from colorama import Fore, Style
+
+from .generators import ChordGenerator, MidiGenerator, TablatureGenerator
 
 # Imports from new modules
 from .theory_utils import MusicTheory, MusicTheoryUtils
 from .ui import (
     UIManager,
-    print_welcome_message,
-    print_operation_cancelled,
-    get_yes_no_answer,
-    get_numbered_option,
     get_chord_settings,
+    get_numbered_option,
     get_tablature_filter,
+    get_yes_no_answer,
+    print_operation_cancelled,
+    print_welcome_message,
 )
-from .generators import ChordGenerator, TablatureGenerator, MidiGenerator
 
 # Mido imports are primarily in generators.py now.
 

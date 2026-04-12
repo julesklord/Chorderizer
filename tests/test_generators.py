@@ -146,18 +146,22 @@ def test_voice_leader_range_guard():
 
     assert all(VoiceLeader.MIDI_MIN <= n <= VoiceLeader.MIDI_MAX for n in voiced)
 
+
 # -----------------------------------------------------------------------------
 # TablatureGenerator Tests
 # -----------------------------------------------------------------------------
 from chorderizer.generators import TablatureGenerator
 
+
 def test_generate_simple_tab_happy_path():
     theory = MusicTheory()
     generator = TablatureGenerator(theory)
 
-    tab_lines = generator.generate_simple_tab("C", [48, 52, 55, 60, 64]) # C3, E3, G3, C4, E4
+    tab_lines = generator.generate_simple_tab(
+        "C", [48, 52, 55, 60, 64]
+    )  # C3, E3, G3, C4, E4
 
-    assert len(tab_lines) == 7 # 1 header + 6 strings
+    assert len(tab_lines) == 7  # 1 header + 6 strings
     assert tab_lines[0] == "Chord: C (simple tab)"
 
     # E6 open string is 40. Note 48 is fret 8.
@@ -172,6 +176,7 @@ def test_generate_simple_tab_happy_path():
     assert "B2|---5--|" in tab_lines[2]
     assert "e1|------|" in tab_lines[1]
 
+
 def test_generate_simple_tab_empty_notes():
     theory = MusicTheory()
     generator = TablatureGenerator(theory)
@@ -179,6 +184,7 @@ def test_generate_simple_tab_empty_notes():
     tab_lines = generator.generate_simple_tab("Empty", [])
 
     assert tab_lines == []
+
 
 def test_generate_simple_tab_too_high_notes():
     theory = MusicTheory()

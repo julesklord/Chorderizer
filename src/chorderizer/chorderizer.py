@@ -76,7 +76,9 @@ def process_single_run(
     )
 
     if not gen_chord_names:
-        print(f"\033[31mCould not generate chords for {selected_scale_tonic}.\033[0m")
+        print(
+            f"{Fore.RED}Could not generate chords for {selected_scale_tonic}.{Style.RESET_ALL}"
+        )
         return True
 
     print(
@@ -107,26 +109,23 @@ def process_single_run(
         )
 
         show_this_tab = False
-        if tab_display_filter_key == "8":
-            pass
-        elif tab_display_filter_key == "1":
+        if tab_display_filter_key == "1":
             show_this_tab = True
-        else:
-            if tab_display_filter_key == "2" and base_qual == "minor":
+        elif tab_display_filter_key == "2" and base_qual == "minor":
+            show_this_tab = True
+        elif tab_display_filter_key == "3" and "7" in chord_name_display:
+            show_this_tab = True
+        elif tab_display_filter_key == "4" and "9" in chord_name_display:
+            show_this_tab = True
+        elif tab_display_filter_key == "5":
+            if chord_name_display.endswith("6") and not chord_name_display.endswith(
+                "m7b6"
+            ):
                 show_this_tab = True
-            elif tab_display_filter_key == "3" and "7" in chord_name_display:
-                show_this_tab = True
-            elif tab_display_filter_key == "4" and "9" in chord_name_display:
-                show_this_tab = True
-            elif tab_display_filter_key == "5":
-                if chord_name_display.endswith("6") and not chord_name_display.endswith(
-                    "m7b6"
-                ):
-                    show_this_tab = True
-            elif tab_display_filter_key == "6" and "11" in chord_name_display:
-                show_this_tab = True
-            elif tab_display_filter_key == "7" and "13" in chord_name_display:
-                show_this_tab = True
+        elif tab_display_filter_key == "6" and "11" in chord_name_display:
+            show_this_tab = True
+        elif tab_display_filter_key == "7" and "13" in chord_name_display:
+            show_this_tab = True
 
         if show_this_tab and gen_midi_notes.get(degree):
             tab_lines_list = tab_builder.generate_simple_tab(
@@ -135,15 +134,15 @@ def process_single_run(
             for tab_line in tab_lines_list:
                 print(f"    {tab_line}")
 
-    print("\n\033[36m--- MIDI Generation Options ---\033[0m")
+    print(f"\n{Fore.CYAN}--- MIDI Generation Options ---{Style.RESET_ALL}")
     chords_for_midi_processing: List[Dict[str, Any]] = []
     if get_yes_no_answer(
         "Define a chord progression for MIDI? (If no, all diatonic chords will be used sequentially)"
     ):
         progression_input_str = (
             input(
-                "Enter progression (degrees separated by '-', e.g., I-V-vi-IV). "
-                "Optional duration in beats (e.g., I:4-V:2-vi:2-IV:4 ): "
+                f"{Fore.CYAN}Enter progression (degrees separated by '-', e.g., I-V-vi-IV). "
+                f"Optional duration in beats (e.g., I:4-V:2-vi:2-IV:4 ): {Style.RESET_ALL}"
             )
             .strip()
             .upper()
@@ -164,7 +163,7 @@ def process_single_run(
                         current_beats_duration = 4.0
                 except ValueError:
                     print(
-                        f"\033[31mInvalid duration for '{current_prog_degree}', using 4.0 beats.\033[0m"
+                        f"{Fore.RED}Invalid duration for '{current_prog_degree}', using 4.0 beats.{Style.RESET_ALL}"
                     )
 
             if current_prog_degree in gen_chord_names:
@@ -178,7 +177,7 @@ def process_single_run(
                 )
             else:
                 print(
-                    f"\033[31mDegree '{current_prog_degree}' not found in generated chords. Skipping.\033[0m"
+                    f"{Fore.RED}Degree '{current_prog_degree}' not found in generated chords. Skipping.{Style.RESET_ALL}"
                 )
     else:
         for degree_key in selected_scale_info["degrees"].keys():
@@ -193,7 +192,7 @@ def process_single_run(
                 )
 
     if not chords_for_midi_processing:
-        print("\033[31mNo chords selected for MIDI processing.\033[0m")
+        print(f"{Fore.RED}No chords selected for MIDI processing.{Style.RESET_ALL}")
         return True
 
     advanced_midi_opts = ui.get_advanced_midi_options()
@@ -202,7 +201,7 @@ def process_single_run(
     )
 
     output_midi_filename = input(
-        f"Enter MIDI filename [default: {suggested_midi_path}]: "
+        f"{Fore.CYAN}Enter MIDI filename [default: {suggested_midi_path}]: {Style.RESET_ALL}"
     ).strip()
     if not output_midi_filename:
         output_midi_filename = suggested_midi_path
@@ -271,7 +270,7 @@ def process_single_run(
                                 prefix="prog_TRANSP_",
                             )
                             trans_midi_fname_out = input(
-                                f"Enter transposed MIDI filename [default: {sugg_trans_path}]: "
+                                f"{Fore.CYAN}Enter transposed MIDI filename [default: {sugg_trans_path}]: {Style.RESET_ALL}"
                             ).strip()
                             if not trans_midi_fname_out:
                                 trans_midi_fname_out = sugg_trans_path

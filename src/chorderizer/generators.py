@@ -1,12 +1,13 @@
-import logging
 import copy
+import logging
 import os
 import random
-from typing import List, Dict, Tuple, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
 
-from mido import MidiFile, MidiTrack, Message, bpm2tempo, MetaMessage
+from mido import Message, MetaMessage, MidiFile, MidiTrack, bpm2tempo
 
 from .theory_utils import MusicTheory, MusicTheoryUtils
+from colorama import Fore, Style
 
 
 # -----------------------------------------------------------------------------
@@ -45,7 +46,9 @@ class ChordGenerator:
         try:
             scale_tonic_index = MusicTheoryUtils.get_note_index(scale_tonic_str)
         except ValueError as e:
-            print(f"\033[31mError: Invalid scale tonic '{scale_tonic_str}': {e}\033[0m")
+            print(
+                f"{Fore.RED}Error: Invalid scale tonic '{scale_tonic_str}': {e}{Style.RESET_ALL}"
+            )
             return {}, {}, {}, {}
 
         scale_degrees_info = scale_info["degrees"]
@@ -126,7 +129,7 @@ class ChordGenerator:
             )
             if not chord_intervals_relative:  # Fallback if type is unknown
                 print(
-                    f"\033[33mWarning: Chord structure for '{chord_type_to_use}' or '{base_quality}' not found. Skipping chord for degree {degree_roman}.\033[0m"
+                    f"{Fore.YELLOW}Warning: Chord structure for '{chord_type_to_use}' or '{base_quality}' not found. Skipping chord for degree {degree_roman}.{Style.RESET_ALL}"
                 )
                 continue
 
@@ -241,7 +244,7 @@ class ChordGenerator:
             temp_intervals.append(
                 bass_relative_interval + 12
             )  # Add to top, an octave higher
-        return sorted(list(set(temp_intervals)))  # Remove duplicates and sort
+        return sorted(set(temp_intervals))  # Remove duplicates and sort
 
 
 # -----------------------------------------------------------------------------
@@ -281,6 +284,8 @@ class TablatureGenerator:
     def generate_simple_tab(
         self, chord_display_name: str, chord_midi_notes: List[int]
     ) -> List[str]:
+        if not chord_midi_notes:
+            return []
         # This is a very basic tablature generator, prioritizing lower frets and one note per string.
         frets_on_strings = {name: "-" for name in self.TAB_STRING_NAMES}
         sorted_midi_notes = sorted(set(chord_midi_notes))  # Ascending MIDI notes
@@ -553,15 +558,17 @@ class MidiGenerator:
             output_directory = os.path.dirname(output_filename)
             if output_directory and not os.path.exists(output_directory):
                 os.makedirs(output_directory, exist_ok=True)
-                print(f"\033[32mDirectory '{output_directory}' created.\033[0m")
+                print(
+                    f"{Fore.GREEN}Directory '{output_directory}' created.{Style.RESET_ALL}"
+                )
             midi_file.save(output_filename)
             print(
-                f"\033[32mMIDI file '{output_filename}' generated successfully.\033[0m"
+                f"{Fore.GREEN}MIDI file '{output_filename}' generated successfully.{Style.RESET_ALL}"
             )
-        except Exception as e:
+        except OSError as e:
             logging.error(f"Failed to save MIDI file '{output_filename}': {e}")
             print(
-                f"\033[31mError saving MIDI file '{output_filename}'. Please check permissions and path validity.\033[0m"
+                f"{Fore.RED}Error saving MIDI file '{output_filename}'. Please check permissions and path validity.{Style.RESET_ALL}"
             )
 
     def _generate_arpeggio_track(

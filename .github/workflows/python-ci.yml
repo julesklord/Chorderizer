@@ -1,0 +1,22 @@
+﻿name: Python CI (Pro)
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Install Ruff and pip-audit
+      run: pip install ruff pip-audit
+    - name: Lint with Ruff
+      run: ruff check .
+    - name: Security Audit (pip-audit)
+      run: pip-audit
+    - name: Test with pytest
+      run: |
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install pytest
+        pytest

@@ -591,6 +591,8 @@ class MidiGenerator:
         num_arp_notes = len(arp_notes_sequence)
         base_vel = midi_options.get("base_velocity", 70)
         vel_rand = midi_options.get("velocity_randomization_range", 0)
+        vel_rand_min = -vel_rand // 2
+        vel_rand_max = max(1, vel_rand // 2)
 
         if num_arp_notes > 0:
             for idx, note_val in enumerate(arp_notes_sequence):
@@ -600,8 +602,8 @@ class MidiGenerator:
                         127,
                         base_vel
                         + random.randint(
-                            -vel_rand // 2,
-                            max(1, vel_rand // 2),
+                            vel_rand_min,
+                            vel_rand_max,
                         ),
                     ),
                 )
@@ -645,6 +647,8 @@ class MidiGenerator:
         time_offset_for_strum_completion = 0
         base_vel = midi_options.get("base_velocity", 70)
         vel_rand = midi_options.get("velocity_randomization_range", 0)
+        vel_rand_min = -vel_rand // 2
+        vel_rand_max = max(1, vel_rand // 2)
 
         for idx, note_val in enumerate(chord_midi_notes):
             velocity = max(
@@ -653,8 +657,8 @@ class MidiGenerator:
                     127,
                     base_vel
                     + random.randint(
-                        -vel_rand // 2,
-                        max(1, vel_rand // 2),
+                        vel_rand_min,
+                        vel_rand_max,
                     ),
                 ),
             )

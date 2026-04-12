@@ -23,3 +23,4 @@ The calculation `int(midi_options["arpeggio_note_duration_beats"] * ticks_per_be
 
 ### Takeaway
 Always analyze loops iterating over user-provided data structures (like chords sequences) to identify and extract loop invariants, especially those involving dictionary lookups and arithmetic operations. This is a common and safe optimization that provides measurable benefits without complex logic changes.
+- Hoisting invariant calculations out of inner loops is a safe and effective way to achieve significant performance gains, especially in high-frequency functions like MIDI event generators.

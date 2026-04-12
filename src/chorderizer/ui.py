@@ -57,7 +57,9 @@ def get_numbered_option(
 
     while True:
         try:
-            user_input_str = input("Choose an option number: ").strip()
+            user_input_str = input(
+                f"{Fore.CYAN}Choose an option number: {Style.RESET_ALL}"
+            ).strip()
             if not user_input_str:
                 continue
 
@@ -171,7 +173,7 @@ class UIManager:
 
         try:
             bpm_in = input(
-                f"BPM (tempo) for MIDI [default: {options['bpm']}]: "
+                f"{Fore.CYAN}BPM (tempo) for MIDI [default: {options['bpm']}]: {Style.RESET_ALL}"
             ).strip()
             if bpm_in:
                 options["bpm"] = int(bpm_in)
@@ -186,7 +188,7 @@ class UIManager:
 
         try:
             vel_in = input(
-                f"Base note velocity (0-127) [default: {options['base_velocity']}]: "
+                f"{Fore.CYAN}Base note velocity (0-127) [default: {options['base_velocity']}]: {Style.RESET_ALL}"
             ).strip()
             if vel_in:
                 options["base_velocity"] = int(vel_in)
@@ -198,7 +200,9 @@ class UIManager:
 
         if get_yes_no_answer("Add slight randomization to velocity?"):
             try:
-                rand_in = input(f"Randomization range (+/-) [default: 5]: ").strip()
+                rand_in = input(
+                    f"{Fore.CYAN}Randomization range (+/-) [default: 5]: {Style.RESET_ALL}"
+                ).strip()
                 if rand_in:
                     options["velocity_randomization_range"] = int(rand_in)
                 options["velocity_randomization_range"] = max(
@@ -228,7 +232,7 @@ class UIManager:
                 options["arpeggio_style"] = arp_styles[style_key]
                 try:
                     arp_dur_in = input(
-                        f"Duration of each arpeggio note in beats [default: {options['arpeggio_note_duration_beats']}]: "
+                        f"{Fore.CYAN}Duration of each arpeggio note in beats [default: {options['arpeggio_note_duration_beats']}]: {Style.RESET_ALL}"
                     ).strip()
                     if arp_dur_in:
                         options["arpeggio_note_duration_beats"] = float(arp_dur_in)
@@ -244,7 +248,7 @@ class UIManager:
         ):
             try:
                 strum_in = input(
-                    f"Strum delay between notes (milliseconds) [default: 15ms]: "
+                    f"{Fore.CYAN}Strum delay between notes (milliseconds) [default: 15ms]: {Style.RESET_ALL}"
                 ).strip()
                 if strum_in:
                     options["strum_delay_ms"] = int(strum_in)

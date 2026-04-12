@@ -563,7 +563,7 @@ class MidiGenerator:
             print(
                 f"{Fore.GREEN}MIDI file '{output_filename}' generated successfully.{Style.RESET_ALL}"
             )
-        except Exception as e:
+        except OSError as e:
             logging.error(f"Failed to save MIDI file '{output_filename}': {e}")
             print(
                 f"{Fore.RED}Error saving MIDI file '{output_filename}'. Please check permissions and path validity.{Style.RESET_ALL}"

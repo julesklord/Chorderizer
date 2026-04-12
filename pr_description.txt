@@ -1,0 +1,5 @@
+🧪 [Add tests for UI print_operation_cancelled]
+
+🎯 **What:** Added a missing unit test to cover the `print_operation_cancelled` function in `src/chorderizer/ui.py`.
+📊 **Coverage:** Tests the exact console output printed by the cancellation function (simulating a user hitting `Ctrl+C` or `Ctrl+D`).
+✨ **Result:** Increased test coverage in the UI module and ensured that the output behaves as expected when catching the cancellation exception.

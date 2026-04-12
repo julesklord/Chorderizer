@@ -17,9 +17,12 @@ def test_chord_generator_happy_path():
     scale_info = theory.AVAILABLE_SCALES["1"]
 
     # Default parameters: extension_level=2 (7ths), inversion=0
-    generated_chords, notes_names, notes_midi, base_qualities = (
-        generator.generate_scale_chords("C", scale_info)
-    )
+    (
+        generated_chords,
+        notes_names,
+        notes_midi,
+        base_qualities,
+    ) = generator.generate_scale_chords("C", scale_info)
 
     assert "I" in generated_chords
     assert generated_chords["I"] == "Cmaj7"
@@ -71,9 +74,12 @@ def test_chord_generator_invalid_tonic():
     scale_info = theory.AVAILABLE_SCALES["1"]  # Major
 
     # Invalid tonic
-    generated_chords, notes_names, notes_midi, base_qualities = (
-        generator.generate_scale_chords("Z", scale_info)
-    )
+    (
+        generated_chords,
+        notes_names,
+        notes_midi,
+        base_qualities,
+    ) = generator.generate_scale_chords("Z", scale_info)
 
     assert generated_chords == {}
     assert notes_names == {}

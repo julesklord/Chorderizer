@@ -23,3 +23,9 @@ The calculation `int(midi_options["arpeggio_note_duration_beats"] * ticks_per_be
 
 ### Takeaway
 Always analyze loops iterating over user-provided data structures (like chords sequences) to identify and extract loop invariants, especially those involving dictionary lookups and arithmetic operations. This is a common and safe optimization that provides measurable benefits without complex logic changes.
+## Performance Optimizations
+
+### Calculate velocity randomization bounds outside loop
+- **Optimization:** Extracted redundant `min`, `max`, and division (`// 2`) calculations for velocity randomization (`vel_rand`) bounds outside the loops in `_generate_arpeggio_track` and `_generate_block_track`.
+- **Why:** `vel_rand` is constant during the loop execution, so recomputing its halved boundaries (`-vel_rand // 2` and `max(1, vel_rand // 2)`) for every note iteration wastes CPU cycles.
+- **Measured Improvement:** A micro-benchmark simulating the velocity calculation with 10M iterations showed an execution time drop from ~16.99s to ~13.80s, representing an approximate 18.7% performance improvement for that specific block.

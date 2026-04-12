@@ -63,13 +63,16 @@ def process_single_run(
     selected_extension_lvl, selected_inversion_idx = chord_settings_tuple
 
     # Generate chords for the selected scale
-    gen_chord_names, gen_note_names, gen_midi_notes, gen_base_qualities = (
-        chord_builder.generate_scale_chords(
-            selected_scale_tonic,
-            selected_scale_info,
-            selected_extension_lvl,
-            selected_inversion_idx,
-        )
+    (
+        gen_chord_names,
+        gen_note_names,
+        gen_midi_notes,
+        gen_base_qualities,
+    ) = chord_builder.generate_scale_chords(
+        selected_scale_tonic,
+        selected_scale_info,
+        selected_extension_lvl,
+        selected_inversion_idx,
     )
 
     if not gen_chord_names:
@@ -77,7 +80,7 @@ def process_single_run(
         return True
 
     print(
-        f"\n{Fore.GREEN}Chords generated for the scale of {selected_scale_tonic} ({selected_scale_info['name']}):{Style.RESET_ALL}"
+        f"\n{Fore.GREEN}Chords generated for the scale of {selected_scale_tonic} ({selected_scale_info['name']}): {Style.RESET_ALL}"
     )
 
     tab_display_filter_key = get_tablature_filter()
@@ -221,7 +224,7 @@ def process_single_run(
             )
             if transposed_chord_display_names:
                 print(
-                    f"\n{Fore.GREEN}Chord names transposed to the tonic of {new_tonic}:{Style.RESET_ALL}"
+                    f"\n{Fore.GREEN}Chord names transposed to the tonic of {new_tonic}: {Style.RESET_ALL}"
                 )
                 for degree, trans_name in transposed_chord_display_names.items():
                     print(f"  {degree.ljust(5)}: {trans_name}")
@@ -229,13 +232,16 @@ def process_single_run(
                 if get_yes_no_answer(
                     "Generate MIDI for these chords in the NEW key/scale?"
                 ):
-                    trans_chord_names_actual, _, trans_midi_notes_actual, _ = (
-                        chord_builder.generate_scale_chords(
-                            new_tonic,
-                            new_scale_data,
-                            selected_extension_lvl,
-                            selected_inversion_idx,
-                        )
+                    (
+                        trans_chord_names_actual,
+                        _,
+                        trans_midi_notes_actual,
+                        _,
+                    ) = chord_builder.generate_scale_chords(
+                        new_tonic,
+                        new_scale_data,
+                        selected_extension_lvl,
+                        selected_inversion_idx,
                     )
                     if trans_chord_names_actual:
                         transposed_chords_for_midi: List[Dict[str, Any]] = []

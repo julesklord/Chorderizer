@@ -1,0 +1,5 @@
+🎯 **What:** The `random` module, a pseudorandom number generator (PRNG), was used for randomization of note velocities. This is generally considered insecure as the sequence can be predicted.
+
+⚠️ **Risk:** While note velocities aren't typically a vector for significant exploits, utilizing a weak PRNG is a poor security practice that introduces weak randomness primitives into the codebase.
+
+🛡️ **Solution:** Swapped the insecure `random` library for the cryptographically secure `secrets` library, specifically replacing `random.randint` with `secrets.SystemRandom().randint` to leverage OS-level entropy for randomization.

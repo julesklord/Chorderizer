@@ -1,7 +1,7 @@
 import logging
 import copy
 import os
-import random
+import secrets
 from typing import List, Dict, Tuple, Optional, Any
 
 from mido import MidiFile, MidiTrack, Message, bpm2tempo, MetaMessage
@@ -594,7 +594,7 @@ class MidiGenerator:
                     min(
                         127,
                         base_vel
-                        + random.randint(
+                        + secrets.SystemRandom().randint(
                             -vel_rand // 2,
                             max(1, vel_rand // 2),
                         ),
@@ -647,7 +647,7 @@ class MidiGenerator:
                 min(
                     127,
                     base_vel
-                    + random.randint(
+                    + secrets.SystemRandom().randint(
                         -vel_rand // 2,
                         max(1, vel_rand // 2),
                     ),

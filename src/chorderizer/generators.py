@@ -1,10 +1,10 @@
-import logging
 import copy
+import logging
 import os
 import random
-from typing import List, Dict, Tuple, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
 
-from mido import MidiFile, MidiTrack, Message, bpm2tempo, MetaMessage
+from mido import Message, MetaMessage, MidiFile, MidiTrack, bpm2tempo
 
 from .theory_utils import MusicTheory, MusicTheoryUtils
 
@@ -241,7 +241,7 @@ class ChordGenerator:
             temp_intervals.append(
                 bass_relative_interval + 12
             )  # Add to top, an octave higher
-        return sorted(list(set(temp_intervals)))  # Remove duplicates and sort
+        return sorted(set(temp_intervals))  # Remove duplicates and sort
 
 
 # -----------------------------------------------------------------------------

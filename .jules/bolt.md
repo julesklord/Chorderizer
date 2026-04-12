@@ -23,3 +23,8 @@ The calculation `int(midi_options["arpeggio_note_duration_beats"] * ticks_per_be
 
 ### Takeaway
 Always analyze loops iterating over user-provided data structures (like chords sequences) to identify and extract loop invariants, especially those involving dictionary lookups and arithmetic operations. This is a common and safe optimization that provides measurable benefits without complex logic changes.
+
+## Suboptimal List Sorting Pattern
+- **What**: When calling `sorted()` on a set (e.g., `sorted(list(set(items)))`), the intermediate conversion to `list` is redundant. Python's built-in `sorted()` function directly accepts any iterable, including sets, and returns a sorted list.
+- **Why**: Removing the `list()` call avoids unnecessary object allocation and improves performance.
+- **When**: 2024-04-20

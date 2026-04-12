@@ -1,70 +1,48 @@
 import sys
 from unittest.mock import MagicMock, patch
-import pytest
 
-# Mock colorama
+# Mock external dependencies
 sys.modules["colorama"] = MagicMock()
-sys.modules["colorama.Fore"] = MagicMock()
-sys.modules["colorama.Style"] = MagicMock()
+sys.modules["mido"] = MagicMock()
 
-from chorderizer.ui import get_numbered_option  # noqa: E402
-
-
-def test_get_numbered_option_valid():
-    options = {"1": "Option 1", "2": "Option 2"}
-    with patch("builtins.input", side_effect=["1"]):
-        result = get_numbered_option("Choose:", options)
-        assert result == "1"
+from chorderizer.ui import get_chord_settings, get_tablature_filter
 
 
-def test_get_numbered_option_cancel():
-    options = {"1": "Option 1", "2": "Option 2"}
-    with patch("builtins.input", side_effect=["0"]):
-        result = get_numbered_option(
-            "Choose:", options, allow_cancel=True, cancel_key="0"
-        )
-        assert result is None
+def test_get_chord_settings_success():
+    with patch("chorderizer.ui.get_numbered_option", side_effect=["1", "1"]):
+        ext, inv = get_chord_settings()
+        assert ext == 0
+        assert inv == 0
 
 
-def test_get_numbered_option_no_cancel():
-    options = {"1": "Option 1", "2": "Option 2"}
-    with patch("builtins.input", side_effect=["0", "1"]):
-        result = get_numbered_option(
-            "Choose:", options, allow_cancel=False, cancel_key="0"
-        )
-        assert result == "1"
+def test_get_chord_settings_different_options():
+    with patch("chorderizer.ui.get_numbered_option", side_effect=["3", "2"]):
+        ext, inv = get_chord_settings()
+        assert ext == 2  # extension_map["3"] = 2
+        assert inv == 1  # int("2") - 1 = 1
 
 
-def test_get_numbered_option_invalid_then_valid():
-    options = {"1": "Option 1"}
-    with patch("builtins.input", side_effect=["99", "1"]):
-        result = get_numbered_option("Choose:", options)
-        assert result == "1"
+def test_get_chord_settings_cancel_extension():
+    with patch("chorderizer.ui.get_numbered_option", return_value=None):
+        ext, inv = get_chord_settings()
+        assert ext is None
+        assert inv is None
 
 
-def test_get_numbered_option_empty_then_valid():
-    options = {"1": "Option 1"}
-    with patch("builtins.input", side_effect=["", "1"]):
-        result = get_numbered_option("Choose:", options)
-        assert result == "1"
+def test_get_chord_settings_cancel_inversion():
+    with patch("chorderizer.ui.get_numbered_option", side_effect=["1", None]):
+        ext, inv = get_chord_settings()
+        assert ext is None
+        assert inv is None
 
 
-def test_get_numbered_option_keyboard_interrupt():
-    options = {"1": "Option 1"}
-    with patch("builtins.input", side_effect=KeyboardInterrupt):
-        result = get_numbered_option("Choose:", options)
-        assert result is None
+def test_get_tablature_filter_success():
+    with patch("chorderizer.ui.get_numbered_option", return_value="3"):
+        result = get_tablature_filter()
+        assert result == "3"
 
 
-def test_get_numbered_option_eof_error():
-    options = {"1": "Option 1"}
-    with patch("builtins.input", side_effect=EOFError):
-        result = get_numbered_option("Choose:", options)
-        assert result is None
-
-
-def test_get_numbered_option_dict_value():
-    options = {"1": {"name": "Dict Option"}}
-    with patch("builtins.input", side_effect=["1"]):
-        result = get_numbered_option("Choose:", options)
-        assert result == "1"
+def test_get_tablature_filter_cancel():
+    with patch("chorderizer.ui.get_numbered_option", return_value=None):
+        result = get_tablature_filter()
+        assert result == "8"

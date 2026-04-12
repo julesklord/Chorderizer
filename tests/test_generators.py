@@ -145,3 +145,54 @@ def test_voice_leader_range_guard():
     voiced = VoiceLeader.apply(prev, curr)
 
     assert all(VoiceLeader.MIDI_MIN <= n <= VoiceLeader.MIDI_MAX for n in voiced)
+
+
+# -----------------------------------------------------------------------------
+# TablatureGenerator Tests
+# -----------------------------------------------------------------------------
+from chorderizer.generators import TablatureGenerator
+
+
+def test_generate_simple_tab_happy_path():
+    theory = MusicTheory()
+    generator = TablatureGenerator(theory)
+
+    tab_lines = generator.generate_simple_tab(
+        "C", [48, 52, 55, 60, 64]
+    )  # C3, E3, G3, C4, E4
+
+    assert len(tab_lines) == 7  # 1 header + 6 strings
+    assert tab_lines[0] == "Chord: C (simple tab)"
+
+    # E6 open string is 40. Note 48 is fret 8.
+    # Note 52: open A5 is 45. Fret 7.
+    # Note 55: open D4 is 50. Fret 5.
+    # Note 60: open G3 is 55. Fret 5.
+    # Note 64: open B2 is 59. Fret 5.
+    assert "E6|---8--|" in tab_lines[6]
+    assert "A5|---7--|" in tab_lines[5]
+    assert "D4|---5--|" in tab_lines[4]
+    assert "G3|---5--|" in tab_lines[3]
+    assert "B2|---5--|" in tab_lines[2]
+    assert "e1|------|" in tab_lines[1]
+
+
+def test_generate_simple_tab_empty_notes():
+    theory = MusicTheory()
+    generator = TablatureGenerator(theory)
+
+    tab_lines = generator.generate_simple_tab("Empty", [])
+
+    assert tab_lines == []
+
+
+def test_generate_simple_tab_too_high_notes():
+    theory = MusicTheory()
+    generator = TablatureGenerator(theory)
+
+    # Notes that are too high to be played within 15 frets of standard tuning
+    tab_lines = generator.generate_simple_tab("Too High", [100, 105])
+
+    assert len(tab_lines) == 7
+    for line in tab_lines[1:]:
+        assert "|------|" in line

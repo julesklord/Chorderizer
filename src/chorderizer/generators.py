@@ -284,6 +284,8 @@ class TablatureGenerator:
     def generate_simple_tab(
         self, chord_display_name: str, chord_midi_notes: List[int]
     ) -> List[str]:
+        if not chord_midi_notes:
+            return []
         # This is a very basic tablature generator, prioritizing lower frets and one note per string.
         frets_on_strings = {name: "-" for name in self.TAB_STRING_NAMES}
         sorted_midi_notes = sorted(set(chord_midi_notes))  # Ascending MIDI notes

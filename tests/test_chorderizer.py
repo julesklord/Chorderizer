@@ -8,7 +8,7 @@ import pytest
 sys.modules["colorama"] = MagicMock()
 sys.modules["mido"] = MagicMock()
 
-from chorderizer.chorderizer import _generate_midi_filename_helper
+from chorderizer.chorderizer import _generate_midi_filename_helper, process_single_run
 
 
 def test_generate_midi_filename_helper_basic():
@@ -70,6 +70,16 @@ def test_generate_midi_filename_helper_empty_base_dir():
     assert _generate_midi_filename_helper(tonic, scale_info, base_dir) == expected_path
 
 
+def test_process_single_run_missing_scale_info():
+    ui_mock = MagicMock()
+    ui_mock.select_tonic_and_scale.return_value = (None, None)
+
+    # process_single_run should return True when scale info is missing
+    result = process_single_run(ui_mock, None, None, None, "/tmp")
+
+    assert result is True
+    ui_mock.select_tonic_and_scale.assert_called_once()
+    
 @patch("chorderizer.chorderizer.get_chord_settings")
 def test_process_single_run_missing_chord_settings(mock_get_chord_settings):
     from chorderizer.chorderizer import process_single_run

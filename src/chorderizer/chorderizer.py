@@ -54,7 +54,7 @@ def process_single_run(
     print("\n" + "=" * 70)
     selected_scale_tonic, selected_scale_info = ui.select_tonic_and_scale()
     if selected_scale_tonic is None or selected_scale_info is None:
-        return False
+        return True
 
     chord_settings_tuple = get_chord_settings()
     if chord_settings_tuple is None:

@@ -102,7 +102,7 @@ def process_single_run(
             color_code = Fore.YELLOW
 
         note_names_str = ", ".join(gen_note_names.get(degree, []))
-        midi_notes_str = ", ".join(map(str, gen_midi_notes.get(degree, [])))
+        midi_notes_str = str(gen_midi_notes.get(degree, []))[1:-1]
         print(
             f"  {degree.ljust(5)}: {color_code}{chord_name_display.ljust(15)}{Style.RESET_ALL} "
             f"(Notes: {note_names_str.ljust(25)}) (MIDI: {midi_notes_str})"

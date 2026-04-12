@@ -1,4 +1,5 @@
 from typing import List, Dict, Tuple, Optional, Any
+from colorama import Fore, Style
 
 
 # -----------------------------------------------------------------------------
@@ -105,7 +106,9 @@ class MusicTheoryUtils:
             )
             new_tonic_idx = MusicTheoryUtils.get_note_index(new_scale_tonic_str)
         except ValueError as e:
-            print(f"\033[31mError parsing tonic for transposition: {e}\033[0m")
+            print(
+                f"{Fore.RED}Error parsing tonic for transposition: {e}{Style.RESET_ALL}"
+            )
             return None
 
         transposition_interval = new_tonic_idx - original_tonic_idx

@@ -5,7 +5,7 @@ Documentation for setting up and contributing to the Chorderizer codebase.
 ## Development Setup
 
 1. **Prerequisites**:
-   - Python 3.8+ 
+   - Python 3.8+
    - Pip (Python Package Index)
 
 2. **Clone and Install**:

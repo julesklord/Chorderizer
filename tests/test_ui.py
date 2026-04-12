@@ -7,6 +7,7 @@ sys.modules["colorama"] = MagicMock()
 
 from chorderizer.ui import get_tablature_filter
 
+
 class TestUI(unittest.TestCase):
     @patch("chorderizer.ui.get_numbered_option")
     def test_get_tablature_filter_valid_choice(self, mock_get_option):

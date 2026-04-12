@@ -558,7 +558,7 @@ class MidiGenerator:
             print(
                 f"\033[32mMIDI file '{output_filename}' generated successfully.\033[0m"
             )
-        except Exception as e:
+        except OSError as e:
             logging.error(f"Failed to save MIDI file '{output_filename}': {e}")
             print(
                 f"\033[31mError saving MIDI file '{output_filename}'. Please check permissions and path validity.\033[0m"

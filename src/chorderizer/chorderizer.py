@@ -1,4 +1,5 @@
 import os
+import logging
 import random
 from typing import List, Dict, Tuple, Optional, Any
 import colorama
@@ -319,6 +320,13 @@ if __name__ == "__main__":
 
     try:
         main()
-    except (EOFError, KeyboardInterrupt):
+    except EOFError:
         print_operation_cancelled()
         sys.exit(0)
+    except KeyboardInterrupt:
+        print_operation_cancelled()
+        sys.exit(130)
+    except Exception as e:
+        logging.error("An unexpected error occurred", exc_info=True)
+        print(f"\n{Fore.RED}An unexpected system error occurred. Please check the logs or contact support.{Style.RESET_ALL}")
+        sys.exit(1)

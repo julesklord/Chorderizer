@@ -32,9 +32,12 @@ def get_yes_no_answer(prompt: str) -> bool:
             print(
                 f"{Fore.RED}Invalid response. Please enter 'y' or 'n'.{Style.RESET_ALL}"
             )
-        except (EOFError, KeyboardInterrupt):
+        except EOFError:
             print_operation_cancelled()
             sys.exit(0)
+        except KeyboardInterrupt:
+            print_operation_cancelled()
+            sys.exit(130)
 
 
 def get_numbered_option(
@@ -70,9 +73,12 @@ def get_numbered_option(
                 return user_input_str
             else:
                 print(f"{Fore.RED}Invalid option.{Style.RESET_ALL}")
-        except (EOFError, KeyboardInterrupt):
+        except EOFError:
             print_operation_cancelled()
-            return None
+            sys.exit(0)
+        except KeyboardInterrupt:
+            print_operation_cancelled()
+            sys.exit(130)
 
 
 def get_chord_settings() -> Tuple[Optional[int], Optional[int]]:

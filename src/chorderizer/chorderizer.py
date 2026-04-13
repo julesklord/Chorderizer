@@ -321,4 +321,4 @@ if __name__ == "__main__":
         main()
     except (EOFError, KeyboardInterrupt):
         print_operation_cancelled()
-        sys.exit(0)
+        sys.exit(130)

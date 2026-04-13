@@ -34,7 +34,7 @@ def get_yes_no_answer(prompt: str) -> bool:
             )
         except (EOFError, KeyboardInterrupt):
             print_operation_cancelled()
-            sys.exit(0)
+            sys.exit(130)
 
 
 def get_numbered_option(
@@ -72,7 +72,7 @@ def get_numbered_option(
                 print(f"{Fore.RED}Invalid option.{Style.RESET_ALL}")
         except (EOFError, KeyboardInterrupt):
             print_operation_cancelled()
-            return None
+            sys.exit(130)
 
 
 def get_chord_settings() -> Tuple[Optional[int], Optional[int]]:

@@ -165,9 +165,118 @@ class UIManager:
         full_scale_tonic_name = selected_tonic + selected_scale_info["tonic_suffix"]
         return full_scale_tonic_name, selected_scale_info
 
+    def _get_bpm(self, current_bpm: int) -> int:
+        try:
+            try:
+                bpm_in = input(
+                    f"{Fore.CYAN}BPM (tempo) for MIDI [default: {current_bpm}]: {Style.RESET_ALL}"
+                ).strip()
+            except (EOFError, KeyboardInterrupt):
+                print_operation_cancelled()
+                import sys
+
+                sys.exit(0)
+            if bpm_in:
+                current_bpm = int(bpm_in)
+            if not (20 <= current_bpm <= 300):  # Reasonable range
+                print(
+                    f"{Fore.YELLOW}Warning: BPM {current_bpm} is outside the typical range (20-300).{Style.RESET_ALL}"
+                )
+            if current_bpm <= 0:
+                current_bpm = 120  # Fallback
+        except ValueError:
+            print(f"{Fore.RED}Invalid BPM, using {current_bpm}.{Style.RESET_ALL}")
+        return current_bpm
+
+    def _get_base_velocity(self, current_vel: int) -> int:
+        try:
+            try:
+                vel_in = input(
+                    f"{Fore.CYAN}Base note velocity (0-127) [default: {current_vel}]: {Style.RESET_ALL}"
+                ).strip()
+            except (EOFError, KeyboardInterrupt):
+                print_operation_cancelled()
+                import sys
+
+                sys.exit(0)
+            if vel_in:
+                current_vel = int(vel_in)
+            current_vel = max(0, min(127, current_vel))
+        except ValueError:
+            print(f"{Fore.RED}Invalid velocity, using {current_vel}.{Style.RESET_ALL}")
+        return current_vel
+
+    def _get_velocity_randomization(self, current_rand: int) -> int:
+        if get_yes_no_answer("Add slight randomization to velocity?"):
+            try:
+                try:
+                    rand_in = input(
+                        f"{Fore.CYAN}Randomization range (+/-) [default: 5]: {Style.RESET_ALL}"
+                    ).strip()
+                except (EOFError, KeyboardInterrupt):
+                    print_operation_cancelled()
+                    import sys
+
+                    sys.exit(0)
+                if rand_in:
+                    current_rand = int(rand_in)
+                current_rand = max(0, min(20, current_rand))
+            except ValueError:
+                print(f"{Fore.RED}Invalid range, using 0.{Style.RESET_ALL}")
+        return current_rand
+
+    def _get_arpeggio_settings(
+        self, current_style: Optional[str], current_dur: float
+    ) -> Tuple[Optional[str], float]:
+        if get_yes_no_answer(
+            "Arpeggiate chords? (Otherwise, they will be block chords)"
+        ):
+            arp_styles = {"1": "up", "2": "down", "3": "updown"}
+            style_key = get_numbered_option("Arpeggio style:", arp_styles)
+            if style_key:
+                current_style = arp_styles[style_key]
+                try:
+                    try:
+                        arp_dur_in = input(
+                            f"{Fore.CYAN}Duration of each arpeggio note in beats [default: {current_dur}]: {Style.RESET_ALL}"
+                        ).strip()
+                    except (EOFError, KeyboardInterrupt):
+                        print_operation_cancelled()
+                        import sys
+
+                        sys.exit(0)
+                    if arp_dur_in:
+                        current_dur = float(arp_dur_in)
+                    if current_dur <= 0:
+                        current_dur = 0.25
+                except ValueError:
+                    print(
+                        f"{Fore.RED}Invalid arpeggio note duration, using {current_dur}.{Style.RESET_ALL}"
+                    )
+        return current_style, current_dur
+
+    def _get_strum_delay(self, current_delay: int) -> int:
+        if get_yes_no_answer("Add strumming effect to block chords?"):
+            try:
+                try:
+                    strum_in = input(
+                        f"{Fore.CYAN}Strum delay between notes (milliseconds) [default: 15ms]: {Style.RESET_ALL}"
+                    ).strip()
+                except (EOFError, KeyboardInterrupt):
+                    print_operation_cancelled()
+                    import sys
+
+                    sys.exit(0)
+                if strum_in:
+                    current_delay = int(strum_in)
+                current_delay = max(0, min(100, current_delay))  # Cap delay
+            except ValueError:
+                print(f"{Fore.RED}Invalid strum delay, using 0.{Style.RESET_ALL}")
+        return current_delay
+
     def get_advanced_midi_options(self) -> Dict[str, Any]:
         print(f"\n{Fore.CYAN}--- Advanced MIDI Options ---{Style.RESET_ALL}")
-        options = {
+        options: Dict[str, Any] = {
             "bpm": 120,
             "base_velocity": 70,
             "velocity_randomization_range": 0,
@@ -179,117 +288,34 @@ class UIManager:
             "strum_delay_ms": 0,
         }
 
-        try:
-            try:
-                bpm_in = input(
-                    f"{Fore.CYAN}BPM (tempo) for MIDI [default: {options['bpm']}]: {Style.RESET_ALL}"
-                ).strip()
-            except (EOFError, KeyboardInterrupt):
-                print_operation_cancelled()
-                import sys
-                sys.exit(0)
-            if bpm_in:
-                options["bpm"] = int(bpm_in)
-            if not (20 <= options["bpm"] <= 300):  # Reasonable range
-                print(
-                    f"{Fore.YELLOW}Warning: BPM {options['bpm']} is outside the typical range (20-300).{Style.RESET_ALL}"
-                )
-            if options["bpm"] <= 0:
-                options["bpm"] = 120  # Fallback
-        except ValueError:
-            print(f"{Fore.RED}Invalid BPM, using {options['bpm']}.{Style.RESET_ALL}")
-
-        try:
-            try:
-                vel_in = input(
-                    f"{Fore.CYAN}Base note velocity (0-127) [default: {options['base_velocity']}]: {Style.RESET_ALL}"
-                ).strip()
-            except (EOFError, KeyboardInterrupt):
-                print_operation_cancelled()
-                import sys
-                sys.exit(0)
-            if vel_in:
-                options["base_velocity"] = int(vel_in)
-            options["base_velocity"] = max(0, min(127, options["base_velocity"]))
-        except ValueError:
-            print(
-                f"{Fore.RED}Invalid velocity, using {options['base_velocity']}.{Style.RESET_ALL}"
-            )
-
-        if get_yes_no_answer("Add slight randomization to velocity?"):
-            try:
-                try:
-                    rand_in = input(
-                        f"{Fore.CYAN}Randomization range (+/-) [default: 5]: {Style.RESET_ALL}"
-                    ).strip()
-                except (EOFError, KeyboardInterrupt):
-                    print_operation_cancelled()
-                    import sys
-                    sys.exit(0)
-                if rand_in:
-                    options["velocity_randomization_range"] = int(rand_in)
-                options["velocity_randomization_range"] = max(
-                    0, min(20, options["velocity_randomization_range"])
-                )
-            except ValueError:
-                print(f"{Fore.RED}Invalid range, using 0.{Style.RESET_ALL}")
+        options["bpm"] = self._get_bpm(options["bpm"])
+        options["base_velocity"] = self._get_base_velocity(options["base_velocity"])
+        options["velocity_randomization_range"] = self._get_velocity_randomization(
+            options["velocity_randomization_range"]
+        )
 
         chord_instr_key = get_numbered_option(
             "Instrument for chords:", self.theory.MIDI_PROGRAMS, allow_cancel=False
         )  # Must select an instrument
-        options["chord_instrument"] = int(chord_instr_key)
+        if chord_instr_key is not None:
+            options["chord_instrument"] = int(chord_instr_key)
 
         options["add_bass_track"] = get_yes_no_answer("Add bass track (root notes)?")
         if options["add_bass_track"]:
             bass_instr_key = get_numbered_option(
                 "Instrument for bass:", self.theory.MIDI_PROGRAMS, allow_cancel=False
             )
-            options["bass_instrument"] = int(bass_instr_key)
+            if bass_instr_key is not None:
+                options["bass_instrument"] = int(bass_instr_key)
 
-        if get_yes_no_answer(
-            "Arpeggiate chords? (Otherwise, they will be block chords)"
-        ):
-            arp_styles = {"1": "up", "2": "down", "3": "updown"}
-            style_key = get_numbered_option("Arpeggio style:", arp_styles)
-            if style_key:
-                options["arpeggio_style"] = arp_styles[style_key]
-                try:
-                    try:
-                        arp_dur_in = input(
-                            f"{Fore.CYAN}Duration of each arpeggio note in beats [default: {options['arpeggio_note_duration_beats']}]: {Style.RESET_ALL}"
-                        ).strip()
-                    except (EOFError, KeyboardInterrupt):
-                        print_operation_cancelled()
-                        import sys
-                        sys.exit(0)
-                    if arp_dur_in:
-                        options["arpeggio_note_duration_beats"] = float(arp_dur_in)
-                    if options["arpeggio_note_duration_beats"] <= 0:
-                        options["arpeggio_note_duration_beats"] = 0.25
-                except ValueError:
-                    print(
-                        f"{Fore.RED}Invalid arpeggio note duration, using {options['arpeggio_note_duration_beats']}.{Style.RESET_ALL}"
-                    )
+        options["arpeggio_style"], options["arpeggio_note_duration_beats"] = (
+            self._get_arpeggio_settings(
+                options["arpeggio_style"], options["arpeggio_note_duration_beats"]
+            )
+        )
 
-        if not options["arpeggio_style"] and get_yes_no_answer(
-            "Add strumming effect to block chords?"
-        ):
-            try:
-                try:
-                    strum_in = input(
-                        f"{Fore.CYAN}Strum delay between notes (milliseconds) [default: 15ms]: {Style.RESET_ALL}"
-                    ).strip()
-                except (EOFError, KeyboardInterrupt):
-                    print_operation_cancelled()
-                    import sys
-                    sys.exit(0)
-                if strum_in:
-                    options["strum_delay_ms"] = int(strum_in)
-                options["strum_delay_ms"] = max(
-                    0, min(100, options["strum_delay_ms"])
-                )  # Cap delay
-            except ValueError:
-                print(f"{Fore.RED}Invalid strum delay, using 0.{Style.RESET_ALL}")
+        if not options["arpeggio_style"]:
+            options["strum_delay_ms"] = self._get_strum_delay(options["strum_delay_ms"])
 
         options["voice_leading"] = get_yes_no_answer(
             "Apply voice leading? (smooth note motion between chords)"

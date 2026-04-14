@@ -540,8 +540,6 @@ class MidiGenerator:
                     chord_midi_notes,
                     chord_duration_ticks,
                     midi_options,
-                    chord_data,
-                    ticks_per_beat,
                     arp_note_indiv_duration_ticks,
                 )
             else:  # Block chords (with optional strum)
@@ -550,8 +548,6 @@ class MidiGenerator:
                     chord_midi_notes,
                     chord_duration_ticks,
                     midi_options,
-                    chord_data,
-                    ticks_per_beat,
                     strum_delay_ticks,
                 )
 
@@ -578,8 +574,6 @@ class MidiGenerator:
         chord_midi_notes,
         chord_duration_ticks,
         midi_options,
-        chord_data,
-        ticks_per_beat,
         arp_note_indiv_duration_ticks,
     ):
         arp_notes_sequence = list(chord_midi_notes)
@@ -643,8 +637,6 @@ class MidiGenerator:
         chord_midi_notes,
         chord_duration_ticks,
         midi_options,
-        chord_data,
-        ticks_per_beat,
         strum_delay_ticks,
     ):
         time_offset_for_strum_completion = 0

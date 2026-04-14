@@ -522,7 +522,6 @@ class MidiGenerator:
 
         self._save_midi_file(midi_file, output_filename)
 
-
     def _generate_arpeggio_track(
         self,
         chord_track,

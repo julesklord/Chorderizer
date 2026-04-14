@@ -550,8 +550,6 @@ class MidiGenerator:
                     chord_midi_notes,
                     chord_duration_ticks,
                     midi_options,
-                    chord_data,
-                    ticks_per_beat,
                     strum_delay_ticks,
                 )
 
@@ -643,8 +641,6 @@ class MidiGenerator:
         chord_midi_notes,
         chord_duration_ticks,
         midi_options,
-        chord_data,
-        ticks_per_beat,
         strum_delay_ticks,
     ):
         time_offset_for_strum_completion = 0

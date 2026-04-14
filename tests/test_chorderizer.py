@@ -79,7 +79,8 @@ def test_process_single_run_missing_scale_info():
 
     assert result is True
     ui_mock.select_tonic_and_scale.assert_called_once()
-    
+
+
 @patch("chorderizer.chorderizer.get_chord_settings")
 def test_process_single_run_missing_chord_settings(mock_get_chord_settings):
     from chorderizer.chorderizer import process_single_run

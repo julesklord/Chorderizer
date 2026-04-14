@@ -448,6 +448,55 @@ class MidiGenerator:
     def __init__(self, theory: MusicTheory):
         self.theory = theory
 
+    def _calculate_strum_delay_ticks(self, midi_options: Dict[str, Any], ticks_per_beat: int) -> int:
+        if midi_options.get("strum_delay_ms", 0) > 0:
+            strum_delay_seconds = midi_options["strum_delay_ms"] / 1000.0
+            strum_delay_beats = strum_delay_seconds * (midi_options.get("bpm", 120) / 60.0)
+            return int(strum_delay_beats * ticks_per_beat)
+        return 0
+
+    def _setup_midi_tracks(self, midi_file: MidiFile, midi_options: Dict[str, Any]) -> Tuple[MidiTrack, Optional[MidiTrack]]:
+        chord_track = MidiTrack()
+        midi_file.tracks.append(chord_track)
+        chord_track.append(MetaMessage("track_name", name="Chords Track", time=0))
+        chord_track.append(Message("program_change", program=midi_options.get("chord_instrument", 0), channel=0, time=0))
+        chord_track.append(MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0))
+
+        bass_track: Optional[MidiTrack] = None
+        if midi_options.get("add_bass_track", False):
+            bass_track = MidiTrack()
+            midi_file.tracks.append(bass_track)
+            bass_track.append(MetaMessage("track_name", name="Bass Track", time=0))
+            bass_track.append(Message("program_change", program=midi_options.get("bass_instrument", 33), channel=1, time=0))
+            bass_track.append(MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0))
+
+        return chord_track, bass_track
+
+    def _generate_bass_note(self, bass_track: MidiTrack, chord_midi_notes: List[int], chord_duration_ticks: int, midi_options: Dict[str, Any]) -> None:
+        bass_note_midi = min(chord_midi_notes)
+        while bass_note_midi > self.theory.MIDI_BASE_OCTAVE - 12:
+            bass_note_midi -= 12
+        if bass_note_midi < 21:
+            bass_note_midi += 12
+
+        bass_velocity = max(0, min(127, midi_options.get("base_velocity", 70) + 10))
+        bass_note_midi = max(0, min(127, bass_note_midi))
+
+        bass_track.append(Message("note_on", note=bass_note_midi, velocity=bass_velocity, channel=1, time=0))
+        bass_track.append(Message("note_off", note=bass_note_midi, velocity=0, channel=1, time=chord_duration_ticks))
+
+    def _save_midi_file(self, midi_file: MidiFile, output_filename: str) -> None:
+        try:
+            output_directory = os.path.dirname(output_filename)
+            if output_directory and not os.path.exists(output_directory):
+                os.makedirs(output_directory, exist_ok=True)
+                print(f"{Fore.GREEN}Directory '{output_directory}' created.{Style.RESET_ALL}")
+            midi_file.save(output_filename)
+            print(f"{Fore.GREEN}MIDI file '{output_filename}' generated successfully.{Style.RESET_ALL}")
+        except OSError as e:
+            logging.error(f"Failed to save MIDI file '{output_filename}': {e}")
+            print(f"{Fore.RED}Error saving MIDI file '{output_filename}'. Please check permissions and path validity.{Style.RESET_ALL}")
+
     def generate_midi_file(
         self,
         chords_to_process: List[Dict[str, Any]],
@@ -455,56 +504,11 @@ class MidiGenerator:
         midi_options: Dict[str, Any],
     ) -> None:
         ticks_per_beat = 480  # Standard resolution
-        strum_delay_ticks = 0
-        if midi_options.get("strum_delay_ms", 0) > 0:
-            strum_delay_seconds = midi_options["strum_delay_ms"] / 1000.0
-            strum_delay_beats = strum_delay_seconds * (
-                midi_options.get("bpm", 120) / 60.0
-            )
-            strum_delay_ticks = int(strum_delay_beats * ticks_per_beat)
+        strum_delay_ticks = self._calculate_strum_delay_ticks(midi_options, ticks_per_beat)
 
         midi_file = MidiFile(ticks_per_beat=ticks_per_beat)
+        chord_track, bass_track = self._setup_midi_tracks(midi_file, midi_options)
 
-        # Chord Track
-        chord_track = MidiTrack()
-        midi_file.tracks.append(chord_track)
-        chord_track.append(MetaMessage("track_name", name="Chords Track", time=0))
-        chord_track.append(
-            Message(
-                "program_change",
-                program=midi_options.get("chord_instrument", 0),
-                channel=0,
-                time=0,
-            )
-        )
-        chord_track.append(
-            MetaMessage(
-                "set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0
-            )
-        )
-
-        # Bass Track (optional)
-        bass_track: Optional[MidiTrack] = None
-        if midi_options.get("add_bass_track", False):
-            bass_track = MidiTrack()
-            midi_file.tracks.append(bass_track)
-            bass_track.append(MetaMessage("track_name", name="Bass Track", time=0))
-            bass_track.append(
-                Message(
-                    "program_change",
-                    program=midi_options.get("bass_instrument", 33),
-                    channel=1,
-                    time=0,
-                )
-            )
-            # Bass track also needs tempo if it's the first event-producing track for it
-            bass_track.append(
-                MetaMessage(
-                    "set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0
-                )
-            )
-
-        # Pre-calculate arpeggio individual note duration since it is constant across chords
         arp_note_indiv_duration_ticks = 0
         if "arpeggio_note_duration_beats" in midi_options:
             arp_note_indiv_duration_ticks = int(
@@ -519,7 +523,6 @@ class MidiGenerator:
             if not chord_midi_notes:
                 continue
 
-            # Apply voice leading (skip first chord — it has no predecessor)
             if use_voice_leading and prev_chord_midi is not None:
                 chord_midi_notes = VoiceLeader.apply(prev_chord_midi, chord_midi_notes)
 
@@ -528,47 +531,9 @@ class MidiGenerator:
             chord_duration_beats = chord_data["duracion_beats"]
             chord_duration_ticks = int(chord_duration_beats * ticks_per_beat)
 
-            # --- Bass Track ---
             if bass_track and midi_options.get("add_bass_track", False):
-                # Find the lowest note of the chord for the bass, then drop it to a bass register
-                bass_note_midi = min(chord_midi_notes)
-                while (
-                    bass_note_midi > self.theory.MIDI_BASE_OCTAVE - 12
-                ):  # Ensure it's below C3
-                    bass_note_midi -= 12
-                if bass_note_midi < 21:  # Ensure it's not too low (below E0)
-                    bass_note_midi += 12
+                self._generate_bass_note(bass_track, chord_midi_notes, chord_duration_ticks, midi_options)
 
-                # Slightly higher velocity for bass, or make it configurable
-                bass_velocity = max(
-                    0, min(127, midi_options.get("base_velocity", 70) + 10)
-                )
-
-                # Ensure bass note is within valid MIDI range [0, 127]
-                bass_note_midi = max(0, min(127, bass_note_midi))
-
-                # Bass note starts with the chord (time=0 relative to previous bass event)
-                bass_track.append(
-                    Message(
-                        "note_on",
-                        note=bass_note_midi,
-                        velocity=bass_velocity,
-                        channel=1,
-                        time=0,
-                    )
-                )
-                # Bass note lasts for the full duration of the chord
-                bass_track.append(
-                    Message(
-                        "note_off",
-                        note=bass_note_midi,
-                        velocity=0,
-                        channel=1,
-                        time=chord_duration_ticks,
-                    )
-                )
-
-            # --- Chord Track ---
             if midi_options.get("arpeggio_style"):
                 self._generate_arpeggio_track(
                     chord_track,
@@ -577,7 +542,7 @@ class MidiGenerator:
                     midi_options,
                     arp_note_indiv_duration_ticks,
                 )
-            else:  # Block chords (with optional strum)
+            else:
                 self._generate_block_track(
                     chord_track,
                     chord_midi_notes,
@@ -586,22 +551,7 @@ class MidiGenerator:
                     strum_delay_ticks,
                 )
 
-        try:
-            output_directory = os.path.dirname(output_filename)
-            if output_directory and not os.path.exists(output_directory):
-                os.makedirs(output_directory, exist_ok=True)
-                print(
-                    f"{Fore.GREEN}Directory '{output_directory}' created.{Style.RESET_ALL}"
-                )
-            midi_file.save(output_filename)
-            print(
-                f"{Fore.GREEN}MIDI file '{output_filename}' generated successfully.{Style.RESET_ALL}"
-            )
-        except OSError as e:
-            logging.error(f"Failed to save MIDI file '{output_filename}': {e}")
-            print(
-                f"{Fore.RED}Error saving MIDI file '{output_filename}'. Please check permissions and path validity.{Style.RESET_ALL}"
-            )
+        self._save_midi_file(midi_file, output_filename)
 
     def _generate_arpeggio_track(
         self,

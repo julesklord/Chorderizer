@@ -91,7 +91,7 @@ def process_single_run(
     tab_display_filter_key = get_tablature_filter()
 
     print(f"  {'Degree'.ljust(6)} | {'Chord'.ljust(15)} | {'Notes'.ljust(25)} | MIDI")
-    print(f"  {'-'*6}-+-{'-'*15}-+-{'-'*25}-+-{'-'*15}")
+    print(f"  {'-' * 6}-+-{'-' * 15}-+-{'-' * 25}-+-{'-' * 15}")
     for degree, chord_name_display in gen_chord_names.items():
         base_qual = gen_base_qualities.get(degree)
         color_code = Fore.GREEN
@@ -108,7 +108,10 @@ def process_single_run(
 
         note_names_str = ", ".join(gen_note_names.get(degree, []))
         midi_notes_str = str(gen_midi_notes.get(degree, []))[1:-1]
-        print(f"  {degree.ljust(6)} | {color_code}{chord_name_display.ljust(15)}{Style.RESET_ALL} | {note_names_str.ljust(25)} | {midi_notes_str}")
+        print(
+            f"  {degree.ljust(6)} | {color_code}{chord_name_display.ljust(15)}{Style.RESET_ALL} "
+            f"| {note_names_str.ljust(25)} | {midi_notes_str}"
+        )
 
         show_this_tab = False
         if tab_display_filter_key == "1":

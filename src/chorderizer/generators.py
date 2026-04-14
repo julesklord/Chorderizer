@@ -68,58 +68,14 @@ class ChordGenerator:
                 "full_quality"
             ]  # Default to full quality (e.g., 7ths)
 
-            # Adjust chord type and suffix based on selected extension level
-            if extension_level == 0:  # Triads
-                triad_map = {
-                    "major": "major",
-                    "minor": "minor",
-                    "diminished": "diminished",
-                    "augmented": "augmented",
-                }
-                chord_type_to_use = triad_map.get(base_quality, base_quality)
-                degree_display_suffix = {
-                    "major": "",
-                    "minor": "m",
-                    "diminished": "dim",
-                    "augmented": "aug",
-                }.get(base_quality, "")
-            elif (
-                extension_level == 1
-            ):  # Sixths (or default 7ths if 6th doesn't fit well)
-                if chord_type_to_use == "maj7":  # Typically Major scale I, IV
-                    chord_type_to_use = "major6"
-                    degree_display_suffix = "6"
-                elif chord_type_to_use == "min7":  # Typically Major scale ii, iii, vi
-                    chord_type_to_use = "minor6"
-                    degree_display_suffix = "m6"
-                # For other cases (e.g., V7, vii°), keep their 7th quality or base triad if 6th is odd
-            elif extension_level >= 3:  # Ninths, Elevenths, Thirteenths
-                extension_map_dict = {
-                    "dom7": {3: "dom9", 4: "dom11", 5: "dom13"},
-                    "maj7": {3: "maj9", 4: "maj11", 5: "maj13"},
-                    "min7": {3: "min9", 4: "min11", 5: "min13"},
-                }
-                suffix_map_dict = {
-                    "dom9": "9",
-                    "dom11": "11",
-                    "dom13": "13",
-                    "maj9": "maj9",
-                    "maj11": "maj11",
-                    "maj13": "maj13",
-                    "min9": "m9",
-                    "min11": "m11",
-                    "min13": "m13",
-                }
-                if (
-                    chord_type_to_use in extension_map_dict
-                    and extension_level in extension_map_dict[chord_type_to_use]
-                ):
-                    new_type = extension_map_dict[chord_type_to_use][extension_level]
-                    if new_type in self.theory.CHORD_STRUCTURES:
-                        chord_type_to_use = new_type
-                        degree_display_suffix = suffix_map_dict.get(
-                            chord_type_to_use, degree_display_suffix
-                        )
+            chord_type_to_use, degree_display_suffix = (
+                self._determine_chord_type_and_suffix(
+                    base_quality,
+                    chord_type_to_use,
+                    degree_display_suffix,
+                    extension_level,
+                )
+            )
 
             # Get intervals for the determined chord type
             chord_intervals_relative = list(
@@ -144,70 +100,14 @@ class ChordGenerator:
             # Generate MIDI notes for the chord
             current_midi_notes: List[int] = []
             unique_sorted_intervals = sorted(set(chord_intervals_relative))
-            last_added_midi_note = -1  # To ensure ascending notes in voicing
 
-            # Determine a base octave offset to keep chords roughly around C4
-            initial_octave_offset = 0
-            if unique_sorted_intervals:
-                # Estimate position of the first note if placed directly
-                first_note_in_octave_relative = (
-                    chord_root_abs_idx + unique_sorted_intervals[0]
-                ) % 12
-                tentative_first_midi_note = (
-                    self.theory.MIDI_BASE_OCTAVE + first_note_in_octave_relative
-                )
+            initial_octave_offset = self._determine_initial_octave_offset(
+                unique_sorted_intervals, chord_root_abs_idx
+            )
 
-                # If the first note is too low and it's a root/low interval, shift up
-                if (
-                    tentative_first_midi_note < self.theory.MIDI_BASE_OCTAVE - 6
-                    and unique_sorted_intervals[0] >= 0
-                ):
-                    initial_octave_offset = 12
-                # If the first note is too high for a root/low interval, shift down (less common for root)
-                elif (
-                    tentative_first_midi_note > self.theory.MIDI_BASE_OCTAVE + 6
-                    and unique_sorted_intervals[0] <= 7
-                ):  # Heuristic
-                    initial_octave_offset = -12
-
-            for rel_interval in unique_sorted_intervals:
-                interval_octave_offset = (
-                    rel_interval // 12
-                ) * 12  # Octave from interval itself (e.g., M9 is R + 14 semitones)
-                candidate_midi_note = (
-                    self.theory.MIDI_BASE_OCTAVE
-                    + initial_octave_offset
-                    + ((chord_root_abs_idx + rel_interval) % 12)
-                    + interval_octave_offset
-                )
-
-                # Ensure notes are generally ascending for a simple voicing
-                while (
-                    last_added_midi_note != -1
-                    and candidate_midi_note <= last_added_midi_note
-                ):
-                    candidate_midi_note += 12
-
-                # MIDI range adjustments (heuristic to keep notes within a playable/sensible range)
-                if candidate_midi_note > 108:
-                    candidate_midi_note -= 12  # Too high, try octave lower
-                if candidate_midi_note < 21:
-                    candidate_midi_note += 12  # Too low, try octave higher
-
-                # For wider chords, try to keep upper notes from going excessively high if a lower octave is available
-                if (
-                    len(unique_sorted_intervals) > 4
-                    and candidate_midi_note
-                    > self.theory.MIDI_BASE_OCTAVE + 24 + initial_octave_offset
-                ):  # Roughly 2 octaves above C4
-                    if (
-                        candidate_midi_note - 12
-                    ) > last_added_midi_note or last_added_midi_note == -1:
-                        candidate_midi_note -= 12
-
-                if 0 <= candidate_midi_note <= 127:  # Valid MIDI note
-                    current_midi_notes.append(candidate_midi_note)
-                    last_added_midi_note = candidate_midi_note
+            current_midi_notes = self._generate_midi_notes_for_chord(
+                unique_sorted_intervals, chord_root_abs_idx, initial_octave_offset
+            )
 
             current_midi_notes = sorted(
                 set(current_midi_notes)
@@ -230,6 +130,141 @@ class ChordGenerator:
         self._chord_cache[cache_key] = result
         # Return a deep copy to prevent callers from mutating the shared cache
         return copy.deepcopy(result)
+
+    def _determine_chord_type_and_suffix(
+        self,
+        base_quality: str,
+        chord_type_to_use: str,
+        degree_display_suffix: str,
+        extension_level: int,
+    ) -> Tuple[str, str]:
+        if extension_level == 0:  # Triads
+            triad_map = {
+                "major": "major",
+                "minor": "minor",
+                "diminished": "diminished",
+                "augmented": "augmented",
+            }
+            chord_type_to_use = triad_map.get(base_quality, base_quality)
+            degree_display_suffix = {
+                "major": "",
+                "minor": "m",
+                "diminished": "dim",
+                "augmented": "aug",
+            }.get(base_quality, "")
+        elif extension_level == 1:  # Sixths (or default 7ths if 6th doesn't fit well)
+            if chord_type_to_use == "maj7":  # Typically Major scale I, IV
+                chord_type_to_use = "major6"
+                degree_display_suffix = "6"
+            elif chord_type_to_use == "min7":  # Typically Major scale ii, iii, vi
+                chord_type_to_use = "minor6"
+                degree_display_suffix = "m6"
+            # For other cases (e.g., V7, vii°), keep their 7th quality or base triad if 6th is odd
+        elif extension_level >= 3:  # Ninths, Elevenths, Thirteenths
+            extension_map_dict = {
+                "dom7": {3: "dom9", 4: "dom11", 5: "dom13"},
+                "maj7": {3: "maj9", 4: "maj11", 5: "maj13"},
+                "min7": {3: "min9", 4: "min11", 5: "min13"},
+            }
+            suffix_map_dict = {
+                "dom9": "9",
+                "dom11": "11",
+                "dom13": "13",
+                "maj9": "maj9",
+                "maj11": "maj11",
+                "maj13": "maj13",
+                "min9": "m9",
+                "min11": "m11",
+                "min13": "m13",
+            }
+            if (
+                chord_type_to_use in extension_map_dict
+                and extension_level in extension_map_dict[chord_type_to_use]
+            ):
+                new_type = extension_map_dict[chord_type_to_use][extension_level]
+                if new_type in self.theory.CHORD_STRUCTURES:
+                    chord_type_to_use = new_type
+                    degree_display_suffix = suffix_map_dict.get(
+                        chord_type_to_use, degree_display_suffix
+                    )
+        return chord_type_to_use, degree_display_suffix
+
+    def _generate_midi_notes_for_chord(
+        self,
+        unique_sorted_intervals: List[int],
+        chord_root_abs_idx: int,
+        initial_octave_offset: int,
+    ) -> List[int]:
+        current_midi_notes: List[int] = []
+        last_added_midi_note = -1
+
+        for rel_interval in unique_sorted_intervals:
+            interval_octave_offset = (
+                rel_interval // 12
+            ) * 12  # Octave from interval itself (e.g., M9 is R + 14 semitones)
+            candidate_midi_note = (
+                self.theory.MIDI_BASE_OCTAVE
+                + initial_octave_offset
+                + ((chord_root_abs_idx + rel_interval) % 12)
+                + interval_octave_offset
+            )
+
+            # Ensure notes are generally ascending for a simple voicing
+            while (
+                last_added_midi_note != -1
+                and candidate_midi_note <= last_added_midi_note
+            ):
+                candidate_midi_note += 12
+
+            # MIDI range adjustments (heuristic to keep notes within a playable/sensible range)
+            if candidate_midi_note > 108:
+                candidate_midi_note -= 12  # Too high, try octave lower
+            if candidate_midi_note < 21:
+                candidate_midi_note += 12  # Too low, try octave higher
+
+            # For wider chords, try to keep upper notes from going excessively high if a lower octave is available
+            if (
+                len(unique_sorted_intervals) > 4
+                and candidate_midi_note
+                > self.theory.MIDI_BASE_OCTAVE + 24 + initial_octave_offset
+            ):  # Roughly 2 octaves above C4
+                if (
+                    candidate_midi_note - 12
+                ) > last_added_midi_note or last_added_midi_note == -1:
+                    candidate_midi_note -= 12
+
+            if 0 <= candidate_midi_note <= 127:  # Valid MIDI note
+                current_midi_notes.append(candidate_midi_note)
+                last_added_midi_note = candidate_midi_note
+
+        return current_midi_notes
+
+    def _determine_initial_octave_offset(
+        self, unique_sorted_intervals: List[int], chord_root_abs_idx: int
+    ) -> int:
+        initial_octave_offset = 0
+        if unique_sorted_intervals:
+            # Estimate position of the first note if placed directly
+            first_note_in_octave_relative = (
+                chord_root_abs_idx + unique_sorted_intervals[0]
+            ) % 12
+            tentative_first_midi_note = (
+                self.theory.MIDI_BASE_OCTAVE + first_note_in_octave_relative
+            )
+
+            # If the first note is too low and it's a root/low interval, shift up
+            if (
+                tentative_first_midi_note < self.theory.MIDI_BASE_OCTAVE - 6
+                and unique_sorted_intervals[0] >= 0
+            ):
+                initial_octave_offset = 12
+            # If the first note is too high for a root/low interval, shift down (less common for root)
+            elif (
+                tentative_first_midi_note > self.theory.MIDI_BASE_OCTAVE + 6
+                and unique_sorted_intervals[0] <= 7
+            ):  # Heuristic
+                initial_octave_offset = -12
+        return initial_octave_offset
 
     def _apply_inversion(
         self, chord_intervals_relative: List[int], inversion: int

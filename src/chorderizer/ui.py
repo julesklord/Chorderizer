@@ -181,6 +181,9 @@ class UIManager:
                 )
             if options["bpm"] <= 0:
                 options["bpm"] = 120  # Fallback
+        except (EOFError, KeyboardInterrupt):
+            print_operation_cancelled()
+            sys.exit(0)
         except ValueError:
             print(f"{Fore.RED}Invalid BPM, using {options['bpm']}.{Style.RESET_ALL}")
 
@@ -191,6 +194,9 @@ class UIManager:
             if vel_in:
                 options["base_velocity"] = int(vel_in)
             options["base_velocity"] = max(0, min(127, options["base_velocity"]))
+        except (EOFError, KeyboardInterrupt):
+            print_operation_cancelled()
+            sys.exit(0)
         except ValueError:
             print(
                 f"{Fore.RED}Invalid velocity, using {options['base_velocity']}.{Style.RESET_ALL}"
@@ -204,6 +210,9 @@ class UIManager:
                 options["velocity_randomization_range"] = max(
                     0, min(20, options["velocity_randomization_range"])
                 )
+            except (EOFError, KeyboardInterrupt):
+                print_operation_cancelled()
+                sys.exit(0)
             except ValueError:
                 print(f"{Fore.RED}Invalid range, using 0.{Style.RESET_ALL}")
 
@@ -234,6 +243,9 @@ class UIManager:
                         options["arpeggio_note_duration_beats"] = float(arp_dur_in)
                     if options["arpeggio_note_duration_beats"] <= 0:
                         options["arpeggio_note_duration_beats"] = 0.25
+                except (EOFError, KeyboardInterrupt):
+                    print_operation_cancelled()
+                    sys.exit(0)
                 except ValueError:
                     print(
                         f"{Fore.RED}Invalid arpeggio note duration, using {options['arpeggio_note_duration_beats']}.{Style.RESET_ALL}"
@@ -251,6 +263,9 @@ class UIManager:
                 options["strum_delay_ms"] = max(
                     0, min(100, options["strum_delay_ms"])
                 )  # Cap delay
+            except (EOFError, KeyboardInterrupt):
+                print_operation_cancelled()
+                sys.exit(0)
             except ValueError:
                 print(f"{Fore.RED}Invalid strum delay, using 0.{Style.RESET_ALL}")
 

@@ -2,6 +2,7 @@ import os
 import random
 from typing import List, Dict, Tuple, Optional, Any
 import colorama
+import sys
 from colorama import Fore, Style
 
 # Imports from new modules
@@ -137,14 +138,18 @@ def process_single_run(
     if get_yes_no_answer(
         "Define a chord progression for MIDI? (If no, all diatonic chords will be used sequentially)"
     ):
-        progression_input_str = (
-            input(
-                "Enter progression (degrees separated by '-', e.g., I-V-vi-IV). "
-                "Optional duration in beats (e.g., I:4-V:2-vi:2-IV:4 ): "
+        try:
+            progression_input_str = (
+                input(
+                    "Enter progression (degrees separated by '-', e.g., I-V-vi-IV). "
+                    "Optional duration in beats (e.g., I:4-V:2-vi:2-IV:4 ): "
+                )
+                .strip()
+                .upper()
             )
-            .strip()
-            .upper()
-        )
+        except (EOFError, KeyboardInterrupt):
+            print_operation_cancelled()
+            sys.exit(0)
         progression_items = progression_input_str.split("-")
         for item_str in progression_items:
             item_str = item_str.strip()
@@ -198,9 +203,13 @@ def process_single_run(
         selected_scale_tonic, selected_scale_info, midi_export_default_dir
     )
 
-    output_midi_filename = input(
-        f"Enter MIDI filename [default: {suggested_midi_path}]: "
-    ).strip()
+    try:
+        output_midi_filename = input(
+            f"Enter MIDI filename [default: {suggested_midi_path}]: "
+        ).strip()
+    except (EOFError, KeyboardInterrupt):
+        print_operation_cancelled()
+        sys.exit(0)
     if not output_midi_filename:
         output_midi_filename = suggested_midi_path
     else:
@@ -264,9 +273,13 @@ def process_single_run(
                                 midi_export_default_dir,
                                 prefix="prog_TRANSP_",
                             )
-                            trans_midi_fname_out = input(
-                                f"Enter transposed MIDI filename [default: {sugg_trans_path}]: "
-                            ).strip()
+                            try:
+                                trans_midi_fname_out = input(
+                                    f"Enter transposed MIDI filename [default: {sugg_trans_path}]: "
+                                ).strip()
+                            except (EOFError, KeyboardInterrupt):
+                                print_operation_cancelled()
+                                sys.exit(0)
                             if not trans_midi_fname_out:
                                 trans_midi_fname_out = sugg_trans_path
                             else:

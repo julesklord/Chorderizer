@@ -1,7 +1,9 @@
 import sys
-from typing import Optional, Tuple, Dict, Any, Union
+from typing import Any, Dict, Optional, Tuple, Union
+
 import colorama
 from colorama import Fore, Style
+
 from .theory_utils import MusicTheory
 
 

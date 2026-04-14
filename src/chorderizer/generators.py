@@ -4,10 +4,10 @@ import os
 import random
 from typing import Any, Dict, List, Optional, Tuple
 
+from colorama import Fore, Style
 from mido import Message, MetaMessage, MidiFile, MidiTrack, bpm2tempo
 
 from .theory_utils import MusicTheory, MusicTheoryUtils
-from colorama import Fore, Style
 
 
 # -----------------------------------------------------------------------------
@@ -46,8 +46,9 @@ class ChordGenerator:
         try:
             scale_tonic_index = MusicTheoryUtils.get_note_index(scale_tonic_str)
         except ValueError as e:
+            logging.error(f"Invalid scale tonic '{scale_tonic_str}': {e}")
             print(
-                f"{Fore.RED}Error: Invalid scale tonic '{scale_tonic_str}': {e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Invalid scale tonic '{scale_tonic_str}'. Please provide a valid tonic.{Style.RESET_ALL}"
             )
             return {}, {}, {}, {}
 

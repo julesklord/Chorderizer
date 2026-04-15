@@ -51,14 +51,18 @@ def get_numbered_option(
     print(f"\n{Fore.CYAN}{prompt}{Style.RESET_ALL}")
     display_options = {str(k): v for k, v in options.items()}
 
+    max_key_len = max(len(str(k)) for k in display_options.keys()) if display_options else 1
+    if allow_cancel:
+        max_key_len = max(max_key_len, len(cancel_key))
+
     for key_str, value in display_options.items():
         display_name = (
             value.get("name", value) if isinstance(value, dict) else str(value)
         )
-        print(f"  {key_str}. {display_name}")
+        print(f"  {key_str.rjust(max_key_len)}. {display_name}")
 
     if allow_cancel:
-        print(f"  {cancel_key}. {Fore.RED}Cancel / Back{Style.RESET_ALL}")
+        print(f"  {cancel_key.rjust(max_key_len)}. {Fore.RED}Cancel / Back{Style.RESET_ALL}")
 
     while True:
         try:

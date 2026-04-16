@@ -60,20 +60,20 @@ class ManualScreen(ModalScreen):
 
     def compose(self) -> ComposeResult:
         with Container(id="manual-container"):
-            yield Label("CHORDERIZER PRO — MANUAL DE OPERACIÓN", classes="manual-title")
+            yield Label("CHORDERIZER PRO — OPERATIONS MANUAL", classes="manual-title")
             yield Static(
-                "[bold cyan]VISUALIZADORES[/bold cyan]\n"
-                "• [bold green]PIANO:[/bold green] Teclado de 2 octavas. Notas activas en cyan.\n"
-                "• [bold yellow]FRETBOARD:[/bold yellow] Diapasón de 12 trastes.\n"
-                "  - [yellow]●[/yellow] : Tónica de la escala.\n"
-                "  - [bright_cyan]●[/bright_cyan] : Posición del acorde seleccionado.\n\n"
-                "[bold cyan]ATAJOS DE CEREBRO[/bold cyan]\n"
-                "• [white][A][/white] Añadir acorde a la progresión (Sidebar derecha).\n"
-                "• [white][X][/white] Limpiar lista de progresiones.\n"
-                "• [white][E][/white] Exportar composición actual a MIDI.\n"
-                "• [white][H][/white] o [white][F1][/white] Ver este manual.\n"
-                "• [white][Q][/white] Salir de la aplicación.\n\n"
-                "[dim italic]Presiona cualquier tecla o Esc para volver al dashboard...[/]",
+                "[bold cyan]VISUALIZERS[/bold cyan]\n"
+                "• [bold green]PIANO:[/bold green] 2-octave keyboard. Active notes in cyan.\n"
+                "• [bold yellow]FRETBOARD:[/bold yellow] 12-fret guitar neck.\n"
+                "  - [yellow]●[/yellow] : Scale tonic.\n"
+                "  - [bright_cyan]●[/bright_cyan] : Selected chord position.\n\n"
+                "[bold cyan]CORE SHORTCUTS[/bold cyan]\n"
+                "• [white][A][/white] Add chord to progression (Right Sidebar).\n"
+                "• [white][X][/white] Clear progression list.\n"
+                "• [white][E][/white] Export current composition to MIDI.\n"
+                "• [white][H][/white] or [white][F1][/white] View this manual.\n"
+                "• [white][Q][/white] Quit application.\n\n"
+                "[dim italic]Press any key or Esc to return to dashboard...[/]",
                 markup=True,
             )
 
@@ -177,25 +177,25 @@ class ChorderizerApp(App):
         yield Header()
         with Horizontal():
             with Vertical(id="sidebar"):
-                yield Label("TÓNICA", classes="config-label")
+                yield Label("TONIC", classes="config-label")
                 yield Select(
                     [(n, n) for n in self.theory.CHROMATIC_NOTES], id="tonic-select", value="C"
                 )
-                yield Label("ESCALA", classes="config-label")
+                yield Label("SCALE", classes="config-label")
                 yield Select(
                     [(v["name"], k) for k, v in self.theory.AVAILABLE_SCALES.items()],
                     id="scale-select",
                     value="1",
                 )
-                yield Label("EXTENSIONES", classes="config-label")
+                yield Label("EXTENSIONS", classes="config-label")
                 with RadioSet(id="extension-set"):
-                    yield RadioButton("Tríadas", value=True)
+                    yield RadioButton("Triads", value=True)
                     yield RadioButton("6ths")
                     yield RadioButton("7ths")
                     yield RadioButton("9ths")
                     yield RadioButton("11ths")
                     yield RadioButton("13ths")
-                yield Label("INVERSIÓN", classes="config-label")
+                yield Label("INVERSION", classes="config-label")
                 with RadioSet(id="inversion-set"):
                     yield RadioButton("Root", value=True)
                     yield RadioButton("1st")
@@ -231,10 +231,10 @@ class ChorderizerApp(App):
     def on_mount(self) -> None:
         self.install_screen(ManualScreen(), name="manual")
         table = self.query_one("#chord-table", DataTable)
-        table.add_columns("Grado", "Nombre", "MIDI")
+        table.add_columns("Degree", "Name", "MIDI")
         table.cursor_type = "row"
         self.log_status(
-            "[bold green]Estación iniciada.[/bold green] Carga escalas y tónicas.", "WELCOME"
+            "[bold green]Station initialized.[/bold green] Load scales and tonics.", "WELCOME"
         )
         self.update_chords()
 
@@ -259,10 +259,10 @@ class ChorderizerApp(App):
             tabs = self.tab_gen.generate_simple_tab(name, midi_notes)
             self.query_one("#guitar-tab", GuitarTabWidget).update_tab(name, tabs)
             self.selected_row_data = {
-                "grado": degree,
-                "nombre": name,
-                "notas_midi": midi_notes,
-                "duracion_beats": 4.0,
+                "degree": degree,
+                "name": name,
+                "midi_notes": midi_notes,
+                "duration_beats": 4.0,
             }
 
     def action_add_to_progression(self) -> None:
@@ -271,19 +271,19 @@ class ChorderizerApp(App):
                 self.selected_row_data
             )
             self.log_status(
-                f"Acorde [bold cyan]{self.selected_row_data['nombre']}[/] añadido.", "COMPOSER"
+                f"Chord [bold cyan]{self.selected_row_data['name']}[/] added.", "COMPOSER"
             )
 
     def action_clear_progression(self) -> None:
         self.query_one("#progression-sidebar", ProgressionPanel).clear_prog()
-        self.log_status("Lista de progresión reiniciada.", "COMPOSER")
+        self.log_status("Progression list reset.", "COMPOSER")
 
     def action_export_midi(self) -> None:
         prog_panel = self.query_one("#progression-sidebar", ProgressionPanel)
         prog_data = prog_panel.get_progression_data()
         if not prog_data:
             prog_data = [
-                {"grado": d, "nombre": n, "notas_midi": self.current_midi[d], "duracion_beats": 4.0}
+                {"degree": d, "name": n, "midi_notes": self.current_midi[d], "duration_beats": 4.0}
                 for d, n in self.current_chords.items()
             ]
 
@@ -308,10 +308,10 @@ class ChorderizerApp(App):
         filename_clean = escape(os.path.basename(filename))
         export_dir_clean = escape(export_dir)
         self.log_status(
-            f"Exportado: [bold green]{filename_clean}[/]\nRuta: [dim]{export_dir_clean}[/]",
+            f"Exported: [bold green]{filename_clean}[/]\nPath: [dim]{export_dir_clean}[/]",
             "MIDI EXPORT",
         )
-        self.notify("MIDI Exportado")
+        self.notify("MIDI Exported")
 
     def update_chords(self) -> None:
         t_sel = self.query_one("#tonic-select", Select)
@@ -339,7 +339,7 @@ class ChorderizerApp(App):
             for deg, name in self.current_chords.items():
                 table.add_row(deg, name, str(self.current_midi[deg]), key=deg)
             self.log_status(
-                f"Escala [bold cyan]{t_sel.value} {scale_info['name']}[/] cargada.", "THEORY"
+                f"Scale [bold cyan]{t_sel.value} {scale_info['name']}[/] loaded.", "THEORY"
             )
         except Exception as e:
             self.log_status(f"[red]Error: {e}[/red]", "THEORY ERROR")

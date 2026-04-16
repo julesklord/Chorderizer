@@ -158,7 +158,7 @@ class ProgressionItem(ListItem):
         self.chord_data = chord_data
 
     def compose(self) -> ComposeResult:
-        yield Label(f" {self.chord_data['nombre']} [dim]({self.chord_data['grado']})[/]")
+        yield Label(f" {self.chord_data['name']} [dim]({self.chord_data['degree']})[/]")
 
 
 class ProgressionPanel(Static):
@@ -189,7 +189,7 @@ class ProgressionPanel(Static):
     """
 
     def compose(self) -> ComposeResult:
-        yield Label("PROGRESIÓN", classes="prog-header")
+        yield Label("PROGRESSION", classes="prog-header")
         yield ListView(id="prog-list")
         yield Label(" [bold][A][/bold] Add  [bold][X][/bold] Clear", id="prog-help")
 

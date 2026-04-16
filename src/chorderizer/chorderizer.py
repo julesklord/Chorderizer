@@ -177,10 +177,10 @@ def _phase4_midi_export(
                 if degree in chord_names:
                     chords_for_midi.append(
                         {
-                            "grado": degree,
-                            "nombre": chord_names[degree],
-                            "notas_midi": midi_notes[degree],
-                            "duracion_beats": beats,
+                            "degree": degree,
+                            "name": chord_names[degree],
+                            "midi_notes": midi_notes[degree],
+                            "duration_beats": beats,
                         }
                     )
                 else:
@@ -191,10 +191,10 @@ def _phase4_midi_export(
             if deg in chord_names:
                 chords_for_midi.append(
                     {
-                        "grado": deg,
-                        "nombre": chord_names[deg],
-                        "notas_midi": midi_notes[deg],
-                        "duracion_beats": 2.0,
+                        "degree": deg,
+                        "name": chord_names[deg],
+                        "midi_notes": midi_notes[deg],
+                        "duration_beats": 2.0,
                     }
                 )
 
@@ -242,13 +242,13 @@ def _phase4_midi_export(
                 if trans_chord_data:
                     trans_list = [
                         {
-                            "grado": item["grado"],
-                            "nombre": trans_chord_data[item["grado"]],
-                            "notas_midi": trans_midi[item["grado"]],
-                            "duracion_beats": item["duracion_beats"],
+                            "degree": item["degree"],
+                            "name": trans_chord_data[item["degree"]],
+                            "midi_notes": trans_midi[item["degree"]],
+                            "duration_beats": item["duration_beats"],
                         }
                         for item in chords_for_midi
-                        if item["grado"] in trans_chord_data
+                        if item["degree"] in trans_chord_data
                     ]
                     if trans_list:
                         sugg_trans = _midi_filename(

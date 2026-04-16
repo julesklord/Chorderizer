@@ -1,0 +1,266 @@
+{
+  "1": {
+    "name": "Major",
+    "tonic_suffix": "",
+    "degrees": {
+      "I": {
+        "root_interval": 0,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "ii": {
+        "root_interval": 2,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "iii": {
+        "root_interval": 4,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "IV": {
+        "root_interval": 5,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "V": {
+        "root_interval": 7,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      },
+      "vi": {
+        "root_interval": 9,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "vii°": {
+        "root_interval": 11,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      }
+    }
+  },
+  "2": {
+    "name": "Natural Minor",
+    "tonic_suffix": "m",
+    "degrees": {
+      "i": {
+        "root_interval": 0,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "ii°": {
+        "root_interval": 2,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      },
+      "III": {
+        "root_interval": 3,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "iv": {
+        "root_interval": 5,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "v": {
+        "root_interval": 7,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "VI": {
+        "root_interval": 8,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "VII": {
+        "root_interval": 10,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      }
+    }
+  },
+  "3": {
+    "name": "Harmonic Minor",
+    "tonic_suffix": "m",
+    "degrees": {
+      "i": {
+        "root_interval": 0,
+        "base_quality": "minor",
+        "full_quality": "minMaj7",
+        "display_suffix": "m(maj7)"
+      },
+      "ii°": {
+        "root_interval": 2,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      },
+      "III+": {
+        "root_interval": 3,
+        "base_quality": "augmented",
+        "full_quality": "augMaj7",
+        "display_suffix": "aug(maj7)"
+      },
+      "iv": {
+        "root_interval": 5,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "V": {
+        "root_interval": 7,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      },
+      "VI": {
+        "root_interval": 8,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "vii°7": {
+        "root_interval": 11,
+        "base_quality": "diminished",
+        "full_quality": "dim7",
+        "display_suffix": "dim7"
+      }
+    }
+  },
+  "4": {
+    "name": "Melodic Minor (Asc)",
+    "tonic_suffix": "m",
+    "degrees": {
+      "i": {
+        "root_interval": 0,
+        "base_quality": "minor",
+        "full_quality": "minMaj7",
+        "display_suffix": "m(maj7)"
+      },
+      "ii": {
+        "root_interval": 2,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "III+": {
+        "root_interval": 3,
+        "base_quality": "augmented",
+        "full_quality": "augMaj7",
+        "display_suffix": "aug(maj7)"
+      },
+      "IV": {
+        "root_interval": 5,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      },
+      "V": {
+        "root_interval": 7,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      },
+      "vi°": {
+        "root_interval": 9,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      },
+      "vii°": {
+        "root_interval": 11,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      }
+    }
+  },
+  "5": {
+    "name": "Major Pentatonic",
+    "tonic_suffix": "",
+    "degrees": {
+      "I": {
+        "root_interval": 0,
+        "base_quality": "major",
+        "full_quality": "major",
+        "display_suffix": ""
+      },
+      "ii_p": {
+        "root_interval": 2,
+        "base_quality": "minor",
+        "full_quality": "minor",
+        "display_suffix": "m"
+      },
+      "iii_p": {
+        "root_interval": 4,
+        "base_quality": "minor",
+        "full_quality": "minor",
+        "display_suffix": "m"
+      },
+      "V_p": {
+        "root_interval": 7,
+        "base_quality": "major",
+        "full_quality": "major",
+        "display_suffix": ""
+      },
+      "vi_p": {
+        "root_interval": 9,
+        "base_quality": "minor",
+        "full_quality": "minor",
+        "display_suffix": "m"
+      }
+    }
+  },
+  "6": {
+    "name": "Minor Pentatonic",
+    "tonic_suffix": "m",
+    "degrees": {
+      "i_p": {
+        "root_interval": 0,
+        "base_quality": "minor",
+        "full_quality": "minor",
+        "display_suffix": "m"
+      },
+      "III_p": {
+        "root_interval": 3,
+        "base_quality": "major",
+        "full_quality": "major",
+        "display_suffix": ""
+      },
+      "iv_p": {
+        "root_interval": 5,
+        "base_quality": "minor",
+        "full_quality": "minor",
+        "display_suffix": "m"
+      },
+      "v_p": {
+        "root_interval": 7,
+        "base_quality": "minor",
+        "full_quality": "minor",
+        "display_suffix": "m"
+      },
+      "VII_p": {
+        "root_interval": 10,
+        "base_quality": "major",
+        "full_quality": "major",
+        "display_suffix": ""
+      }
+    }
+  }
+}

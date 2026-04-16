@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chorderizer"
-version = "1.2.0"
+version = "0.2.0"
 authors = [
   { name="Julio César Martinez", email="julioglez.93@gmail.com" },
 ]
-description = "Un generador avanzado de progresiones de acordes MIDI basado en teoría musical."
+description = "Generador avanzado de progresiones de acordes MIDI con Dashboard TUI reactivo y visualizadores."
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: End Users/Desktop",
@@ -30,6 +30,18 @@ classifiers = [
 dependencies = [
     "mido>=1.3.3",
     "colorama>=0.4.6",
+    "prompt_toolkit>=3.0.0",
+    "textual>=0.86.0",
+    "rich>=13.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
 ]
 
 [project.urls]
@@ -42,3 +54,6 @@ chorderizer = "chorderizer.chorderizer:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["chorderizer*"]
+
+[tool.setuptools.package-data]
+chorderizer = ["data/*.json"]

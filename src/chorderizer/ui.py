@@ -1,328 +1,661 @@
-import sys
-from typing import Any, Dict, Optional, Tuple, Union
+"""
+ui.py — Premium TUI for Chorderizer
+====================================
+A lightweight, responsive terminal UI built on prompt_toolkit.
+Provides clean visual design, inline validation, and a streamlined
+4-phase workflow.
+"""
 
-import colorama
-from colorama import Fore, Style
+import shutil
+import sys
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.shortcuts import print_formatted_text, clear
+from prompt_toolkit.styles import Style
+from prompt_toolkit.validation import ValidationError, Validator
 
 from .theory_utils import MusicTheory
 
+# ─── App Metadata ─────────────────────────────────────────────────────────────
+VERSION = "1.2.0"
 
-# -----------------------------------------------------------------------------
-# UI Helper Functions
-# -----------------------------------------------------------------------------
-def print_welcome_message() -> None:
-    print(f"{Fore.GREEN}Welcome to the Advanced Chord Generator!{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW}Modularized Version 1.2.0{Style.RESET_ALL}")
+# ─── Color Palette ────────────────────────────────────────────────────────────
+STYLE = Style.from_dict(
+    {
+        # Brand
+        "banner": "#b57bee bold",
+        "banner-sub": "#888888",
+        "version": "#ffaf00",
+        # Sections
+        "section": "#5fd7ff bold",
+        "rule": "#333333",
+        # Menu items
+        "key": "#ffaf00 bold",
+        "value": "#d7d7d7",
+        "hint": "#666666 italic",
+        "cancel": "#ff5f5f",
+        # Chord quality colours
+        "major": "#5fd787 bold",
+        "minor": "#87afff bold",
+        "diminished": "#d787ff bold",
+        "augmented": "#ffd75f bold",
+        # Feedback
+        "success": "#5fd787 bold",
+        "error": "#ff5f5f bold",
+        "warn": "#ffd75f bold",
+        # Table
+        "th": "#5fd7ff bold",
+        "border": "#444444",
+        "degree": "#888888",
+        "midi-val": "#666666",
+        # Prompt arrow
+        "arrow": "#b57bee bold",
+    }
+)
+
+# ─── Box Drawing ──────────────────────────────────────────────────────────────
+# Heavy (banner)
+H = {
+    "tl": "╔",
+    "tr": "╗",
+    "bl": "╚",
+    "br": "╝",
+    "h": "═",
+    "v": "║",
+    "ml": "╠",
+    "mr": "╣",
+    "mt": "╦",
+    "mb": "╩",
+    "x": "╬",
+}
+# Light (tables)
+L = {
+    "tl": "┌",
+    "tr": "┐",
+    "bl": "└",
+    "br": "┘",
+    "h": "─",
+    "v": "│",
+    "ml": "├",
+    "mr": "┤",
+    "mt": "┬",
+    "mb": "┴",
+    "x": "┼",
+}
+
+# ─── Helpers ──────────────────────────────────────────────────────────────────
 
 
-def print_operation_cancelled() -> None:
-    print(f"\n{Fore.RED}Operation cancelled by the user.{Style.RESET_ALL}")
+def _width() -> int:
+    """Returns the current terminal width, capped at 120."""
+    return min(shutil.get_terminal_size((80, 24)).columns, 120)
 
 
-def get_yes_no_answer(prompt: str) -> bool:
-    while True:
-        try:
-            response = (
-                input(f"{Fore.CYAN}{prompt} [y/N]: {Style.RESET_ALL}").strip().lower()
+def _pp(html: str) -> None:
+    """Print styled HTML text via prompt_toolkit."""
+    print_formatted_text(HTML(html), style=STYLE)
+
+
+def _raw(text: str) -> None:
+    """Print plain text (no markup)."""
+    print(text)
+
+
+def _escape(text: str) -> str:
+    """Escape HTML special chars so they print literally inside _pp()."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+# ─── Layout Components ────────────────────────────────────────────────────────
+
+
+def render_banner() -> None:
+    """Render the Chorderizer application banner."""
+    clear()
+    w = min(_width(), 62)
+    inner = w - 2
+    title = "♩  C H O R D E R I Z E R  ♩"
+    sub = f"Advanced Chord Generator  ·  v{VERSION}"
+
+    _pp(f"<banner>{H['tl']}{H['h'] * inner}{H['tr']}</banner>")
+    _pp(
+        f"<banner>{H['v']}</banner>"
+        f"<banner>{title.center(inner)}</banner>"
+        f"<banner>{H['v']}</banner>"
+    )
+    _pp(
+        f"<banner>{H['v']}</banner>"
+        f"<banner-sub>{sub.center(inner)}</banner-sub>"
+        f"<banner>{H['v']}</banner>"
+    )
+    _pp(f"<banner>{H['bl']}{H['h'] * inner}{H['br']}</banner>")
+    _raw("")
+
+
+def render_section(title: str) -> None:
+    """Render a labelled section separator."""
+    w = _width()
+    _raw("")
+    _pp(f"<section>  ◆  {title}</section>")
+    _pp(f"<rule>  {'─' * (w - 4)}</rule>")
+
+
+def render_success(msg: str) -> None:
+    _pp(f"<success>  ✓  {_escape(msg)}</success>")
+
+
+def render_error(msg: str) -> None:
+    _pp(f"<error>  ✗  {_escape(msg)}</error>")
+
+
+def render_warn(msg: str) -> None:
+    _pp(f"<warn>  ⚠  {_escape(msg)}</warn>")
+
+
+def render_cancelled() -> None:
+    _pp(f"\n<warn>  ⊘  Operation cancelled.</warn>")
+
+
+# ─── Chord Table ──────────────────────────────────────────────────────────────
+
+
+def render_chord_table(
+    chord_names: Dict[str, str],
+    note_names: Dict[str, List[str]],
+    midi_notes: Dict[str, List[int]],
+    base_qualities: Dict[str, str],
+    tonic: str,
+    scale_name: str,
+) -> None:
+    """Render a premium chord table with box-drawing borders."""
+    w = _width()
+
+    # Determine column widths dynamically
+    col_deg = max(8, max((len(d) for d in chord_names), default=4) + 2)
+    col_chord = max(18, max((len(n) for n in chord_names.values()), default=6) + 4)
+    col_notes = max(24, min(30, w - col_deg - col_chord - 20))
+    col_midi = max(14, w - col_deg - col_chord - col_notes - 4)
+
+    def hline(left, mid, right, bold="h"):
+        seg = L[bold]
+        return (
+            f"{left}{seg * col_deg}"
+            f"{mid}{seg * col_chord}"
+            f"{mid}{seg * col_notes}"
+            f"{mid}{seg * col_midi}{right}"
+        )
+
+    def cell(deg, chord, notes, midi_v):
+        return (
+            f"<border>{L['v']}</border>"
+            f"{deg.center(col_deg)}"
+            f"<border>{L['v']}</border>"
+            f"{chord:<{col_chord}}"
+            f"<border>{L['v']}</border>"
+            f"{notes:<{col_notes}}"
+            f"<border>{L['v']}</border>"
+            f"{midi_v:<{col_midi}}"
+            f"<border>{L['v']}</border>"
+        )
+
+    _raw("")
+    _pp(f"  <section>{_escape(tonic)} — {_escape(scale_name)}</section>")
+    _raw("")
+    _pp(f"<border>  {hline(L['tl'], L['mt'], L['tr'])}</border>")
+    _pp(
+        f"  "
+        + cell(
+            f"<th>{'Degree'.center(col_deg)}</th>",
+            f"<th>{'Chord':<{col_chord}}</th>",
+            f"<th>{'Notes':<{col_notes}}</th>",
+            f"<th>{'MIDI':<{col_midi}}</th>",
+        )
+    )
+    _pp(f"<border>  {hline(L['ml'], L['x'], L['mr'])}</border>")
+
+    QUALITY_TAG = {
+        "major": "major",
+        "minor": "minor",
+        "diminished": "diminished",
+        "augmented": "augmented",
+    }
+
+    for degree, chord_name in chord_names.items():
+        qual = base_qualities.get(degree, "major")
+        tag = QUALITY_TAG.get(qual, "value")
+        notes_str = ", ".join(note_names.get(degree, []))
+        midi_str = ", ".join(str(n) for n in midi_notes.get(degree, []))
+
+        # Truncate long strings to fit column
+        notes_str = (
+            (notes_str[: col_notes - 2] + "…")
+            if len(notes_str) > col_notes
+            else notes_str
+        )
+        midi_str = (
+            (midi_str[: col_midi - 2] + "…") if len(midi_str) > col_midi else midi_str
+        )
+
+        _pp(
+            f"  "
+            + cell(
+                f"<degree>{_escape(degree).center(col_deg)}</degree>",
+                f"<{tag}>{_escape(chord_name):<{col_chord}}</{tag}>",
+                f"<value>{_escape(notes_str):<{col_notes}}</value>",
+                f"<midi-val>{_escape(midi_str):<{col_midi}}</midi-val>",
             )
-            if not response:
-                return False
-            if response in ["yes", "y", "si", "s"]:
-                return True
-            if response in ["no", "n"]:
-                return False
-            print(
-                f"{Fore.RED}Invalid response. Please enter 'y' or 'n'.{Style.RESET_ALL}"
-            )
-        except EOFError:
-            print_operation_cancelled()
-            sys.exit(0)
-        except KeyboardInterrupt:
-            print_operation_cancelled()
-            sys.exit(130)
+        )
+
+    _pp(f"<border>  {hline(L['bl'], L['mb'], L['br'])}</border>")
+    _raw("")
 
 
-def get_numbered_option(
-    prompt: str,
+def render_guitar_tab(chord_name: str, tab_lines: List[str]) -> None:
+    """Render guitar tab block with styling."""
+    _pp(f"    <dim>  ┌─ {_escape(chord_name)} ──────</dim>")
+    for line in tab_lines[1:]:  # skip the header line from generator
+        _pp(f"    <dim>  │  {_escape(line)}</dim>")
+    _raw("")
+
+
+# ─── Interactive Prompts ──────────────────────────────────────────────────────
+
+
+def _prompt_raw(default: str = "", completer=None, validator=None) -> str:
+    """Internal: display the styled › prompt and return input."""
+    return prompt(
+        HTML("<arrow>  › </arrow>"),
+        style=STYLE,
+        default=default,
+        completer=completer,
+        validator=validator,
+        validate_while_typing=True,
+    ).strip()
+
+
+def prompt_menu(
+    title: str,
     options: Dict[Union[str, int], Any],
     allow_cancel: bool = True,
     cancel_key: str = "0",
 ) -> Optional[str]:
-    print(f"\n{Fore.CYAN}{prompt}{Style.RESET_ALL}")
-    display_options = {str(k): v for k, v in options.items()}
-
-    max_key_len = max(len(str(k)) for k in display_options.keys()) if display_options else 1
+    """
+    Display a numbered list menu and return the chosen key,
+    or None if the user cancels.
+    """
+    display = {str(k): v for k, v in options.items()}
+    max_kw = max((len(k) for k in display), default=1)
     if allow_cancel:
-        max_key_len = max(max_key_len, len(cancel_key))
+        max_kw = max(max_kw, len(cancel_key))
 
-    for key_str, value in display_options.items():
-        display_name = (
-            value.get("name", value) if isinstance(value, dict) else str(value)
+    _pp(f"\n<section>  {_escape(title)}</section>")
+    for k, v in display.items():
+        name = v.get("name", v) if isinstance(v, dict) else str(v)
+        _pp(f"  <key>{k.rjust(max_kw)}.</key>  <value>{_escape(name)}</value>")
+    if allow_cancel:
+        _pp(
+            f"  <cancel>{cancel_key.rjust(max_kw)}.</cancel>  <hint>← Back / Cancel</hint>"
         )
-        print(f"  {key_str.rjust(max_key_len)}. {display_name}")
+    _pp(f"  <hint>{'─' * 30}</hint>")
 
+    valid = set(display.keys())
     if allow_cancel:
-        print(f"  {cancel_key.rjust(max_key_len)}. {Fore.RED}Cancel / Back{Style.RESET_ALL}")
+        valid.add(cancel_key)
+    completer = WordCompleter(sorted(valid), sentence=True)
 
     while True:
         try:
-            user_input_str = input(
-                f"{Fore.CYAN}Choose an option number: {Style.RESET_ALL}"
-            ).strip()
-            if not user_input_str:
-                continue
+            answer = _prompt_raw(completer=completer)
+        except (EOFError, KeyboardInterrupt):
+            raise KeyboardInterrupt
 
-            if allow_cancel and user_input_str == cancel_key:
-                return None
-
-            if user_input_str in display_options:
-                return user_input_str
-            else:
-                print(f"{Fore.RED}Invalid option.{Style.RESET_ALL}")
-        except EOFError:
-            print_operation_cancelled()
-            sys.exit(0)
-        except KeyboardInterrupt:
-            print_operation_cancelled()
-            sys.exit(130)
+        if not answer:
+            continue
+        if allow_cancel and answer == cancel_key:
+            return None
+        if answer in display:
+            return answer
+        render_error(f"'{answer}' is not a valid option.")
 
 
-def get_chord_settings() -> Tuple[Optional[int], Optional[int]]:
-    print(f"\n{Fore.CYAN}--- Chord Settings ---{Style.RESET_ALL}")
-    extension_map = {"1": 0, "2": 1, "3": 2, "4": 3, "5": 4, "6": 5}
-    extension_options = {
-        "1": "Simple Triads",
-        "2": "Sixths (or sevenths if 6th doesn't apply)",
-        "3": "Sevenths (scale default)",
-        "4": "Ninths",
-        "5": "Elevenths (can sound dense!)",
-        "6": "Thirteenths (can sound very dense!)",
-    }
-    ext_choice_key = get_numbered_option("Chord extension level:", extension_options)
-    if ext_choice_key is None:
-        return None, None
-    selected_extension_level = extension_map[ext_choice_key]
-
-    inversion_options = {
-        "1": "Root Position",
-        "2": "1st Inversion",
-        "3": "2nd Inversion",
-        "4": "3rd Inversion (for 7ths+)",
-    }
-    inv_choice_key = get_numbered_option("Chord inversion:", inversion_options)
-    if inv_choice_key is None:
-        return None, None
-    selected_inversion = int(inv_choice_key) - 1
-    return selected_extension_level, selected_inversion
+def prompt_text(
+    title: str,
+    default: str = "",
+    validator: Optional[Validator] = None,
+    completer=None,
+    hint: str = "",
+) -> str:
+    """Display a styled text input prompt."""
+    _pp(f"\n<section>  {_escape(title)}</section>")
+    if hint:
+        _pp(f"  <hint>{_escape(hint)}</hint>")
+    try:
+        return _prompt_raw(default=default, validator=validator, completer=completer)
+    except (EOFError, KeyboardInterrupt):
+        raise KeyboardInterrupt
 
 
-def get_tablature_filter() -> str:
-    tab_filter_options = {
-        "1": "All tablatures",
-        "2": "Only Minor chords (minor base quality)",
-        "3": "Only chords with Seventh",
-        "4": "Only chords with Ninth",
-        "5": "Only Sixth chords (X6, Xm6)",
-        "6": "Only chords with Eleventh",
-        "7": "Only chords with Thirteenth",
-        "8": "No tablatures",
-    }
-    choice = get_numbered_option(
-        "--- Filter for Displaying Tablatures ---",
-        tab_filter_options,
-        allow_cancel=True,
-    )
-    return choice if choice is not None else "8"  # Default to None if cancelled
+def prompt_confirm(message: str, default: bool = False) -> bool:
+    """Display a yes/no confirmation prompt."""
+    tag = "[Y/n]" if default else "[y/N]"
+    _pp(f"\n  <value>{_escape(message)}</value>  <hint>{tag}</hint>")
+    try:
+        ans = _prompt_raw().lower()
+        if not ans:
+            return default
+        return ans in ("y", "yes", "si", "s")
+    except (EOFError, KeyboardInterrupt):
+        raise KeyboardInterrupt
 
 
-# -----------------------------------------------------------------------------
-# Class UIManager: Manages console user interface
-# -----------------------------------------------------------------------------
+# ─── Validators ───────────────────────────────────────────────────────────────
+
+
+class RangeValidator(Validator):
+    """Validates that input is a number within [low, high]."""
+
+    def __init__(self, low: float, high: float, allow_empty: bool = True):
+        self.low = low
+        self.high = high
+        self.allow_empty = allow_empty
+
+    def validate(self, document):
+        text = document.text.strip()
+        if not text:
+            if not self.allow_empty:
+                raise ValidationError(
+                    message=f"Required. Enter a number between {self.low} and {self.high}."
+                )
+            return
+        try:
+            val = float(text)
+        except ValueError:
+            raise ValidationError(message="Must be a number.")
+        if not (self.low <= val <= self.high):
+            raise ValidationError(
+                message=f"Must be between {self.low} and {self.high}."
+            )
+
+
+# ─── UIManager ────────────────────────────────────────────────────────────────
+
+
 class UIManager:
+    """Manages all user interaction for the Chorderizer workflow."""
+
     def __init__(self, theory: MusicTheory):
         self.theory = theory
 
-    def select_tonic_and_scale(self) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
-        print(f"\n{Fore.CYAN}--- Select Scale Tonic ---{Style.RESET_ALL}")
-        tonic_options = {
+    # ── Phase 1: Scale Configuration ─────────────────────────────────────────
+
+    def select_scale_config(
+        self,
+    ) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
+        """
+        Phase 1 — Unified tonic + scale selection.
+        Returns (full_tonic_name, scale_info_dict) or (None, None) on cancel.
+        """
+        render_section("Phase 1  ·  Scale Configuration")
+
+        tonic_opts = {
             str(i + 1): note for i, note in enumerate(self.theory.CHROMATIC_NOTES)
         }
-
-        tonic_choice_key = get_numbered_option(
-            "Tonic:", tonic_options, allow_cancel=True, cancel_key="0"
-        )
-        if tonic_choice_key is None:
+        tonic_key = prompt_menu("Select Tonic Key:", tonic_opts)
+        if tonic_key is None:
             return None, None
-        selected_tonic = tonic_options[tonic_choice_key]
+        tonic = tonic_opts[tonic_key]
 
-        print(f"\n{Fore.CYAN}--- Select Scale Type ---{Style.RESET_ALL}")
-        scale_choice_key = get_numbered_option(
-            "Scale Type:",
-            self.theory.AVAILABLE_SCALES,
-            allow_cancel=True,
-            cancel_key="0",
-        )
-        if scale_choice_key is None:
+        scale_key = prompt_menu("Select Scale Type:", self.theory.AVAILABLE_SCALES)
+        if scale_key is None:
             return None, None
+        scale_info = self.theory.AVAILABLE_SCALES[scale_key]
 
-        selected_scale_info = self.theory.AVAILABLE_SCALES[scale_choice_key]
-        full_scale_tonic_name = selected_tonic + selected_scale_info["tonic_suffix"]
-        return full_scale_tonic_name, selected_scale_info
+        full_tonic = tonic + scale_info["tonic_suffix"]
+        render_success(f"Scale set to  {full_tonic}  ({scale_info['name']})")
+        return full_tonic, scale_info
 
-    def _get_bpm(self, current_bpm: int) -> int:
-        try:
-            try:
-                bpm_in = input(
-                    f"{Fore.CYAN}BPM (tempo) for MIDI [default: {current_bpm}]: {Style.RESET_ALL}"
-                ).strip()
-            except (EOFError, KeyboardInterrupt):
-                print_operation_cancelled()
-                import sys
+    # ── Phase 2: Chord Configuration ─────────────────────────────────────────
 
-                sys.exit(0)
-            if bpm_in:
-                current_bpm = int(bpm_in)
-            if not (20 <= current_bpm <= 300):  # Reasonable range
-                print(
-                    f"{Fore.YELLOW}Warning: BPM {current_bpm} is outside the typical range (20-300).{Style.RESET_ALL}"
-                )
-            if current_bpm <= 0:
-                current_bpm = 120  # Fallback
-        except ValueError:
-            print(f"{Fore.RED}Invalid BPM, using {current_bpm}.{Style.RESET_ALL}")
-        return current_bpm
+    def select_chord_config(self) -> Tuple[Optional[int], Optional[int]]:
+        """
+        Phase 2 — Extension level and inversion in one compact section.
+        Returns (extension_level, inversion_index) or (None, None) on cancel.
+        """
+        render_section("Phase 2  ·  Chord Configuration")
 
-    def _get_base_velocity(self, current_vel: int) -> int:
-        try:
-            try:
-                vel_in = input(
-                    f"{Fore.CYAN}Base note velocity (0-127) [default: {current_vel}]: {Style.RESET_ALL}"
-                ).strip()
-            except (EOFError, KeyboardInterrupt):
-                print_operation_cancelled()
-                import sys
+        ext_map = {"1": 0, "2": 1, "3": 2, "4": 3, "5": 4, "6": 5}
+        ext_opts = {
+            "1": "Triads            (3 notes — clean & simple)",
+            "2": "Sixths            (4 notes — rich colour)",
+            "3": "Sevenths          (4 notes — jazz / default)",
+            "4": "Ninths            (5 notes — lush)",
+            "5": "Elevenths         (6 notes — dense, modern)",
+            "6": "Thirteenths       (7 notes — full harmonic stack)",
+        }
+        ext_key = prompt_menu("Chord Extension:", ext_opts)
+        if ext_key is None:
+            return None, None
+        ext_level = ext_map[ext_key]
 
-                sys.exit(0)
-            if vel_in:
-                current_vel = int(vel_in)
-            current_vel = max(0, min(127, current_vel))
-        except ValueError:
-            print(f"{Fore.RED}Invalid velocity, using {current_vel}.{Style.RESET_ALL}")
-        return current_vel
+        inv_opts = {
+            "1": "Root Position     (standard)",
+            "2": "1st Inversion     (3rd in bass)",
+            "3": "2nd Inversion     (5th in bass)",
+            "4": "3rd Inversion     (7th in bass — 7ths+)",
+        }
+        inv_key = prompt_menu("Chord Inversion:", inv_opts)
+        if inv_key is None:
+            return None, None
+        inv_idx = int(inv_key) - 1
 
-    def _get_velocity_randomization(self, current_rand: int) -> int:
-        if get_yes_no_answer("Add slight randomization to velocity?"):
-            try:
-                try:
-                    rand_in = input(
-                        f"{Fore.CYAN}Randomization range (+/-) [default: 5]: {Style.RESET_ALL}"
-                    ).strip()
-                except (EOFError, KeyboardInterrupt):
-                    print_operation_cancelled()
-                    import sys
+        return ext_level, inv_idx
 
-                    sys.exit(0)
-                if rand_in:
-                    current_rand = int(rand_in)
-                current_rand = max(0, min(20, current_rand))
-            except ValueError:
-                print(f"{Fore.RED}Invalid range, using 0.{Style.RESET_ALL}")
-        return current_rand
+    # ── Phase 3: Tablature Filter ─────────────────────────────────────────────
 
-    def _get_arpeggio_settings(
-        self, current_style: Optional[str], current_dur: float
-    ) -> Tuple[Optional[str], float]:
-        if get_yes_no_answer(
-            "Arpeggiate chords? (Otherwise, they will be block chords)"
-        ):
-            arp_styles = {"1": "up", "2": "down", "3": "updown"}
-            style_key = get_numbered_option("Arpeggio style:", arp_styles)
-            if style_key:
-                current_style = arp_styles[style_key]
-                try:
-                    try:
-                        arp_dur_in = input(
-                            f"{Fore.CYAN}Duration of each arpeggio note in beats [default: {current_dur}]: {Style.RESET_ALL}"
-                        ).strip()
-                    except (EOFError, KeyboardInterrupt):
-                        print_operation_cancelled()
-                        import sys
+    def prompt_tablature_filter(self) -> str:
+        """Return a tab filter key, defaulting to '8' (none)."""
+        tab_opts = {
+            "1": "All chords",
+            "2": "Minor chords only",
+            "3": "Seventh chords only",
+            "4": "Ninth chords only",
+            "5": "Sixth chords only",
+            "6": "Eleventh chords only",
+            "7": "Thirteenth chords only",
+            "8": "Skip  (no tablature)",
+        }
+        choice = prompt_menu(
+            "Guitar Tablature — Show tabs for:", tab_opts, allow_cancel=True
+        )
+        return choice if choice is not None else "8"
 
-                        sys.exit(0)
-                    if arp_dur_in:
-                        current_dur = float(arp_dur_in)
-                    if current_dur <= 0:
-                        current_dur = 0.25
-                except ValueError:
-                    print(
-                        f"{Fore.RED}Invalid arpeggio note duration, using {current_dur}.{Style.RESET_ALL}"
-                    )
-        return current_style, current_dur
+    # ── Phase 4a: Progression Input ───────────────────────────────────────────
 
-    def _get_strum_delay(self, current_delay: int) -> int:
-        if get_yes_no_answer("Add strumming effect to block chords?"):
-            try:
-                try:
-                    strum_in = input(
-                        f"{Fore.CYAN}Strum delay between notes (milliseconds) [default: 15ms]: {Style.RESET_ALL}"
-                    ).strip()
-                except (EOFError, KeyboardInterrupt):
-                    print_operation_cancelled()
-                    import sys
+    def prompt_progression(self, chord_names: Dict[str, str]) -> Optional[str]:
+        """
+        Prompt the user to enter a chord progression string.
+        Returns the raw string, or None to use all diatonic chords.
+        """
+        degrees = list(chord_names.keys())
+        completer = WordCompleter(degrees, sentence=False, ignore_case=True)
 
-                    sys.exit(0)
-                if strum_in:
-                    current_delay = int(strum_in)
-                current_delay = max(0, min(100, current_delay))  # Cap delay
-            except ValueError:
-                print(f"{Fore.RED}Invalid strum delay, using 0.{Style.RESET_ALL}")
-        return current_delay
+        example = ""
+        if len(degrees) >= 5:
+            example = f"{degrees[0]}:4-{degrees[4]}:2-{degrees[5] if len(degrees) > 5 else degrees[-1]}:4-{degrees[3]}:2"
 
-    def get_advanced_midi_options(self) -> Dict[str, Any]:
-        print(f"\n{Fore.CYAN}--- Advanced MIDI Options ---{Style.RESET_ALL}")
+        raw = prompt_text(
+            "Chord Progression (Enter to use all diatonic chords):",
+            hint=f"Degrees: {' '.join(degrees)} · Example: {example}",
+            completer=completer,
+        )
+        return raw.strip() if raw.strip() else None
+
+    # ── Phase 4b: MIDI Options ────────────────────────────────────────────────
+
+    def get_midi_options(self) -> Dict[str, Any]:
+        """
+        Phase 4 — Collect all MIDI export options in a compact, guided form.
+        Returns options dict consumed by MidiGenerator.
+        """
+        render_section("Phase 4  ·  MIDI Configuration")
+
         options: Dict[str, Any] = {
             "bpm": 120,
             "base_velocity": 70,
             "velocity_randomization_range": 0,
             "chord_instrument": 0,
             "add_bass_track": False,
-            "bass_instrument": 33,  # Acoustic Bass
+            "bass_instrument": 33,
             "arpeggio_style": None,
             "arpeggio_note_duration_beats": 0.25,
             "strum_delay_ms": 0,
+            "voice_leading": False,
         }
 
-        options["bpm"] = self._get_bpm(options["bpm"])
-        options["base_velocity"] = self._get_base_velocity(options["base_velocity"])
-        options["velocity_randomization_range"] = self._get_velocity_randomization(
-            options["velocity_randomization_range"]
+        # — Tempo
+        bpm_raw = prompt_text(
+            f"Tempo (BPM):",
+            default=str(options["bpm"]),
+            validator=RangeValidator(20, 300),
+            hint="20 – 300 · press Enter to keep default",
         )
+        if bpm_raw:
+            try:
+                options["bpm"] = max(20, min(300, int(float(bpm_raw))))
+            except ValueError:
+                pass
 
-        chord_instr_key = get_numbered_option(
-            "Instrument for chords:", self.theory.MIDI_PROGRAMS, allow_cancel=False
-        )  # Must select an instrument
-        if chord_instr_key is not None:
-            options["chord_instrument"] = int(chord_instr_key)
-
-        options["add_bass_track"] = get_yes_no_answer("Add bass track (root notes)?")
-        if options["add_bass_track"]:
-            bass_instr_key = get_numbered_option(
-                "Instrument for bass:", self.theory.MIDI_PROGRAMS, allow_cancel=False
-            )
-            if bass_instr_key is not None:
-                options["bass_instrument"] = int(bass_instr_key)
-
-        options["arpeggio_style"], options["arpeggio_note_duration_beats"] = (
-            self._get_arpeggio_settings(
-                options["arpeggio_style"], options["arpeggio_note_duration_beats"]
-            )
+        # — Velocity
+        vel_raw = prompt_text(
+            "Base Velocity (0–127):",
+            default=str(options["base_velocity"]),
+            validator=RangeValidator(0, 127),
+            hint="0 = silent  ·  127 = maximum",
         )
+        if vel_raw:
+            try:
+                options["base_velocity"] = max(0, min(127, int(vel_raw)))
+            except ValueError:
+                pass
 
-        if not options["arpeggio_style"]:
-            options["strum_delay_ms"] = self._get_strum_delay(options["strum_delay_ms"])
+        # — Humanize velocity
+        if prompt_confirm("Add slight velocity humanization?"):
+            rand_raw = prompt_text(
+                "Humanization range (+/-):",
+                default="5",
+                validator=RangeValidator(0, 20),
+            )
+            try:
+                options["velocity_randomization_range"] = max(
+                    0, min(20, int(rand_raw or "5"))
+                )
+            except ValueError:
+                pass
 
-        options["voice_leading"] = get_yes_no_answer(
+        # — Chord instrument
+        instr_key = prompt_menu(
+            "Chord Instrument:",
+            self.theory.MIDI_PROGRAMS,
+            allow_cancel=False,
+        )
+        if instr_key is not None:
+            options["chord_instrument"] = int(instr_key)
+
+        # — Bass track
+        if prompt_confirm("Add bass track (root notes)?"):
+            options["add_bass_track"] = True
+            bass_key = prompt_menu(
+                "Bass Instrument:",
+                self.theory.MIDI_PROGRAMS,
+                allow_cancel=False,
+            )
+            if bass_key is not None:
+                options["bass_instrument"] = int(bass_key)
+
+        # — Playback style: Arpeggio or Block
+        if prompt_confirm("Arpeggiate chords? (otherwise block chords)"):
+            arp_styles = {"1": "up", "2": "down", "3": "updown"}
+            sk = prompt_menu("Arpeggio Direction:", arp_styles, allow_cancel=True)
+            if sk:
+                options["arpeggio_style"] = arp_styles[sk]
+                dur_raw = prompt_text(
+                    "Note duration per arpeggio step (beats):",
+                    default="0.25",
+                    validator=RangeValidator(0.01, 8.0),
+                )
+                try:
+                    options["arpeggio_note_duration_beats"] = float(dur_raw or "0.25")
+                except ValueError:
+                    pass
+        else:
+            if prompt_confirm("Add strum delay to block chords?"):
+                strum_raw = prompt_text(
+                    "Strum delay (ms):",
+                    default="15",
+                    validator=RangeValidator(0, 100),
+                    hint="0 = instant  ·  100 ms = slow strum",
+                )
+                try:
+                    options["strum_delay_ms"] = max(0, min(100, int(strum_raw or "15")))
+                except ValueError:
+                    pass
+
+        # — Voice leading
+        options["voice_leading"] = prompt_confirm(
             "Apply voice leading? (smooth note motion between chords)"
         )
 
         return options
+
+    # ── Legacy aliases (kept for backward compat with tests) ─────────────────
+
+    def select_tonic_and_scale(
+        self,
+    ) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
+        """Alias for select_scale_config() — kept for backward compatibility."""
+        return self.select_scale_config()
+
+    def get_advanced_midi_options(self) -> Dict[str, Any]:
+        """Alias for get_midi_options() — kept for backward compatibility."""
+        return self.get_midi_options()
+
+
+# ─── Standalone helpers (used by chorderizer.py) ──────────────────────────────
+
+
+def print_welcome_message() -> None:
+    render_banner()
+
+
+def print_operation_cancelled() -> None:
+    render_cancelled()
+
+
+def get_yes_no_answer(prompt_msg: str) -> bool:
+    return prompt_confirm(prompt_msg)
+
+
+def get_numbered_option(
+    title: str,
+    options: Dict[Union[str, int], Any],
+    allow_cancel: bool = True,
+    cancel_key: str = "0",
+) -> Optional[str]:
+    return prompt_menu(title, options, allow_cancel=allow_cancel, cancel_key=cancel_key)
+
+
+def get_chord_settings() -> Tuple[Optional[int], Optional[int]]:
+    """Standalone chord config — delegates to a temporary UIManager."""
+    # Imported here to avoid circular; theory only needed for UIManager
+    theory = MusicTheory()
+    ui = UIManager(theory)
+    return ui.select_chord_config()
+
+
+def get_tablature_filter() -> str:
+    theory = MusicTheory()
+    ui = UIManager(theory)
+    return ui.prompt_tablature_filter()

@@ -1,4 +1,6 @@
 import logging
+import json
+import os
 from typing import Any, Dict, List, Optional, Tuple
 
 from colorama import Fore, Style
@@ -141,6 +143,47 @@ class MusicTheoryUtils:
 # Class MusicTheory: Constants and basic music theory definitions
 # -----------------------------------------------------------------------------
 class MusicTheory:
+    def __init__(self):
+        self.AVAILABLE_SCALES = {}
+        self._load_scales()
+
+    def note_to_midi(self, note_name: str) -> int:
+        """Converts a note name (e.g., 'C#') to its 0-11 pitch class index."""
+        return MusicTheoryUtils.get_note_index(note_name)
+
+    def _load_scales(self):
+        """Loads scale definitions from a JSON file."""
+        data_path = os.path.join(os.path.dirname(__file__), "data", "scales.json")
+        try:
+            if os.path.exists(data_path):
+                with open(data_path, "r", encoding="utf-8") as f:
+                    self.AVAILABLE_SCALES = json.load(f)
+            else:
+                 logging.warning(f"Scales data file not found at {data_path}. Using internal defaults.")
+                 self.AVAILABLE_SCALES = self._get_default_scales()
+        except Exception as e:
+            logging.error(f"Error loading scales from JSON: {e}")
+            self.AVAILABLE_SCALES = self._get_default_scales()
+
+    def _get_default_scales(self) -> Dict[str, Any]:
+        """Provides a fallback set of scales if the JSON file cannot be loaded."""
+        # Simple fallback with at least Major and Natural Minor
+        return {
+            "1": {
+                "name": "Major",
+                "tonic_suffix": "",
+                "degrees": {
+                    "I": {"root_interval": 0, "base_quality": "major", "full_quality": "maj7", "display_suffix": "maj7"},
+                    "ii": {"root_interval": 2, "base_quality": "minor", "full_quality": "min7", "display_suffix": "m7"},
+                    "iii": {"root_interval": 4, "base_quality": "minor", "full_quality": "min7", "display_suffix": "m7"},
+                    "IV": {"root_interval": 5, "base_quality": "major", "full_quality": "maj7", "display_suffix": "maj7"},
+                    "V": {"root_interval": 7, "base_quality": "major", "full_quality": "dom7", "display_suffix": "7"},
+                    "vi": {"root_interval": 9, "base_quality": "minor", "full_quality": "min7", "display_suffix": "m7"},
+                    "vii°": {"root_interval": 11, "base_quality": "diminished", "full_quality": "halfdim7", "display_suffix": "m7b5"}
+                }
+            }
+        }
+
     CHROMATIC_NOTES: List[str] = [
         "C",
         "C#",
@@ -298,284 +341,7 @@ class MusicTheory:
         ],
     }
 
-    # Scale Definitions
-    SCALE_MAJOR: str = "Major"
-    SCALE_NATURAL_MINOR: str = "Natural Minor"
-    SCALE_HARMONIC_MINOR: str = "Harmonic Minor"
-    SCALE_MELODIC_MINOR_ASC: str = "Melodic Minor (Asc)"
-    SCALE_MAJOR_PENTATONIC: str = "Major Pentatonic"
-    SCALE_MINOR_PENTATONIC: str = "Minor Pentatonic"
-
-    # Diatonic Chords for Scales
-    MAJOR_SCALE_DEGREES: Dict[str, Dict[str, Any]] = {
-        "I": {
-            "root_interval": 0,
-            "base_quality": "major",
-            "full_quality": "maj7",
-            "display_suffix": "maj7",
-        },
-        "ii": {
-            "root_interval": 2,
-            "base_quality": "minor",
-            "full_quality": "min7",
-            "display_suffix": "m7",
-        },
-        "iii": {
-            "root_interval": 4,
-            "base_quality": "minor",
-            "full_quality": "min7",
-            "display_suffix": "m7",
-        },
-        "IV": {
-            "root_interval": 5,
-            "base_quality": "major",
-            "full_quality": "maj7",
-            "display_suffix": "maj7",
-        },
-        "V": {
-            "root_interval": 7,
-            "base_quality": "major",
-            "full_quality": "dom7",
-            "display_suffix": "7",
-        },
-        "vi": {
-            "root_interval": 9,
-            "base_quality": "minor",
-            "full_quality": "min7",
-            "display_suffix": "m7",
-        },
-        "vii°": {
-            "root_interval": 11,
-            "base_quality": "diminished",
-            "full_quality": "halfdim7",
-            "display_suffix": "m7b5",
-        },
-    }
-    NATURAL_MINOR_SCALE_DEGREES: Dict[str, Dict[str, Any]] = {
-        "i": {
-            "root_interval": 0,
-            "base_quality": "minor",
-            "full_quality": "min7",
-            "display_suffix": "m7",
-        },
-        "ii°": {
-            "root_interval": 2,
-            "base_quality": "diminished",
-            "full_quality": "halfdim7",
-            "display_suffix": "m7b5",
-        },
-        "III": {
-            "root_interval": 3,
-            "base_quality": "major",
-            "full_quality": "maj7",
-            "display_suffix": "maj7",
-        },
-        "iv": {
-            "root_interval": 5,
-            "base_quality": "minor",
-            "full_quality": "min7",
-            "display_suffix": "m7",
-        },
-        "v": {
-            "root_interval": 7,
-            "base_quality": "minor",
-            "full_quality": "min7",
-            "display_suffix": "m7",
-        },
-        "VI": {
-            "root_interval": 8,
-            "base_quality": "major",
-            "full_quality": "maj7",
-            "display_suffix": "maj7",
-        },
-        "VII": {
-            "root_interval": 10,
-            "base_quality": "major",
-            "full_quality": "dom7",
-            "display_suffix": "7",
-        },
-    }
-    HARMONIC_MINOR_SCALE_DEGREES: Dict[str, Dict[str, Any]] = {
-        "i": {
-            "root_interval": 0,
-            "base_quality": "minor",
-            "full_quality": "minMaj7",
-            "display_suffix": "m(maj7)",
-        },
-        "ii°": {
-            "root_interval": 2,
-            "base_quality": "diminished",
-            "full_quality": "halfdim7",
-            "display_suffix": "m7b5",
-        },
-        "III+": {
-            "root_interval": 3,
-            "base_quality": "augmented",
-            "full_quality": "augMaj7",
-            "display_suffix": "aug(maj7)",
-        },
-        "iv": {
-            "root_interval": 5,
-            "base_quality": "minor",
-            "full_quality": "min7",
-            "display_suffix": "m7",
-        },
-        "V": {
-            "root_interval": 7,
-            "base_quality": "major",
-            "full_quality": "dom7",
-            "display_suffix": "7",
-        },
-        "VI": {
-            "root_interval": 8,
-            "base_quality": "major",
-            "full_quality": "maj7",
-            "display_suffix": "maj7",
-        },
-        "vii°7": {
-            "root_interval": 11,
-            "base_quality": "diminished",
-            "full_quality": "dim7",
-            "display_suffix": "dim7",
-        },
-    }
-    MELODIC_MINOR_ASC_SCALE_DEGREES: Dict[str, Dict[str, Any]] = {
-        "i": {
-            "root_interval": 0,
-            "base_quality": "minor",
-            "full_quality": "minMaj7",
-            "display_suffix": "m(maj7)",
-        },
-        "ii": {
-            "root_interval": 2,
-            "base_quality": "minor",
-            "full_quality": "min7",
-            "display_suffix": "m7",
-        },
-        "III+": {
-            "root_interval": 3,
-            "base_quality": "augmented",
-            "full_quality": "augMaj7",
-            "display_suffix": "aug(maj7)",
-        },
-        "IV": {
-            "root_interval": 5,
-            "base_quality": "major",
-            "full_quality": "dom7",
-            "display_suffix": "7",
-        },
-        "V": {
-            "root_interval": 7,
-            "base_quality": "major",
-            "full_quality": "dom7",
-            "display_suffix": "7",
-        },
-        "vi°": {
-            "root_interval": 9,
-            "base_quality": "diminished",
-            "full_quality": "halfdim7",
-            "display_suffix": "m7b5",
-        },
-        "vii°": {
-            "root_interval": 11,
-            "base_quality": "diminished",
-            "full_quality": "halfdim7",
-            "display_suffix": "m7b5",
-        },
-    }
-    MAJOR_PENTATONIC_SCALE_DEGREES: Dict[str, Dict[str, Any]] = {
-        "I": {
-            "root_interval": 0,
-            "base_quality": "major",
-            "full_quality": "major",
-            "display_suffix": "",
-        },
-        "ii_p": {
-            "root_interval": 2,
-            "base_quality": "minor",
-            "full_quality": "minor",
-            "display_suffix": "m",
-        },
-        "iii_p": {
-            "root_interval": 4,
-            "base_quality": "minor",
-            "full_quality": "minor",
-            "display_suffix": "m",
-        },
-        "V_p": {
-            "root_interval": 7,
-            "base_quality": "major",
-            "full_quality": "major",
-            "display_suffix": "",
-        },
-        "vi_p": {
-            "root_interval": 9,
-            "base_quality": "minor",
-            "full_quality": "minor",
-            "display_suffix": "m",
-        },
-    }
-    MINOR_PENTATONIC_SCALE_DEGREES: Dict[str, Dict[str, Any]] = {
-        "i_p": {
-            "root_interval": 0,
-            "base_quality": "minor",
-            "full_quality": "minor",
-            "display_suffix": "m",
-        },
-        "III_p": {
-            "root_interval": 3,
-            "base_quality": "major",
-            "full_quality": "major",
-            "display_suffix": "",
-        },
-        "iv_p": {
-            "root_interval": 5,
-            "base_quality": "minor",
-            "full_quality": "minor",
-            "display_suffix": "m",
-        },
-        "v_p": {
-            "root_interval": 7,
-            "base_quality": "minor",
-            "full_quality": "minor",
-            "display_suffix": "m",
-        },
-        "VII_p": {
-            "root_interval": 10,
-            "base_quality": "major",
-            "full_quality": "major",
-            "display_suffix": "",
-        },
-    }
-
-    AVAILABLE_SCALES: Dict[str, Dict[str, Any]] = {
-        "1": {"name": SCALE_MAJOR, "degrees": MAJOR_SCALE_DEGREES, "tonic_suffix": ""},
-        "2": {
-            "name": SCALE_NATURAL_MINOR,
-            "degrees": NATURAL_MINOR_SCALE_DEGREES,
-            "tonic_suffix": "m",
-        },
-        "3": {
-            "name": SCALE_HARMONIC_MINOR,
-            "degrees": HARMONIC_MINOR_SCALE_DEGREES,
-            "tonic_suffix": "m",
-        },
-        "4": {
-            "name": SCALE_MELODIC_MINOR_ASC,
-            "degrees": MELODIC_MINOR_ASC_SCALE_DEGREES,
-            "tonic_suffix": "m",
-        },
-        "5": {
-            "name": SCALE_MAJOR_PENTATONIC,
-            "degrees": MAJOR_PENTATONIC_SCALE_DEGREES,
-            "tonic_suffix": "",
-        },
-        "6": {
-            "name": SCALE_MINOR_PENTATONIC,
-            "degrees": MINOR_PENTATONIC_SCALE_DEGREES,
-            "tonic_suffix": "m",
-        },
-    }
+    AVAILABLE_SCALES: Dict[str, Dict[str, Any]] = {}
 
     MIDI_PROGRAMS: Dict[int, str] = {
         0: "Acoustic Grand Piano",

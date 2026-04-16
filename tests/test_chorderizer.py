@@ -1,10 +1,13 @@
+"""
+test_chorderizer.py — Tests for the main orchestration module.
+"""
 import os
 import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Mock colorama and mido before importing chorderizer
+# Mock external dependencies before importing chorderizer
 sys.modules["colorama"] = MagicMock()
 sys.modules["mido"] = MagicMock()
 
@@ -71,37 +74,32 @@ def test_generate_midi_filename_helper_empty_base_dir():
 
 
 def test_process_single_run_missing_scale_info():
+    """process_single_run returns True (loop) when scale selection is cancelled."""
     ui_mock = MagicMock()
-    ui_mock.select_tonic_and_scale.return_value = (None, None)
+    # select_scale_config is the new method; select_tonic_and_scale is the compat alias
+    ui_mock.select_scale_config.return_value = (None, None)
 
-    # process_single_run should return True when scale info is missing
     result = process_single_run(ui_mock, None, None, None, "/tmp")
 
     assert result is True
-    ui_mock.select_tonic_and_scale.assert_called_once()
+    ui_mock.select_scale_config.assert_called_once()
 
 
-@patch("chorderizer.chorderizer.get_chord_settings")
-def test_process_single_run_missing_chord_settings(mock_get_chord_settings):
-    from chorderizer.chorderizer import process_single_run
-
-    # Setup mocks
+def test_process_single_run_missing_chord_settings():
+    """process_single_run returns True (loop) when chord config is cancelled."""
     ui_mock = MagicMock()
-    ui_mock.select_tonic_and_scale.return_value = ("C", {"name": "Major"})
+    ui_mock.select_scale_config.return_value = (
+        "C",
+        {"name": "Major", "degrees": {}, "tonic_suffix": ""},
+    )
+    ui_mock.select_chord_config.return_value = (None, None)
 
     chord_builder_mock = MagicMock()
-    tab_builder_mock = MagicMock()
-    midi_builder_mock = MagicMock()
 
-    # When get_chord_settings returns None
-    mock_get_chord_settings.return_value = None
-
-    # Act
     result = process_single_run(
-        ui_mock, chord_builder_mock, tab_builder_mock, midi_builder_mock, "/tmp/midi"
+        ui_mock, chord_builder_mock, MagicMock(), MagicMock(), "/tmp/midi"
     )
 
-    # Assert
     assert result is True
-    mock_get_chord_settings.assert_called_once()
+    ui_mock.select_chord_config.assert_called_once()
     chord_builder_mock.generate_scale_chords.assert_not_called()

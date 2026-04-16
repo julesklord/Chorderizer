@@ -1,348 +1,373 @@
-import os
-import logging
-import random
-from typing import Any, Dict, List, Optional, Tuple
+"""
+chorderizer.py — Main orchestration for Chorderizer
+=====================================================
+Coordinates the 4-phase workflow:
+  Phase 1  ·  Scale Configuration
+  Phase 2  ·  Chord Configuration
+  Phase 3  ·  Results Display (table + guitar tabs)
+  Phase 4  ·  MIDI Export (progression → options → file)
 
-import colorama
-from colorama import Fore, Style
+All user interaction is delegated to UIManager (ui.py).
+All music theory is delegated to MusicTheory / MusicTheoryUtils.
+All generation logic lives in generators.py.
+"""
+
+import argparse
+import logging
+import os
+import sys
+from typing import Any, Dict, List
 
 from .generators import ChordGenerator, MidiGenerator, TablatureGenerator
-
-# Imports from new modules
 from .theory_utils import MusicTheory, MusicTheoryUtils
 from .ui import (
     UIManager,
-    get_chord_settings,
-    get_numbered_option,
-    get_tablature_filter,
-    get_yes_no_answer,
     print_operation_cancelled,
     print_welcome_message,
+    prompt_confirm,
+    render_chord_table,
+    render_error,
+    render_guitar_tab,
+    render_section,
+    render_success,
+    render_warn,
 )
 
-# Mido imports are primarily in generators.py now.
+
+# ─── TUI Moderno ──────────────────────────────────────────────────────────────
+
+def run_modern_tui():
+    """Launch the reactive Textual dashboard."""
+    try:
+        from .tui_app import ChorderizerApp
+        app = ChorderizerApp()
+        app.run()
+    except ImportError as e:
+        render_error(f"Textual or a dependency is missing: {e}")
+        render_warn("Make sure you are running from the src directory or have it in PYTHONPATH.")
+        sys.exit(1)
+    except Exception as e:
+        render_error(f"Failed to launch dashboard: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
-# -----------------------------------------------------------------------------
-# Main Program Logic (Remains in chorderizer.py)
-# -----------------------------------------------------------------------------
-def _generate_midi_filename_helper(
-    tonic: str, scale_info: Dict[str, Any], base_dir: str, prefix: str = "prog_"
-) -> str:
-    # Cleaner filename: keep the b/sharp symbols but make them filename-safe if needed
-    clean_tonic = tonic.replace(" ", "_")
-    safe_scale_name = (
-        scale_info["name"].replace(" ", "_").replace("(", "").replace(")", "")
+# ─── File helpers ─────────────────────────────────────────────────────────────
+
+def _midi_filename(tonic: str, scale_info: Dict[str, Any], base_dir: str, prefix: str = "prog_") -> str:
+    """Build a safe MIDI filename from tonic + scale."""
+    safe_tonic = tonic.replace(" ", "_")
+    safe_scale = (
+        scale_info["name"]
+        .replace(" ", "_")
+        .replace("(", "")
+        .replace(")", "")
     )
-    filename = f"{prefix}{clean_tonic}_{safe_scale_name}.mid"
-    return os.path.join(base_dir, filename)
+    return os.path.join(base_dir, f"{prefix}{safe_tonic}_{safe_scale}.mid")
 
 
-def _sanitize_midi_path(path_input: str, default_path: str, base_dir: str) -> str:
+# Backward-compat alias used by existing tests
+_generate_midi_filename_helper = _midi_filename
+
+
+def _sanitize_path(path_input: str, default: str, base_dir: str) -> str:
     """
-    Sanitizes the user-provided path to prevent path traversal vulnerabilities.
-    If path_input is empty, it returns the default_path.
-    Otherwise, it extracts only the filename and joins it with the intended base directory.
+    Prevent path-traversal by stripping to filename only.
+    Returns default if path_input is empty.
     """
     if not path_input:
-        return default_path
-    filename = os.path.basename(path_input)
-    return os.path.join(base_dir, filename)
+        return default
+    return os.path.join(base_dir, os.path.basename(path_input))
 
+
+# Backward-compat alias used by existing tests
+_sanitize_midi_path = _sanitize_path
+
+
+# ─── Chord display helpers ────────────────────────────────────────────────────
+
+def _should_show_tab(filter_key: str, chord_name: str, base_quality: str) -> bool:
+    """Return True if a guitar tab should be shown for this chord given the filter."""
+    if filter_key == "1":
+        return True
+    if filter_key == "2" and base_quality == "minor":
+        return True
+    if filter_key == "3" and "7" in chord_name:
+        return True
+    if filter_key == "4" and "9" in chord_name:
+        return True
+    if filter_key == "5" and chord_name.endswith("6") and not chord_name.endswith("m7b6"):
+        return True
+    if filter_key == "6" and "11" in chord_name:
+        return True
+    if filter_key == "7" and "13" in chord_name:
+        return True
+    return False
+
+
+# ─── Core workflow ────────────────────────────────────────────────────────────
+
+def _phase3_display_results(
+    ui: UIManager,
+    tab_builder: TablatureGenerator,
+    tonic: str,
+    scale_info: Dict[str, Any],
+    chord_names: Dict[str, str],
+    note_names: Dict[str, List[str]],
+    midi_notes: Dict[str, List[int]],
+    base_qualities: Dict[str, str],
+) -> None:
+    """Phase 3 — Display chord table and optional guitar tabs."""
+    render_section("Phase 3  ·  Scale Results")
+
+    render_chord_table(chord_names, note_names, midi_notes, base_qualities, tonic, scale_info["name"])
+
+    tab_filter = ui.prompt_tablature_filter()
+
+    for degree, chord_name in chord_names.items():
+        qual = base_qualities.get(degree, "major")
+        if _should_show_tab(tab_filter, chord_name, qual):
+            midi = midi_notes.get(degree, [])
+            if midi:
+                tab_lines = tab_builder.generate_simple_tab(chord_name, midi)
+                if tab_lines:
+                    render_guitar_tab(chord_name, tab_lines)
+
+
+def _phase4_midi_export(
+    ui: UIManager,
+    midi_builder: MidiGenerator,
+    chord_builder: ChordGenerator,
+    tonic: str,
+    scale_info: Dict[str, Any],
+    chord_names: Dict[str, str],
+    midi_notes: Dict[str, List[int]],
+    extension_level: int,
+    inversion_idx: int,
+    export_dir: str,
+) -> None:
+    """Phase 4 — Build progression, collect MIDI options, and export."""
+    render_section("Phase 4  ·  MIDI Export")
+
+    # ── 4a: Build chord progression ──────────────────────────────────────────
+    chords_for_midi: List[Dict[str, Any]] = []
+
+    if prompt_confirm("Define a custom chord progression?", default=False):
+        raw_prog = ui.prompt_progression(chord_names)
+        if raw_prog:
+            for item_str in raw_prog.strip().upper().split("-"):
+                item_str = item_str.strip()
+                if not item_str:
+                    continue
+                degree, beats = item_str, 4.0
+                if ":" in item_str:
+                    parts = item_str.split(":", 1)
+                    degree = parts[0].strip()
+                    try:
+                        beats = float(parts[1].strip())
+                        if beats <= 0:
+                            beats = 4.0
+                    except ValueError:
+                        render_warn(f"Invalid duration for '{degree}' — using 4.0 beats.")
+                if degree in chord_names:
+                    chords_for_midi.append({
+                        "grado": degree,
+                        "nombre": chord_names[degree],
+                        "notas_midi": midi_notes[degree],
+                        "duracion_beats": beats,
+                    })
+                else:
+                    render_warn(f"Degree '{degree}' not found — skipped.")
+    else:
+        # Use all diatonic chords sequentially
+        for deg in scale_info["degrees"]:
+            if deg in chord_names:
+                chords_for_midi.append({
+                    "grado": deg,
+                    "nombre": chord_names[deg],
+                    "notas_midi": midi_notes[deg],
+                    "duracion_beats": 2.0,
+                })
+
+    if not chords_for_midi:
+        render_error("No chords available for MIDI export.")
+        return
+
+    # ── 4b: MIDI options ─────────────────────────────────────────────────────
+    midi_opts = ui.get_midi_options()
+
+    # ── 4c: Output filename ───────────────────────────────────────────────────
+    suggested = _midi_filename(tonic, scale_info, export_dir)
+
+    from .ui import prompt_text  # local import to avoid circular at module level
+    raw_fname = prompt_text(
+        "Output MIDI filename:",
+        default=suggested,
+        hint=f"Default: {suggested}",
+    )
+    out_path = _sanitize_path(raw_fname.strip(), suggested, export_dir)
+
+    midi_builder.generate_midi_file(chords_for_midi, out_path, midi_opts)
+    render_success(f"MIDI saved → {out_path}")
+
+    # ── 4d: Optional transposition ────────────────────────────────────────────
+    if prompt_confirm("Transpose chord names to a different tonic?"):
+        render_section("Transposition")
+        new_configs = ui.select_scale_config()
+        if new_configs != (None, None):
+            new_tonic, new_scale = new_configs
+            transposed = MusicTheoryUtils.transpose_chords(chord_names, tonic, new_tonic)
+            if transposed:
+                render_section(f"Transposed to  {new_tonic}  ({new_scale['name']})")
+                from .ui import _pp, _escape
+                for deg, name in transposed.items():
+                    _pp(f"  <key>{_escape(deg.ljust(8))}</key>  <value>{_escape(name)}</value>")
+                print()
+
+            if prompt_confirm("Generate MIDI for the transposed chords?"):
+                trans_chord_data, _, trans_midi, _ = chord_builder.generate_scale_chords(
+                    new_tonic, new_scale, extension_level, inversion_idx
+                )
+                if trans_chord_data:
+                    trans_list = [
+                        {
+                            "grado": item["grado"],
+                            "nombre": trans_chord_data[item["grado"]],
+                            "notas_midi": trans_midi[item["grado"]],
+                            "duracion_beats": item["duracion_beats"],
+                        }
+                        for item in chords_for_midi
+                        if item["grado"] in trans_chord_data
+                    ]
+                    if trans_list:
+                        sugg_trans = _midi_filename(
+                            new_tonic, new_scale, export_dir, prefix="prog_TRANSP_"
+                        )
+                        trans_path = prompt_text(
+                            "Transposed MIDI filename:",
+                            default=sugg_trans,
+                            hint=f"Default: {sugg_trans}",
+                        )
+                        trans_out = _sanitize_path(trans_path.strip(), sugg_trans, export_dir)
+                        midi_builder.generate_midi_file(trans_list, trans_out, midi_opts)
+                        render_success(f"Transposed MIDI saved → {trans_out}")
+
+
+# ─── Main loop ────────────────────────────────────────────────────────────────
 
 def process_single_run(
-    ui, chord_builder, tab_builder, midi_builder, midi_export_default_dir
+    ui: UIManager,
+    chord_builder: ChordGenerator,
+    tab_builder: TablatureGenerator,
+    midi_builder: MidiGenerator,
+    export_dir: str,
 ) -> bool:
-    """Handles one full cycle of chord/MIDI generation. Returns True to continue, False to exit."""
-    print("\n" + "=" * 70)
-    selected_scale_tonic, selected_scale_info = ui.select_tonic_and_scale()
-    if selected_scale_tonic is None or selected_scale_info is None:
-        return True
+    """
+    Execute one full generation cycle.
+    Returns True to loop again, False to exit.
+    """
+    # ── Phase 1: Scale ────────────────────────────────────────────────────────
+    tonic, scale_info = ui.select_scale_config()
+    if tonic is None or scale_info is None:
+        return True  # cancelled — loop
 
-    chord_settings_tuple = get_chord_settings()
-    if chord_settings_tuple is None:
-        return True  # User cancelled settings, but might want to try another scale
+    # ── Phase 2: Chord config ─────────────────────────────────────────────────
+    chord_cfg = ui.select_chord_config()
+    if chord_cfg == (None, None) or None in chord_cfg:
+        return True  # cancelled — loop
+    extension_level, inversion_idx = chord_cfg
 
-    selected_extension_lvl, selected_inversion_idx = chord_settings_tuple
-
-    # Generate chords for the selected scale
-    (
-        gen_chord_names,
-        gen_note_names,
-        gen_midi_notes,
-        gen_base_qualities,
-    ) = chord_builder.generate_scale_chords(
-        selected_scale_tonic,
-        selected_scale_info,
-        selected_extension_lvl,
-        selected_inversion_idx,
+    # ── Generate chords ───────────────────────────────────────────────────────
+    chord_names, note_names, midi_notes, base_qualities = chord_builder.generate_scale_chords(
+        tonic, scale_info, extension_level, inversion_idx
     )
 
-    if not gen_chord_names:
-        print(
-            f"{Fore.RED}Could not generate chords for {selected_scale_tonic}.{Style.RESET_ALL}"
-        )
+    if not chord_names:
+        render_error(f"Could not generate chords for  {tonic}.")
         return True
 
-    print(
-        f"\n{Fore.GREEN}Chords generated for the scale of {selected_scale_tonic} ({selected_scale_info['name']}): {Style.RESET_ALL}"
+    # ── Phase 3: Display results ──────────────────────────────────────────────
+    _phase3_display_results(
+        ui, tab_builder, tonic, scale_info,
+        chord_names, note_names, midi_notes, base_qualities,
     )
 
-    tab_display_filter_key = get_tablature_filter()
-
-    print(f"  {'Degree'.ljust(6)} | {'Chord'.ljust(15)} | {'Notes'.ljust(25)} | MIDI")
-    print(f"  {'-' * 6}-+-{'-' * 15}-+-{'-' * 25}-+-{'-' * 15}")
-    for degree, chord_name_display in gen_chord_names.items():
-        base_qual = gen_base_qualities.get(degree)
-        color_code = Fore.GREEN
-        if base_qual == "minor":
-            color_code = Fore.CYAN
-        elif (
-            base_qual == "diminished"
-            or "ø" in chord_name_display
-            or "m7b5" in chord_name_display
-        ):
-            color_code = Fore.MAGENTA
-        elif base_qual == "augmented" or "+" in chord_name_display:
-            color_code = Fore.YELLOW
-
-        note_names_str = ", ".join(gen_note_names.get(degree, []))
-        midi_notes_str = str(gen_midi_notes.get(degree, []))[1:-1]
-        print(
-            f"  {degree.ljust(6)} | {color_code}{chord_name_display.ljust(15)}{Style.RESET_ALL} "
-            f"| {note_names_str.ljust(25)} | {midi_notes_str}"
-        )
-
-        show_this_tab = False
-        if tab_display_filter_key == "1":
-            show_this_tab = True
-        elif tab_display_filter_key == "2" and base_qual == "minor":
-            show_this_tab = True
-        elif tab_display_filter_key == "3" and "7" in chord_name_display:
-            show_this_tab = True
-        elif tab_display_filter_key == "4" and "9" in chord_name_display:
-            show_this_tab = True
-        elif tab_display_filter_key == "5":
-            if chord_name_display.endswith("6") and not chord_name_display.endswith(
-                "m7b6"
-            ):
-                show_this_tab = True
-        elif tab_display_filter_key == "6" and "11" in chord_name_display:
-            show_this_tab = True
-        elif tab_display_filter_key == "7" and "13" in chord_name_display:
-            show_this_tab = True
-
-        if show_this_tab and gen_midi_notes.get(degree):
-            tab_lines_list = tab_builder.generate_simple_tab(
-                chord_name_display, gen_midi_notes[degree]
-            )
-            for tab_line in tab_lines_list:
-                print(f"    {tab_line}")
-
-    print(f"\n{Fore.CYAN}--- MIDI Generation Options ---{Style.RESET_ALL}")
-    chords_for_midi_processing: List[Dict[str, Any]] = []
-    if get_yes_no_answer(
-        "Define a chord progression for MIDI? (If no, all diatonic chords will be used sequentially)"
-    ):
+    # ── Phase 4: MIDI export ──────────────────────────────────────────────────
+    if prompt_confirm("Export to MIDI?", default=True):
         try:
-            progression_input_str = (
-                input(
-                    f"{Fore.CYAN}Enter progression (degrees separated by '-', e.g., I-V-vi-IV). "
-                    f"Optional duration in beats (e.g., I:4-V:2-vi:2-IV:4 ): {Style.RESET_ALL}"
-                )
-                .strip()
-                .upper()
+            _phase4_midi_export(
+                ui, midi_builder, chord_builder,
+                tonic, scale_info, chord_names, midi_notes,
+                extension_level, inversion_idx, export_dir,
             )
-        except (EOFError, KeyboardInterrupt):
+        except KeyboardInterrupt:
             print_operation_cancelled()
-            return True
-        progression_items = progression_input_str.split("-")
-        for item_str in progression_items:
-            item_str = item_str.strip()
-            if not item_str:
-                continue
 
-            current_prog_degree, current_beats_duration = item_str, 4.0
-            if ":" in item_str:
-                parts = item_str.split(":", 1)
-                current_prog_degree = parts[0].strip()
-                try:
-                    current_beats_duration = float(parts[1].strip())
-                    if current_beats_duration <= 0:
-                        current_beats_duration = 4.0
-                except ValueError:
-                    print(
-                        f"{Fore.RED}Invalid duration for '{current_prog_degree}', using 4.0 beats.{Style.RESET_ALL}"
-                    )
+    return prompt_confirm("Start a new session?", default=False)
 
-            if current_prog_degree in gen_chord_names:
-                chords_for_midi_processing.append(
-                    {
-                        "grado": current_prog_degree,
-                        "nombre": gen_chord_names[current_prog_degree],
-                        "notas_midi": gen_midi_notes[current_prog_degree],
-                        "duracion_beats": current_beats_duration,
-                    }
-                )
-            else:
-                print(
-                    f"{Fore.RED}Degree '{current_prog_degree}' not found in generated chords. Skipping.{Style.RESET_ALL}"
-                )
-    else:
-        for degree_key in selected_scale_info["degrees"].keys():
-            if degree_key in gen_chord_names:
-                chords_for_midi_processing.append(
-                    {
-                        "grado": degree_key,
-                        "nombre": gen_chord_names[degree_key],
-                        "notas_midi": gen_midi_notes[degree_key],
-                        "duracion_beats": 2.0,
-                    }
-                )
 
-    if not chords_for_midi_processing:
-        print(f"{Fore.RED}No chords selected for MIDI processing.{Style.RESET_ALL}")
-        return True
-
-    advanced_midi_opts = ui.get_advanced_midi_options()
-    suggested_midi_path = _generate_midi_filename_helper(
-        selected_scale_tonic, selected_scale_info, midi_export_default_dir
+def main() -> None:
+    """Application entry point."""
+    parser = argparse.ArgumentParser(description="Chorderizer — Advanced Chord Generator")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="Chorderizer 0.2.0"
     )
-
-    try:
-        output_midi_filename = input(
-            f"{Fore.CYAN}Enter MIDI filename [default: {suggested_midi_path}]: {Style.RESET_ALL}"
-        ).strip()
-    except (EOFError, KeyboardInterrupt):
-        print_operation_cancelled()
-        return True
-    if not output_midi_filename:
-        output_midi_filename = suggested_midi_path
-    else:
-        output_midi_filename = os.path.join(
-            midi_export_default_dir, os.path.basename(output_midi_filename)
-        )
-
-    midi_builder.generate_midi_file(
-        chords_for_midi_processing, output_midi_filename, advanced_midi_opts
+    parser.add_argument(
+        "--legacy",
+        action="store_true",
+        help="Run the sequential prompt-based UI instead of the dashboard"
     )
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable detailed logging output"
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Run in debug mode with full tracebacks"
+    )
+    args = parser.parse_args()
 
-    if get_yes_no_answer("Transpose these chord names to another scale tonic?"):
-        print(f"\n{Fore.CYAN}--- Transposition ---{Style.RESET_ALL}")
-        new_tonic, new_scale_data = ui.select_tonic_and_scale()
-        if new_tonic and new_scale_data:
-            transposed_chord_display_names = MusicTheoryUtils.transpose_chords(
-                gen_chord_names, selected_scale_tonic, new_tonic
-            )
-            if transposed_chord_display_names:
-                print(
-                    f"\n{Fore.GREEN}Chord names transposed to the tonic of {new_tonic}: {Style.RESET_ALL}"
-                )
-                for degree, trans_name in transposed_chord_display_names.items():
-                    print(f"  {degree.ljust(5)}: {trans_name}")
+    if args.verbose or args.debug:
+        logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
+        logging.info("Verbose mode enabled.")
 
-                if get_yes_no_answer(
-                    "Generate MIDI for these chords in the NEW key/scale?"
-                ):
-                    (
-                        trans_chord_names_actual,
-                        _,
-                        trans_midi_notes_actual,
-                        _,
-                    ) = chord_builder.generate_scale_chords(
-                        new_tonic,
-                        new_scale_data,
-                        selected_extension_lvl,
-                        selected_inversion_idx,
-                    )
-                    if trans_chord_names_actual:
-                        transposed_chords_for_midi: List[Dict[str, Any]] = []
-                        for original_prog_item_data in chords_for_midi_processing:
-                            original_degree = original_prog_item_data["grado"]
-                            original_duration = original_prog_item_data[
-                                "duracion_beats"
-                            ]
-                            if original_degree in trans_chord_names_actual:
-                                transposed_chords_for_midi.append(
-                                    {
-                                        "grado": original_degree,
-                                        "nombre": trans_chord_names_actual[
-                                            original_degree
-                                        ],
-                                        "notas_midi": trans_midi_notes_actual[
-                                            original_degree
-                                        ],
-                                        "duracion_beats": original_duration,
-                                    }
-                                )
-                        if transposed_chords_for_midi:
-                            sugg_trans_path = _generate_midi_filename_helper(
-                                new_tonic,
-                                new_scale_data,
-                                midi_export_default_dir,
-                                prefix="prog_TRANSP_",
-                            )
-                            try:
-                                trans_midi_fname_out = input(
-                                    f"{Fore.CYAN}Enter transposed MIDI filename [default: {sugg_trans_path}]: {Style.RESET_ALL}"
-                                ).strip()
-                            except (EOFError, KeyboardInterrupt):
-                                print_operation_cancelled()
-                                return True
-                            if not trans_midi_fname_out:
-                                trans_midi_fname_out = sugg_trans_path
-                            else:
-                                trans_midi_fname_out = os.path.join(
-                                    midi_export_default_dir,
-                                    os.path.basename(trans_midi_fname_out),
-                                )
-                            midi_builder.generate_midi_file(
-                                transposed_chords_for_midi,
-                                trans_midi_fname_out,
-                                advanced_midi_opts,
-                            )
+    if not args.legacy:
+        run_modern_tui()
+        return
 
-    return get_yes_no_answer("Perform another operation?")
-
-
-def main():
-    # Initialize colorama for cross-platform color support
-    colorama.init()
-
+    # Legacy Sequential Flow
     theory = MusicTheory()
     ui = UIManager(theory)
     chord_builder = ChordGenerator(theory)
     tab_builder = TablatureGenerator(theory)
     midi_builder = MidiGenerator(theory)
 
-    print_welcome_message()
-    home_directory = os.path.expanduser("~")
-    midi_export_default_dir = os.path.join(
-        home_directory, "chord_generator_midi_exports"
-    )
+    print_welcome_message()  # renders the banner
 
-    while True:
-        if not process_single_run(
-            ui, chord_builder, tab_builder, midi_builder, midi_export_default_dir
-        ):
-            print(
-                f"{Fore.GREEN}Thank you for using the Advanced Chord Generator. Goodbye!{Style.RESET_ALL}"
-            )
-            break
+    export_dir = os.path.join(os.path.expanduser("~"), "chord_generator_midi_exports")
+
+    try:
+        while True:
+            if not process_single_run(ui, chord_builder, tab_builder, midi_builder, export_dir):
+                from .ui import _pp
+                _pp("\n<success>  ♩  Thank you for using Chorderizer. Goodbye!</success>\n")
+                break
+    except KeyboardInterrupt:
+        print_operation_cancelled()
 
 
 if __name__ == "__main__":
-    import sys
-
     try:
         main()
-    except EOFError:
-        print_operation_cancelled()
-        sys.exit(0)
     except KeyboardInterrupt:
         print_operation_cancelled()
         sys.exit(130)
-    except Exception as e:
-        logging.error("An unexpected error occurred", exc_info=True)
-        print(f"\n{Fore.RED}An unexpected system error occurred. Please check the logs or contact support.{Style.RESET_ALL}")
+    except Exception:
+        logging.error("Unexpected error", exc_info=True)
+        render_error("An unexpected error occurred. Check logs for details.")
         sys.exit(1)

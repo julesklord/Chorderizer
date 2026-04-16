@@ -51,10 +51,10 @@ class PianoWidget(Static):
                         rows[r].append("██", style=black_color)
                     else:
                         rows[r].append("████", style=color)
-                    rows[r].append("│", style="grey37")
+                    rows[r].append("|", style="grey37")
 
                 label_color = "bold cyan" if is_active else "bold white"
-                label_row.append(f" {white_names[i]}  ", style=label_color)
+                label_row.append(f" {white_names[i]:^3} ", style=label_color)
                 label_row.append(" ", style="on default")
 
         full_piano = Text("\n").join(rows)
@@ -99,18 +99,18 @@ class FretboardWidget(Static):
             for fret in range(13):
                 midi = start_midi + fret
                 pc = midi % 12
-                char = "───"
+                char = "──"
                 style = "grey37"
 
                 if midi in self.chord_notes_midi:
-                    char = " ● "
+                    char = "● "
                     style = "bold bright_cyan"
                 elif pc == self.tonic_pc:
-                    char = " ● "
+                    char = "● "
                     style = "bold yellow"
 
                 line.append(char, style=style)
-                line.append("│", style="grey37")
+                line.append("|", style="grey37")
             fretboard.append(line)
             fretboard.append("\n")
 

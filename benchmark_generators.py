@@ -11,7 +11,7 @@ def original():
             min(
                 127,
                 base_vel
-                + random.randint(  # nosec
+                + random.randint(  # nosec  # noqa: S311
                     -vel_rand // 2,
                     max(1, vel_rand // 2),
                 ),
@@ -30,7 +30,7 @@ def optimized():
             min(
                 127,
                 base_vel
-                + random.randint(  # nosec
+                + random.randint(  # nosec  # noqa: S311
                     vel_rand_min,
                     vel_rand_max,
                 ),

@@ -63,7 +63,7 @@ target-version = "py38"
 line-length = 100
 
 [tool.ruff.lint]
-# Enable Pyflakes (F), Pycodestyle (E, W), Isort (I), and Bandit (S)
+# Enable Pyflakes (F), Pycodestyle (E, W), Isort (I), Bandit (S), Bugbear (B), Pyupgrade (UP), and Comprehensions (C4)
 select = ["F", "E", "W", "I", "S", "B", "UP", "C4"]
 
 # Rules to ignore:

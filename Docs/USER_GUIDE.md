@@ -1,62 +1,56 @@
-# User Guide
+# Chorderizer User Guide
 
-A step-by-step guide to mastering Chorderizer.
+This guide provides a comprehensive walkthrough of the Chorderizer harmonic dashboard and its core operational cycles.
 
-## 1. Quick Start
-
-Run the application using:
-
-```bash
-chorderizer
-```
-
-Or from source:
-
+## 🚀 Quick Start
+To launch the primary interactive dashboard, execute the module:
 ```bash
 python -m chorderizer.chorderizer
 ```
 
-## 2. Theoretical Workflow
+## 1. Harmonic Configuration Cycle
+The Chorderizer workflow is divided into four distinct phases, visualized in real-time through the dashboard.
 
-Chorderizer follows a logical music theory path:
+### Phase 1: Scale Definition
+Select your **Tonic** (e.g., C, F#) and **Scale Type**. Chorderizer supports 11+ scales, including full Greek Modal support.
+*   **Dorian, Phrygian, Lydian**: Instantly available from the Scale menu.
+*   **Visual Feedback**: The dashboard highlights all diatonic notes on the **Piano** and **Guitar** visualizers immediately.
 
-### Step 1: Define Your Key
+### Phase 2: Chord Voicing
+Customize the structure of your diatonic chords:
+*   **Extensions**: Choose between Triads, 6ths, 7ths, 9ths, 11ths, or 13ths.
+*   **Inversions**: Rotate the chord structure (Root, 1st, 2nd, or 3rd inversion).
 
-Select a **Tonic** (e.g., C, F#) and a **Scale Type** (e.g., Major, Harmonic Minor). This creates the harmonic foundation for all subsequent steps.
+## 2. Interactive Exploration
+Use the central dashboard to audit your selection before exporting.
 
-### Step 2: Configure Chord Voicing
+![Navigation Demo](demo.gif)
 
-Choose the **Extension Level** and **Inversion**:
+*   **Keyboard Navigation**: Use `Tab` and `Arrow Keys` to move between configuration menus and the chord table.
+*   **Visual Audit**: Highlighting a row in the **Chord Table** updates:
+    *   **Piano Board**: Shows the physical fingering of the chord.
+    *   **Guitar Fretboard**: Displays the specific fret positions.
+    *   **Guitar Tab**: Generates a quick-read ASCII tablature.
 
-- **Triads to 13ths**: Control the complexity and "flavor" of each degree.
-- **Inversions**: Move the bass to the 3rd, 5th, or 7th to change the chord's texture and bass motion.
+## 3. Progression & Export
+Once you have identified the desired harmonies, you can build a composition.
 
-### Step 3: Explore & Filter
+### Building a Progression
+1.  Navigate to the **Chord Table**.
+2.  Press **`[A]`** to add the selected chord to the right sidebar (Progression Panel).
+3.  Repeat to build your sequence.
 
-View the generated chords, note names, and MIDI values. Use the **Tablature Filter** to display guitar fingerings for specific chord types.
-
-## 3. Creating MIDI Files
-
-### Defining Progressions
-
-You can export all diatonic chords sequentially or define a custom progression using Roman numerals:
-
-- `I-V-vi-IV` (Classic Pop progression)
-- `ii:2-V:2-I:4` (Jazz II-V-I with custom durations)
-
-### MIDI Customization
-
-- **BPM & Velocity**: Set the tempo and base dynamics.
-- **Humanization**: Add randomization to the velocity to avoid a "robotic" sound.
-- **Dual Tracks**: Add an automatic bassline instrument along with your chords.
-- **Performance Effects**:
-  - **Arpeggio**: Spread the notes across time (up, down, or up-down).
-  - **Strum**: Add a millisecond delay between notes in a single block chord.
+### MIDI Export
+Press **`[E]`** to invoke the MIDI export engine. Chorderizer will:
+1.  Apply **Humanization** (micro-velocity randomization).
+2.  Optionally add an automated **Bass Track**.
+3.  Save the `.mid` file to `~/chord_generator_midi_exports`.
 
 ## 4. Advanced: Transposition
-
-After generating a MIDI file, you can transpose your entire progression to a new key. The system will keep all your voicing and timing settings but move the notes to the target key.
+After an export, you can instantly shift the entire progression to a new tonic.
+*   **Maintain Voicings**: The system retains your extension and inversion settings.
+*   **Parallel Harmony**: Ideal for exploring how a progression feels in different tonal centers.
 
 ---
-> [!TIP]
-> Use the "Humanization" feature with a range of +/- 5 for a subtle, professional feel.
+> [!NOTE]
+> All MIDI exports are serialized with high-precision timing (ticks per beat) to ensure compatibility with all modern DAWs like Ableton Live, Logic Pro, and FL Studio.

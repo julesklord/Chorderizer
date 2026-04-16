@@ -1,21 +1,24 @@
 import os
+import logging
 import random
-from typing import List, Dict, Tuple, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
+
 import colorama
 from colorama import Fore, Style
+
+from .generators import ChordGenerator, MidiGenerator, TablatureGenerator
 
 # Imports from new modules
 from .theory_utils import MusicTheory, MusicTheoryUtils
 from .ui import (
     UIManager,
-    print_welcome_message,
-    print_operation_cancelled,
-    get_yes_no_answer,
-    get_numbered_option,
     get_chord_settings,
+    get_numbered_option,
     get_tablature_filter,
+    get_yes_no_answer,
+    print_operation_cancelled,
+    print_welcome_message,
 )
-from .generators import ChordGenerator, TablatureGenerator, MidiGenerator
 
 # Mido imports are primarily in generators.py now.
 
@@ -87,6 +90,8 @@ def process_single_run(
 
     tab_display_filter_key = get_tablature_filter()
 
+    print(f"  {'Degree'.ljust(6)} | {'Chord'.ljust(15)} | {'Notes'.ljust(25)} | MIDI")
+    print(f"  {'-' * 6}-+-{'-' * 15}-+-{'-' * 25}-+-{'-' * 15}")
     for degree, chord_name_display in gen_chord_names.items():
         base_qual = gen_base_qualities.get(degree)
         color_code = Fore.GREEN
@@ -104,8 +109,8 @@ def process_single_run(
         note_names_str = ", ".join(gen_note_names.get(degree, []))
         midi_notes_str = str(gen_midi_notes.get(degree, []))[1:-1]
         print(
-            f"  {degree.ljust(5)}: {color_code}{chord_name_display.ljust(15)}{Style.RESET_ALL} "
-            f"(Notes: {note_names_str.ljust(25)}) (MIDI: {midi_notes_str})"
+            f"  {degree.ljust(6)} | {color_code}{chord_name_display.ljust(15)}{Style.RESET_ALL} "
+            f"| {note_names_str.ljust(25)} | {midi_notes_str}"
         )
 
         show_this_tab = False
@@ -139,14 +144,18 @@ def process_single_run(
     if get_yes_no_answer(
         "Define a chord progression for MIDI? (If no, all diatonic chords will be used sequentially)"
     ):
-        progression_input_str = (
-            input(
-                f"{Fore.CYAN}Enter progression (degrees separated by '-', e.g., I-V-vi-IV). "
-                f"Optional duration in beats (e.g., I:4-V:2-vi:2-IV:4 ): {Style.RESET_ALL}"
+        try:
+            progression_input_str = (
+                input(
+                    f"{Fore.CYAN}Enter progression (degrees separated by '-', e.g., I-V-vi-IV). "
+                    f"Optional duration in beats (e.g., I:4-V:2-vi:2-IV:4 ): {Style.RESET_ALL}"
+                )
+                .strip()
+                .upper()
             )
-            .strip()
-            .upper()
-        )
+        except (EOFError, KeyboardInterrupt):
+            print_operation_cancelled()
+            return True
         progression_items = progression_input_str.split("-")
         for item_str in progression_items:
             item_str = item_str.strip()
@@ -200,9 +209,13 @@ def process_single_run(
         selected_scale_tonic, selected_scale_info, midi_export_default_dir
     )
 
-    output_midi_filename = input(
-        f"{Fore.CYAN}Enter MIDI filename [default: {suggested_midi_path}]: {Style.RESET_ALL}"
-    ).strip()
+    try:
+        output_midi_filename = input(
+            f"{Fore.CYAN}Enter MIDI filename [default: {suggested_midi_path}]: {Style.RESET_ALL}"
+        ).strip()
+    except (EOFError, KeyboardInterrupt):
+        print_operation_cancelled()
+        return True
     if not output_midi_filename:
         output_midi_filename = suggested_midi_path
     else:
@@ -269,9 +282,13 @@ def process_single_run(
                                 midi_export_default_dir,
                                 prefix="prog_TRANSP_",
                             )
-                            trans_midi_fname_out = input(
-                                f"{Fore.CYAN}Enter transposed MIDI filename [default: {sugg_trans_path}]: {Style.RESET_ALL}"
-                            ).strip()
+                            try:
+                                trans_midi_fname_out = input(
+                                    f"{Fore.CYAN}Enter transposed MIDI filename [default: {sugg_trans_path}]: {Style.RESET_ALL}"
+                                ).strip()
+                            except (EOFError, KeyboardInterrupt):
+                                print_operation_cancelled()
+                                return True
                             if not trans_midi_fname_out:
                                 trans_midi_fname_out = sugg_trans_path
                             else:
@@ -319,6 +336,13 @@ if __name__ == "__main__":
 
     try:
         main()
-    except (EOFError, KeyboardInterrupt):
+    except EOFError:
         print_operation_cancelled()
         sys.exit(0)
+    except KeyboardInterrupt:
+        print_operation_cancelled()
+        sys.exit(130)
+    except Exception as e:
+        logging.error("An unexpected error occurred", exc_info=True)
+        print(f"\n{Fore.RED}An unexpected system error occurred. Please check the logs or contact support.{Style.RESET_ALL}")
+        sys.exit(1)

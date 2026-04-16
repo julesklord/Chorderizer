@@ -4,10 +4,10 @@ import os
 import random
 from typing import Any, Dict, List, Optional, Tuple
 
+from colorama import Fore, Style
 from mido import Message, MetaMessage, MidiFile, MidiTrack, bpm2tempo
 
 from .theory_utils import MusicTheory, MusicTheoryUtils
-from colorama import Fore, Style
 
 
 # -----------------------------------------------------------------------------
@@ -46,8 +46,9 @@ class ChordGenerator:
         try:
             scale_tonic_index = MusicTheoryUtils.get_note_index(scale_tonic_str)
         except ValueError as e:
+            logging.error(f"Invalid scale tonic '{scale_tonic_str}': {e}")
             print(
-                f"{Fore.RED}Error: Invalid scale tonic '{scale_tonic_str}': {e}{Style.RESET_ALL}"
+                f"{Fore.RED}Error: Invalid scale tonic '{scale_tonic_str}'. Please provide a valid tonic.{Style.RESET_ALL}"
             )
             return {}, {}, {}, {}
 
@@ -67,58 +68,14 @@ class ChordGenerator:
                 "full_quality"
             ]  # Default to full quality (e.g., 7ths)
 
-            # Adjust chord type and suffix based on selected extension level
-            if extension_level == 0:  # Triads
-                triad_map = {
-                    "major": "major",
-                    "minor": "minor",
-                    "diminished": "diminished",
-                    "augmented": "augmented",
-                }
-                chord_type_to_use = triad_map.get(base_quality, base_quality)
-                degree_display_suffix = {
-                    "major": "",
-                    "minor": "m",
-                    "diminished": "dim",
-                    "augmented": "aug",
-                }.get(base_quality, "")
-            elif (
-                extension_level == 1
-            ):  # Sixths (or default 7ths if 6th doesn't fit well)
-                if chord_type_to_use == "maj7":  # Typically Major scale I, IV
-                    chord_type_to_use = "major6"
-                    degree_display_suffix = "6"
-                elif chord_type_to_use == "min7":  # Typically Major scale ii, iii, vi
-                    chord_type_to_use = "minor6"
-                    degree_display_suffix = "m6"
-                # For other cases (e.g., V7, vii°), keep their 7th quality or base triad if 6th is odd
-            elif extension_level >= 3:  # Ninths, Elevenths, Thirteenths
-                extension_map_dict = {
-                    "dom7": {3: "dom9", 4: "dom11", 5: "dom13"},
-                    "maj7": {3: "maj9", 4: "maj11", 5: "maj13"},
-                    "min7": {3: "min9", 4: "min11", 5: "min13"},
-                }
-                suffix_map_dict = {
-                    "dom9": "9",
-                    "dom11": "11",
-                    "dom13": "13",
-                    "maj9": "maj9",
-                    "maj11": "maj11",
-                    "maj13": "maj13",
-                    "min9": "m9",
-                    "min11": "m11",
-                    "min13": "m13",
-                }
-                if (
-                    chord_type_to_use in extension_map_dict
-                    and extension_level in extension_map_dict[chord_type_to_use]
-                ):
-                    new_type = extension_map_dict[chord_type_to_use][extension_level]
-                    if new_type in self.theory.CHORD_STRUCTURES:
-                        chord_type_to_use = new_type
-                        degree_display_suffix = suffix_map_dict.get(
-                            chord_type_to_use, degree_display_suffix
-                        )
+            chord_type_to_use, degree_display_suffix = (
+                self._determine_chord_type_and_suffix(
+                    base_quality,
+                    chord_type_to_use,
+                    degree_display_suffix,
+                    extension_level,
+                )
+            )
 
             # Get intervals for the determined chord type
             chord_intervals_relative = list(
@@ -143,70 +100,14 @@ class ChordGenerator:
             # Generate MIDI notes for the chord
             current_midi_notes: List[int] = []
             unique_sorted_intervals = sorted(set(chord_intervals_relative))
-            last_added_midi_note = -1  # To ensure ascending notes in voicing
 
-            # Determine a base octave offset to keep chords roughly around C4
-            initial_octave_offset = 0
-            if unique_sorted_intervals:
-                # Estimate position of the first note if placed directly
-                first_note_in_octave_relative = (
-                    chord_root_abs_idx + unique_sorted_intervals[0]
-                ) % 12
-                tentative_first_midi_note = (
-                    self.theory.MIDI_BASE_OCTAVE + first_note_in_octave_relative
-                )
+            initial_octave_offset = self._determine_initial_octave_offset(
+                unique_sorted_intervals, chord_root_abs_idx
+            )
 
-                # If the first note is too low and it's a root/low interval, shift up
-                if (
-                    tentative_first_midi_note < self.theory.MIDI_BASE_OCTAVE - 6
-                    and unique_sorted_intervals[0] >= 0
-                ):
-                    initial_octave_offset = 12
-                # If the first note is too high for a root/low interval, shift down (less common for root)
-                elif (
-                    tentative_first_midi_note > self.theory.MIDI_BASE_OCTAVE + 6
-                    and unique_sorted_intervals[0] <= 7
-                ):  # Heuristic
-                    initial_octave_offset = -12
-
-            for rel_interval in unique_sorted_intervals:
-                interval_octave_offset = (
-                    rel_interval // 12
-                ) * 12  # Octave from interval itself (e.g., M9 is R + 14 semitones)
-                candidate_midi_note = (
-                    self.theory.MIDI_BASE_OCTAVE
-                    + initial_octave_offset
-                    + ((chord_root_abs_idx + rel_interval) % 12)
-                    + interval_octave_offset
-                )
-
-                # Ensure notes are generally ascending for a simple voicing
-                while (
-                    last_added_midi_note != -1
-                    and candidate_midi_note <= last_added_midi_note
-                ):
-                    candidate_midi_note += 12
-
-                # MIDI range adjustments (heuristic to keep notes within a playable/sensible range)
-                if candidate_midi_note > 108:
-                    candidate_midi_note -= 12  # Too high, try octave lower
-                if candidate_midi_note < 21:
-                    candidate_midi_note += 12  # Too low, try octave higher
-
-                # For wider chords, try to keep upper notes from going excessively high if a lower octave is available
-                if (
-                    len(unique_sorted_intervals) > 4
-                    and candidate_midi_note
-                    > self.theory.MIDI_BASE_OCTAVE + 24 + initial_octave_offset
-                ):  # Roughly 2 octaves above C4
-                    if (
-                        candidate_midi_note - 12
-                    ) > last_added_midi_note or last_added_midi_note == -1:
-                        candidate_midi_note -= 12
-
-                if 0 <= candidate_midi_note <= 127:  # Valid MIDI note
-                    current_midi_notes.append(candidate_midi_note)
-                    last_added_midi_note = candidate_midi_note
+            current_midi_notes = self._generate_midi_notes_for_chord(
+                unique_sorted_intervals, chord_root_abs_idx, initial_octave_offset
+            )
 
             current_midi_notes = sorted(
                 set(current_midi_notes)
@@ -229,6 +130,141 @@ class ChordGenerator:
         self._chord_cache[cache_key] = result
         # Return a deep copy to prevent callers from mutating the shared cache
         return copy.deepcopy(result)
+
+    def _determine_chord_type_and_suffix(
+        self,
+        base_quality: str,
+        chord_type_to_use: str,
+        degree_display_suffix: str,
+        extension_level: int,
+    ) -> Tuple[str, str]:
+        if extension_level == 0:  # Triads
+            triad_map = {
+                "major": "major",
+                "minor": "minor",
+                "diminished": "diminished",
+                "augmented": "augmented",
+            }
+            chord_type_to_use = triad_map.get(base_quality, base_quality)
+            degree_display_suffix = {
+                "major": "",
+                "minor": "m",
+                "diminished": "dim",
+                "augmented": "aug",
+            }.get(base_quality, "")
+        elif extension_level == 1:  # Sixths (or default 7ths if 6th doesn't fit well)
+            if chord_type_to_use == "maj7":  # Typically Major scale I, IV
+                chord_type_to_use = "major6"
+                degree_display_suffix = "6"
+            elif chord_type_to_use == "min7":  # Typically Major scale ii, iii, vi
+                chord_type_to_use = "minor6"
+                degree_display_suffix = "m6"
+            # For other cases (e.g., V7, vii°), keep their 7th quality or base triad if 6th is odd
+        elif extension_level >= 3:  # Ninths, Elevenths, Thirteenths
+            extension_map_dict = {
+                "dom7": {3: "dom9", 4: "dom11", 5: "dom13"},
+                "maj7": {3: "maj9", 4: "maj11", 5: "maj13"},
+                "min7": {3: "min9", 4: "min11", 5: "min13"},
+            }
+            suffix_map_dict = {
+                "dom9": "9",
+                "dom11": "11",
+                "dom13": "13",
+                "maj9": "maj9",
+                "maj11": "maj11",
+                "maj13": "maj13",
+                "min9": "m9",
+                "min11": "m11",
+                "min13": "m13",
+            }
+            if (
+                chord_type_to_use in extension_map_dict
+                and extension_level in extension_map_dict[chord_type_to_use]
+            ):
+                new_type = extension_map_dict[chord_type_to_use][extension_level]
+                if new_type in self.theory.CHORD_STRUCTURES:
+                    chord_type_to_use = new_type
+                    degree_display_suffix = suffix_map_dict.get(
+                        chord_type_to_use, degree_display_suffix
+                    )
+        return chord_type_to_use, degree_display_suffix
+
+    def _generate_midi_notes_for_chord(
+        self,
+        unique_sorted_intervals: List[int],
+        chord_root_abs_idx: int,
+        initial_octave_offset: int,
+    ) -> List[int]:
+        current_midi_notes: List[int] = []
+        last_added_midi_note = -1
+
+        for rel_interval in unique_sorted_intervals:
+            interval_octave_offset = (
+                rel_interval // 12
+            ) * 12  # Octave from interval itself (e.g., M9 is R + 14 semitones)
+            candidate_midi_note = (
+                self.theory.MIDI_BASE_OCTAVE
+                + initial_octave_offset
+                + ((chord_root_abs_idx + rel_interval) % 12)
+                + interval_octave_offset
+            )
+
+            # Ensure notes are generally ascending for a simple voicing
+            while (
+                last_added_midi_note != -1
+                and candidate_midi_note <= last_added_midi_note
+            ):
+                candidate_midi_note += 12
+
+            # MIDI range adjustments (heuristic to keep notes within a playable/sensible range)
+            if candidate_midi_note > 108:
+                candidate_midi_note -= 12  # Too high, try octave lower
+            if candidate_midi_note < 21:
+                candidate_midi_note += 12  # Too low, try octave higher
+
+            # For wider chords, try to keep upper notes from going excessively high if a lower octave is available
+            if (
+                len(unique_sorted_intervals) > 4
+                and candidate_midi_note
+                > self.theory.MIDI_BASE_OCTAVE + 24 + initial_octave_offset
+            ):  # Roughly 2 octaves above C4
+                if (
+                    candidate_midi_note - 12
+                ) > last_added_midi_note or last_added_midi_note == -1:
+                    candidate_midi_note -= 12
+
+            if 0 <= candidate_midi_note <= 127:  # Valid MIDI note
+                current_midi_notes.append(candidate_midi_note)
+                last_added_midi_note = candidate_midi_note
+
+        return current_midi_notes
+
+    def _determine_initial_octave_offset(
+        self, unique_sorted_intervals: List[int], chord_root_abs_idx: int
+    ) -> int:
+        initial_octave_offset = 0
+        if unique_sorted_intervals:
+            # Estimate position of the first note if placed directly
+            first_note_in_octave_relative = (
+                chord_root_abs_idx + unique_sorted_intervals[0]
+            ) % 12
+            tentative_first_midi_note = (
+                self.theory.MIDI_BASE_OCTAVE + first_note_in_octave_relative
+            )
+
+            # If the first note is too low and it's a root/low interval, shift up
+            if (
+                tentative_first_midi_note < self.theory.MIDI_BASE_OCTAVE - 6
+                and unique_sorted_intervals[0] >= 0
+            ):
+                initial_octave_offset = 12
+            # If the first note is too high for a root/low interval, shift down (less common for root)
+            elif (
+                tentative_first_midi_note > self.theory.MIDI_BASE_OCTAVE + 6
+                and unique_sorted_intervals[0] <= 7
+            ):  # Heuristic
+                initial_octave_offset = -12
+        return initial_octave_offset
 
     def _apply_inversion(
         self, chord_intervals_relative: List[int], inversion: int
@@ -412,6 +448,55 @@ class MidiGenerator:
     def __init__(self, theory: MusicTheory):
         self.theory = theory
 
+    def _calculate_strum_delay_ticks(self, midi_options: Dict[str, Any], ticks_per_beat: int) -> int:
+        if midi_options.get("strum_delay_ms", 0) > 0:
+            strum_delay_seconds = midi_options["strum_delay_ms"] / 1000.0
+            strum_delay_beats = strum_delay_seconds * (midi_options.get("bpm", 120) / 60.0)
+            return int(strum_delay_beats * ticks_per_beat)
+        return 0
+
+    def _setup_midi_tracks(self, midi_file: MidiFile, midi_options: Dict[str, Any]) -> Tuple[MidiTrack, Optional[MidiTrack]]:
+        chord_track = MidiTrack()
+        midi_file.tracks.append(chord_track)
+        chord_track.append(MetaMessage("track_name", name="Chords Track", time=0))
+        chord_track.append(Message("program_change", program=midi_options.get("chord_instrument", 0), channel=0, time=0))
+        chord_track.append(MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0))
+
+        bass_track: Optional[MidiTrack] = None
+        if midi_options.get("add_bass_track", False):
+            bass_track = MidiTrack()
+            midi_file.tracks.append(bass_track)
+            bass_track.append(MetaMessage("track_name", name="Bass Track", time=0))
+            bass_track.append(Message("program_change", program=midi_options.get("bass_instrument", 33), channel=1, time=0))
+            bass_track.append(MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0))
+
+        return chord_track, bass_track
+
+    def _generate_bass_note(self, bass_track: MidiTrack, chord_midi_notes: List[int], chord_duration_ticks: int, midi_options: Dict[str, Any]) -> None:
+        bass_note_midi = min(chord_midi_notes)
+        while bass_note_midi > self.theory.MIDI_BASE_OCTAVE - 12:
+            bass_note_midi -= 12
+        if bass_note_midi < 21:
+            bass_note_midi += 12
+
+        bass_velocity = max(0, min(127, midi_options.get("base_velocity", 70) + 10))
+        bass_note_midi = max(0, min(127, bass_note_midi))
+
+        bass_track.append(Message("note_on", note=bass_note_midi, velocity=bass_velocity, channel=1, time=0))
+        bass_track.append(Message("note_off", note=bass_note_midi, velocity=0, channel=1, time=chord_duration_ticks))
+
+    def _save_midi_file(self, midi_file: MidiFile, output_filename: str) -> None:
+        try:
+            output_directory = os.path.dirname(output_filename)
+            if output_directory and not os.path.exists(output_directory):
+                os.makedirs(output_directory, exist_ok=True)
+                print(f"{Fore.GREEN}Directory '{output_directory}' created.{Style.RESET_ALL}")
+            midi_file.save(output_filename)
+            print(f"{Fore.GREEN}MIDI file '{output_filename}' generated successfully.{Style.RESET_ALL}")
+        except OSError as e:
+            logging.error(f"Failed to save MIDI file '{output_filename}': {e}")
+            print(f"{Fore.RED}Error saving MIDI file '{output_filename}'. Please check permissions and path validity.{Style.RESET_ALL}")
+
     def generate_midi_file(
         self,
         chords_to_process: List[Dict[str, Any]],
@@ -419,56 +504,11 @@ class MidiGenerator:
         midi_options: Dict[str, Any],
     ) -> None:
         ticks_per_beat = 480  # Standard resolution
-        strum_delay_ticks = 0
-        if midi_options.get("strum_delay_ms", 0) > 0:
-            strum_delay_seconds = midi_options["strum_delay_ms"] / 1000.0
-            strum_delay_beats = strum_delay_seconds * (
-                midi_options.get("bpm", 120) / 60.0
-            )
-            strum_delay_ticks = int(strum_delay_beats * ticks_per_beat)
+        strum_delay_ticks = self._calculate_strum_delay_ticks(midi_options, ticks_per_beat)
 
         midi_file = MidiFile(ticks_per_beat=ticks_per_beat)
+        chord_track, bass_track = self._setup_midi_tracks(midi_file, midi_options)
 
-        # Chord Track
-        chord_track = MidiTrack()
-        midi_file.tracks.append(chord_track)
-        chord_track.append(MetaMessage("track_name", name="Chords Track", time=0))
-        chord_track.append(
-            Message(
-                "program_change",
-                program=midi_options.get("chord_instrument", 0),
-                channel=0,
-                time=0,
-            )
-        )
-        chord_track.append(
-            MetaMessage(
-                "set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0
-            )
-        )
-
-        # Bass Track (optional)
-        bass_track: Optional[MidiTrack] = None
-        if midi_options.get("add_bass_track", False):
-            bass_track = MidiTrack()
-            midi_file.tracks.append(bass_track)
-            bass_track.append(MetaMessage("track_name", name="Bass Track", time=0))
-            bass_track.append(
-                Message(
-                    "program_change",
-                    program=midi_options.get("bass_instrument", 33),
-                    channel=1,
-                    time=0,
-                )
-            )
-            # Bass track also needs tempo if it's the first event-producing track for it
-            bass_track.append(
-                MetaMessage(
-                    "set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0
-                )
-            )
-
-        # Pre-calculate arpeggio individual note duration since it is constant across chords
         arp_note_indiv_duration_ticks = 0
         if "arpeggio_note_duration_beats" in midi_options:
             arp_note_indiv_duration_ticks = int(
@@ -483,7 +523,6 @@ class MidiGenerator:
             if not chord_midi_notes:
                 continue
 
-            # Apply voice leading (skip first chord — it has no predecessor)
             if use_voice_leading and prev_chord_midi is not None:
                 chord_midi_notes = VoiceLeader.apply(prev_chord_midi, chord_midi_notes)
 
@@ -492,84 +531,27 @@ class MidiGenerator:
             chord_duration_beats = chord_data["duracion_beats"]
             chord_duration_ticks = int(chord_duration_beats * ticks_per_beat)
 
-            # --- Bass Track ---
             if bass_track and midi_options.get("add_bass_track", False):
-                # Find the lowest note of the chord for the bass, then drop it to a bass register
-                bass_note_midi = min(chord_midi_notes)
-                while (
-                    bass_note_midi > self.theory.MIDI_BASE_OCTAVE - 12
-                ):  # Ensure it's below C3
-                    bass_note_midi -= 12
-                if bass_note_midi < 21:  # Ensure it's not too low (below E0)
-                    bass_note_midi += 12
+                self._generate_bass_note(bass_track, chord_midi_notes, chord_duration_ticks, midi_options)
 
-                # Slightly higher velocity for bass, or make it configurable
-                bass_velocity = max(
-                    0, min(127, midi_options.get("base_velocity", 70) + 10)
-                )
-
-                # Ensure bass note is within valid MIDI range [0, 127]
-                bass_note_midi = max(0, min(127, bass_note_midi))
-
-                # Bass note starts with the chord (time=0 relative to previous bass event)
-                bass_track.append(
-                    Message(
-                        "note_on",
-                        note=bass_note_midi,
-                        velocity=bass_velocity,
-                        channel=1,
-                        time=0,
-                    )
-                )
-                # Bass note lasts for the full duration of the chord
-                bass_track.append(
-                    Message(
-                        "note_off",
-                        note=bass_note_midi,
-                        velocity=0,
-                        channel=1,
-                        time=chord_duration_ticks,
-                    )
-                )
-
-            # --- Chord Track ---
             if midi_options.get("arpeggio_style"):
                 self._generate_arpeggio_track(
                     chord_track,
                     chord_midi_notes,
                     chord_duration_ticks,
                     midi_options,
-                    chord_data,
-                    ticks_per_beat,
                     arp_note_indiv_duration_ticks,
                 )
-            else:  # Block chords (with optional strum)
+            else:
                 self._generate_block_track(
                     chord_track,
                     chord_midi_notes,
                     chord_duration_ticks,
                     midi_options,
-                    chord_data,
-                    ticks_per_beat,
                     strum_delay_ticks,
                 )
 
-        try:
-            output_directory = os.path.dirname(output_filename)
-            if output_directory and not os.path.exists(output_directory):
-                os.makedirs(output_directory, exist_ok=True)
-                print(
-                    f"{Fore.GREEN}Directory '{output_directory}' created.{Style.RESET_ALL}"
-                )
-            midi_file.save(output_filename)
-            print(
-                f"{Fore.GREEN}MIDI file '{output_filename}' generated successfully.{Style.RESET_ALL}"
-            )
-        except OSError as e:
-            logging.error(f"Failed to save MIDI file '{output_filename}': {e}")
-            print(
-                f"{Fore.RED}Error saving MIDI file '{output_filename}'. Please check permissions and path validity.{Style.RESET_ALL}"
-            )
+        self._save_midi_file(midi_file, output_filename)
 
     def _generate_arpeggio_track(
         self,
@@ -577,8 +559,6 @@ class MidiGenerator:
         chord_midi_notes,
         chord_duration_ticks,
         midi_options,
-        chord_data,
-        ticks_per_beat,
         arp_note_indiv_duration_ticks,
     ):
         arp_notes_sequence = list(chord_midi_notes)
@@ -642,8 +622,6 @@ class MidiGenerator:
         chord_midi_notes,
         chord_duration_ticks,
         midi_options,
-        chord_data,
-        ticks_per_beat,
         strum_delay_ticks,
     ):
         time_offset_for_strum_completion = 0

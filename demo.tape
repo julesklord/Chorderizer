@@ -2,8 +2,8 @@
 Output demo.gif
 
 Set Shell "pwsh"
-Set FontSize 18
-Set Width 1200
+Set FontSize 16
+Set Width 1600
 Set Height 900
 Set Padding 30
 Set Theme "Catppuccin Mocha"
@@ -13,8 +13,7 @@ Type ".venv\Scripts\python.exe -m chorderizer.chorderizer"
 Enter
 Sleep 4s
 
-# Welcome message should be visible in the console
-# Navigate Sidebar to change Tonic
+# Select Tonic
 Tab 2
 Sleep 500ms
 Type "j"
@@ -22,20 +21,20 @@ Sleep 500ms
 Enter
 Sleep 1s
 
-# Change Scale (Down to Dorian)
+# Select Scale (Dorian)
 Tab
 Type "jjjj" 
 Sleep 500ms
 Enter
 Sleep 1s
 
-# Toggle Extensions (Down to 7ths)
+# Toggle Extensions (7ths)
 Tab
 Type "jj"
 Type " "
 Sleep 1s
 
-# Navigate to Chord Table (Select and Add)
+# Chord Selection
 Tab 8
 Sleep 800ms
 Type "j"
@@ -49,13 +48,13 @@ Type "j"
 Type "a"
 Sleep 1.5s
 
-# Show Manual
+# Manual
 Type "h"
 Sleep 3s
 Type "escape"
 Sleep 1s
 
-# Export MIDI
+# Export
 Type "e"
 Sleep 2s
 

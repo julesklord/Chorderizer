@@ -60,3 +60,8 @@ scratch/
 .github
 *workspace
 prettierrc
+.trunk/
+.editorconfig   
+
+demo.gif
+demo.tape

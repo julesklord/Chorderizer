@@ -48,14 +48,14 @@ class PianoWidget(Static):
                 for r in range(4):
                     if r < 2 and has_black:
                         rows[r].append("██", style=color)
-                        rows[r].append("██", style=black_color)
+                        rows[r].append("█", style=black_color)
                     else:
-                        rows[r].append("████", style=color)
+                        rows[r].append("███", style=color)
                     rows[r].append("|", style="grey37")
 
                 label_color = "bold cyan" if is_active else "bold white"
-                label_row.append(f" {white_names[i]:^3} ", style=label_color)
-                label_row.append(" ", style="on default")
+                label_row.append(f"{white_names[i]:^3}", style=label_color)
+                label_row.append("|", style="grey37")
 
         full_piano = Text("\n").join(rows)
         full_piano.append("\n")

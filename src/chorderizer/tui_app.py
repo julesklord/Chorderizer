@@ -99,16 +99,18 @@ class ChorderizerApp(App):
     ]
 
     CSS = """
+    Screen {
+        background: transparent;
+    }
     #sidebar {
         width: 30;
-        min-width: 30;
-        background: $surface;
+        background: transparent;
         border-right: tall $primary;
         padding: 1 1;
     }
     #progression-sidebar {
         width: 32;
-        min-width: 32;
+        background: transparent;
     }
     .config-label {
         margin-top: 1;
@@ -117,8 +119,7 @@ class ChorderizerApp(App):
     }
     #center-col {
         width: 1fr;
-        min-width: 50;
-        background: $background;
+        background: transparent;
     }
 
     PianoWidget {

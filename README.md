@@ -1,49 +1,88 @@
-# Chorderizer: Advanced Chord Generator & MIDI Exporter
+# Chorderizer: Advanced Chord Orchestration & MIDI Analysis Dashboard
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-Chorderizer is a Python-based command-line tool designed for composers, and music students. It empowers you to explore diatonic chords within various musical scales, customize chord voicings, and export professional MIDI sequences.
+Chorderizer is a specialized Python-based orchestration tool and harmonic workstation designed for professional composers, theorists, and music producers. It provides a robust engine for exploring diatonic relationships across a wide array of musical scales, enabling precise customization of chord voicings and the generation of production-ready MIDI sequences.
 
-## 🚀 Key Features
+![Chorderizer Dashboard Overview](demo.gif)
 
-* **Versatile Scale Support**: Diatonic chords for Major, Minor, Harmonic, Melodic, and Pentatonic scales.
-* **Deep Customization**: Extensions from Triads to 13ths and full support for Inversions (1st, 2nd, 3rd).
-* **Advanced MIDI Engine**: Arpeggiation, strumming effects, humanization, and automated basslines.
-* **Transposition Engine**: Instantly shift progressions between keys while retaining performance data.
-* **Interactive CLI**: User-friendly colored terminal interface.
+## Project Philosophy
+The core objective of Chorderizer is to bridge the gap between abstract music theory and digital composition. By providing an interactive, low-latency TUI (Terminal User Interface) dashboard, the tool allows for rapid prototyping of harmonic progressions while maintaining strict adherence to diatonic principles and ergonomic voice leading.
 
-## 📚 Documentation
+## Core Capabilities
 
-For a deep dive into Chorderizer, please refer to our dedicated documentation:
+### Harmonic Engine & Theory Support
+The underlying music theory engine has been expanded to support 11 distinct scales, covering the fundamental building blocks of Western and contemporary harmony:
+* **Diatonic Standards**: Major (Ionian), Natural Minor (Aeolian).
+* **Modal Harmony**: Full support for Greek Modes (Dorian, Phrygian, Lydian, Mixolydian, Locrian).
+* **Advanced Tonality**: Harmonic Minor, Melodic Minor (Ascending).
+* **Pentatonic Structures**: Major and Minor Pentatonic variations.
 
-* 📖 **[User Guide](Docs/USER_GUIDE.md)**: How to use Chorderizer from start to finish.
-* 🏗️ **[Architecture](Docs/ARCHITECTURE.md)**: Internal design and module overview.
-* 💻 **[Developer Guide](Docs/DEVELOPER_GUIDE.md)**: Setup, testing, and contribution details.
-* 🔧 **[API Reference](Docs/API_REFERENCE.md)**: Technical details for developers.
-* 🗺️ **[Roadmap](ROADMAP.md)**: Future vision and upcoming features.
+### Reactive TUI Dashboard
+The v0.2.x release introduces a comprehensive dashboard built on the Textual framework, facilitating real-time visualization and interaction:
+* **Piano Visualizer**: A 2-octave responsive keyboard rendering active MIDI notes with precision.
+* **Guitar Fretboard**: A 12-fret interactive diapasón highlighting scale tonics and specific chord positions.
+* **Guitar Tab Generator**: Automated conversion of MIDI chord voicings into playable tablature notation.
+* **Diatonic Table**: Real-time calculation of chord names, degrees (Roman Numeral Analysis), and MIDI note arrays based on selected extensions.
 
-## 🛠️ Installation
+### MIDI Export & Humanization
+The MIDI engine (powered by mido) is designed to produce sequences that feel organic and professional:
+* **Note Extensions**: Support for Triads, 6ths, 7ths, 9ths, 11ths, and 13ths.
+* **Inversion Logic**: Precise control over 1st, 2nd, and 3rd inversions.
+* **Humanization Engine**: Intelligent velocity randomization and micro-timing adjustments.
+* **Automated Basslines**: Optional generation of root-based bass tracks for full harmonic context.
 
+## Installation & Execution
+
+### Prerequisites
+* Python 3.8 or higher.
+* Recommended: A terminal with support for true color and UTF-8 characters (e.g., Windows Terminal, iTerm2, Alacritty).
+
+### Setup
 ```bash
+# Clone the repository
+git clone https://github.com/julesklord/chorderizer.git
+cd chorderizer
+
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
+
+# Install development/production dependencies
 pip install .
 ```
 
-To run from source:
-
+### Running the Workstation
+To launch the interactive dashboard, execute the module directly:
 ```bash
 python -m chorderizer.chorderizer
 ```
 
-## 🧪 Testing
+## Dashboard Interface Guide
 
-```bash
-pytest
-```
+The TUI is designed for keyboard-driven efficiency:
+* **[A] Add Chord**: Commits the currently highlighted chord in the table to the progression list (Right Sidebar).
+* **[X] Clear List**: Flushes the internal progression buffer.
+* **[E] Export MIDI**: Serializes the current progression list into a standard MIDI file (SMF) in `~/chord_generator_midi_exports`.
+* **[H] Manual**: Displays the comprehensive on-screen operation manual.
+* **[Q] Terminate**: Safely closes the application.
 
-## 📄 License
+## Technical Standards & Quality Assurance
+The codebase adheres to PEP 8 standards and utilizes modern tooling to ensure stability and maintainability:
+* **Linting & Formatting**: Managed via Ruff and Trunk for lightning-fast quality control.
+* **Testing Suite**: Comprehensive unit tests managed via `pytest`, ensuring integrity of the theory engine and MIDI generation.
+* **Architecture**: Modular design separating theory logic (`theory_utils.py`), MIDI generation (`generators.py`), and UI orchestration (`tui_app.py`).
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+## Supplementary Documentation
+For detailed technical specifications, refer to the following documents:
+* [User Guide](Docs/USER_GUIDE.md) — End-user operational details.
+* [Architecture](Docs/ARCHITECTURE.md) — System design and module interactions.
+* [API Reference](Docs/API_REFERENCE.md) — Technical documentation for engine integration.
+
+## License
+This project is licensed under the MIT License - see the LICENSE.md file for details.
 
 ---
-*Created with ❤️ for the musical community.*
+*Created with ❤️ for the musical community. Powered by Python, Textual, and Antigravity*

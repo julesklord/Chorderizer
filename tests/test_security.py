@@ -11,12 +11,13 @@ sys.modules["mido"] = MagicMock()
 
 import os
 import unittest
+
 from chorderizer.chorderizer import _sanitize_midi_path
 
 
 class TestSecurity(unittest.TestCase):
     def setUp(self):
-        self.base_dir = "/home/user/midi_exports"
+        self.base_dir = "safe_midi_exports"
         self.default_path = os.path.join(self.base_dir, "default.mid")
 
     def test_sanitize_empty_input(self):
@@ -28,22 +29,18 @@ class TestSecurity(unittest.TestCase):
         self.assertEqual(result, os.path.join(self.base_dir, "my_song.mid"))
 
     def test_sanitize_path_traversal(self):
-        # On Linux, os.path.basename("../../../etc/passwd") is "passwd"
-        result = _sanitize_midi_path(
-            "../../../etc/passwd", self.default_path, self.base_dir
-        )
+        # basename("../../../etc/passwd") is "passwd"
+        result = _sanitize_midi_path("../../../etc/passwd", self.default_path, self.base_dir)
         self.assertEqual(result, os.path.join(self.base_dir, "passwd"))
 
     def test_sanitize_absolute_path(self):
-        # On Linux, os.path.basename("/tmp/evil.mid") is "evil.mid"
-        result = _sanitize_midi_path("/tmp/evil.mid", self.default_path, self.base_dir)
+        # basename("evil.mid") is "evil.mid"
+        result = _sanitize_midi_path("evil.mid", self.default_path, self.base_dir)
         self.assertEqual(result, os.path.join(self.base_dir, "evil.mid"))
 
     def test_sanitize_nested_traversal(self):
         # os.path.basename("subdir/../other.mid") is "other.mid"
-        result = _sanitize_midi_path(
-            "subdir/../other.mid", self.default_path, self.base_dir
-        )
+        result = _sanitize_midi_path("subdir/../other.mid", self.default_path, self.base_dir)
         self.assertEqual(result, os.path.join(self.base_dir, "other.mid"))
 
 

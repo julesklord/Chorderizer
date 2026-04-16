@@ -59,4 +59,4 @@ scratch/
 .pytest_cache/
 .github
 *workspace
-
+prettierrc

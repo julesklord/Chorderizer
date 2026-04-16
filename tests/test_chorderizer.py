@@ -1,23 +1,25 @@
 """
 test_chorderizer.py — Tests for the main orchestration module.
 """
+
 import os
 import sys
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 # Mock external dependencies before importing chorderizer
 sys.modules["colorama"] = MagicMock()
 sys.modules["mido"] = MagicMock()
 
-from chorderizer.chorderizer import _generate_midi_filename_helper, process_single_run
+from chorderizer.chorderizer import (  # noqa: E402
+    _generate_midi_filename_helper,
+    process_single_run,
+)
 
 
 def test_generate_midi_filename_helper_basic():
     tonic = "C"
     scale_info = {"name": "Major"}
-    base_dir = "/tmp/midi"
+    base_dir = "temp_midi_dir"
 
     expected_filename = "prog_C_Major.mid"
     expected_path = os.path.join(base_dir, expected_filename)
@@ -28,7 +30,7 @@ def test_generate_midi_filename_helper_basic():
 def test_generate_midi_filename_helper_with_spaces_in_tonic():
     tonic = "C # "
     scale_info = {"name": "Major"}
-    base_dir = "/tmp/midi"
+    base_dir = "temp_midi_dir"
 
     expected_filename = "prog_C_#__Major.mid"
     expected_path = os.path.join(base_dir, expected_filename)
@@ -39,7 +41,7 @@ def test_generate_midi_filename_helper_with_spaces_in_tonic():
 def test_generate_midi_filename_helper_with_parentheses_and_spaces_in_scale():
     tonic = "D"
     scale_info = {"name": "Minor (Harmonic)"}
-    base_dir = "/tmp/midi"
+    base_dir = "temp_midi_dir"
 
     expected_filename = "prog_D_Minor_Harmonic.mid"
     expected_path = os.path.join(base_dir, expected_filename)
@@ -50,15 +52,14 @@ def test_generate_midi_filename_helper_with_parentheses_and_spaces_in_scale():
 def test_generate_midi_filename_helper_custom_prefix():
     tonic = "G"
     scale_info = {"name": "Dorian"}
-    base_dir = "/tmp/midi"
+    base_dir = "temp_midi_dir"
     prefix = "custom_"
 
     expected_filename = "custom_G_Dorian.mid"
     expected_path = os.path.join(base_dir, expected_filename)
 
     assert (
-        _generate_midi_filename_helper(tonic, scale_info, base_dir, prefix=prefix)
-        == expected_path
+        _generate_midi_filename_helper(tonic, scale_info, base_dir, prefix=prefix) == expected_path
     )
 
 
@@ -79,7 +80,7 @@ def test_process_single_run_missing_scale_info():
     # select_scale_config is the new method; select_tonic_and_scale is the compat alias
     ui_mock.select_scale_config.return_value = (None, None)
 
-    result = process_single_run(ui_mock, None, None, None, "/tmp")
+    result = process_single_run(ui_mock, None, None, None, "temp_midi")
 
     assert result is True
     ui_mock.select_scale_config.assert_called_once()
@@ -97,7 +98,7 @@ def test_process_single_run_missing_chord_settings():
     chord_builder_mock = MagicMock()
 
     result = process_single_run(
-        ui_mock, chord_builder_mock, MagicMock(), MagicMock(), "/tmp/midi"
+        ui_mock, chord_builder_mock, MagicMock(), MagicMock(), "temp_midi_dir"
     )
 
     assert result is True

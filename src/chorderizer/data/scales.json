@@ -192,6 +192,246 @@
     }
   },
   "5": {
+    "name": "Dorian",
+    "tonic_suffix": "m",
+    "degrees": {
+      "i": {
+        "root_interval": 0,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "ii": {
+        "root_interval": 2,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "III": {
+        "root_interval": 3,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "IV": {
+        "root_interval": 5,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      },
+      "v": {
+        "root_interval": 7,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "vi°": {
+        "root_interval": 9,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      },
+      "VII": {
+        "root_interval": 10,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      }
+    }
+  },
+  "6": {
+    "name": "Phrygian",
+    "tonic_suffix": "m",
+    "degrees": {
+      "i": {
+        "root_interval": 0,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "II": {
+        "root_interval": 1,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "III": {
+        "root_interval": 3,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      },
+      "iv": {
+        "root_interval": 5,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "v°": {
+        "root_interval": 7,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      },
+      "VI": {
+        "root_interval": 8,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "vii": {
+        "root_interval": 10,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      }
+    }
+  },
+  "7": {
+    "name": "Lydian",
+    "tonic_suffix": "",
+    "degrees": {
+      "I": {
+        "root_interval": 0,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "II": {
+        "root_interval": 2,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      },
+      "iii": {
+        "root_interval": 4,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "iv°": {
+        "root_interval": 6,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      },
+      "V": {
+        "root_interval": 7,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "vi": {
+        "root_interval": 9,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "vii": {
+        "root_interval": 11,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      }
+    }
+  },
+  "8": {
+    "name": "Mixolydian",
+    "tonic_suffix": "",
+    "degrees": {
+      "I": {
+        "root_interval": 0,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "ii": {
+        "root_interval": 2,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "iii°": {
+        "root_interval": 4,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      },
+      "IV": {
+        "root_interval": 5,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "v": {
+        "root_interval": 7,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "vi": {
+        "root_interval": 9,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "VII": {
+        "root_interval": 10,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      }
+    }
+  },
+  "9": {
+    "name": "Locrian",
+    "tonic_suffix": "dim",
+    "degrees": {
+      "i°": {
+        "root_interval": 0,
+        "base_quality": "diminished",
+        "full_quality": "halfdim7",
+        "display_suffix": "m7b5"
+      },
+      "II": {
+        "root_interval": 1,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "iii": {
+        "root_interval": 3,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "iv": {
+        "root_interval": 5,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      },
+      "V": {
+        "root_interval": 6,
+        "base_quality": "major",
+        "full_quality": "maj7",
+        "display_suffix": "maj7"
+      },
+      "VI": {
+        "root_interval": 8,
+        "base_quality": "major",
+        "full_quality": "dom7",
+        "display_suffix": "7"
+      },
+      "vii": {
+        "root_interval": 10,
+        "base_quality": "minor",
+        "full_quality": "min7",
+        "display_suffix": "m7"
+      }
+    }
+  },
+  "10": {
     "name": "Major Pentatonic",
     "tonic_suffix": "",
     "degrees": {
@@ -227,7 +467,7 @@
       }
     }
   },
-  "6": {
+  "11": {
     "name": "Minor Pentatonic",
     "tonic_suffix": "m",
     "degrees": {

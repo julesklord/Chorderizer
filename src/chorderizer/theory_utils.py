@@ -1,5 +1,5 @@
-import logging
 import json
+import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -45,7 +45,7 @@ class MusicTheoryUtils:
         return False
 
     # Pre-calculated cache for get_note_index to improve performance
-    _NOTE_INDEX_CACHE = {}
+    _NOTE_INDEX_CACHE: Dict[str, int] = {}
 
     @staticmethod
     def get_note_index(note_name: str) -> int:
@@ -79,10 +79,10 @@ class MusicTheoryUtils:
             # Cache the result for future calls
             MusicTheoryUtils._NOTE_INDEX_CACHE[note_name.upper()] = res
             return res
-        except ValueError:
+        except ValueError as err:
             raise ValueError(
                 f"Base note '{root_note_str}' from '{note_name}' not recognized."
-            )
+            ) from err
 
     @staticmethod
     def split_chord_name(chord_name: str) -> Tuple[str, str]:
@@ -105,9 +105,7 @@ class MusicTheoryUtils:
     ) -> Optional[Dict[str, str]]:
         """Transposes a dictionary of chords to a new scale tonic."""
         try:
-            original_tonic_idx = MusicTheoryUtils.get_note_index(
-                original_scale_tonic_str
-            )
+            original_tonic_idx = MusicTheoryUtils.get_note_index(original_scale_tonic_str)
             new_tonic_idx = MusicTheoryUtils.get_note_index(new_scale_tonic_str)
         except ValueError as e:
             logging.error(f"Error parsing tonic for transposition: {e}")
@@ -156,11 +154,13 @@ class MusicTheory:
         data_path = os.path.join(os.path.dirname(__file__), "data", "scales.json")
         try:
             if os.path.exists(data_path):
-                with open(data_path, "r", encoding="utf-8") as f:
+                with open(data_path, encoding="utf-8") as f:
                     self.AVAILABLE_SCALES = json.load(f)
             else:
-                 logging.warning(f"Scales data file not found at {data_path}. Using internal defaults.")
-                 self.AVAILABLE_SCALES = self._get_default_scales()
+                logging.warning(
+                    f"Scales data file not found at {data_path}. Using internal defaults."
+                )
+                self.AVAILABLE_SCALES = self._get_default_scales()
         except Exception as e:
             logging.error(f"Error loading scales from JSON: {e}")
             self.AVAILABLE_SCALES = self._get_default_scales()
@@ -173,14 +173,49 @@ class MusicTheory:
                 "name": "Major",
                 "tonic_suffix": "",
                 "degrees": {
-                    "I": {"root_interval": 0, "base_quality": "major", "full_quality": "maj7", "display_suffix": "maj7"},
-                    "ii": {"root_interval": 2, "base_quality": "minor", "full_quality": "min7", "display_suffix": "m7"},
-                    "iii": {"root_interval": 4, "base_quality": "minor", "full_quality": "min7", "display_suffix": "m7"},
-                    "IV": {"root_interval": 5, "base_quality": "major", "full_quality": "maj7", "display_suffix": "maj7"},
-                    "V": {"root_interval": 7, "base_quality": "major", "full_quality": "dom7", "display_suffix": "7"},
-                    "vi": {"root_interval": 9, "base_quality": "minor", "full_quality": "min7", "display_suffix": "m7"},
-                    "vii°": {"root_interval": 11, "base_quality": "diminished", "full_quality": "halfdim7", "display_suffix": "m7b5"}
-                }
+                    "I": {
+                        "root_interval": 0,
+                        "base_quality": "major",
+                        "full_quality": "maj7",
+                        "display_suffix": "maj7",
+                    },
+                    "ii": {
+                        "root_interval": 2,
+                        "base_quality": "minor",
+                        "full_quality": "min7",
+                        "display_suffix": "m7",
+                    },
+                    "iii": {
+                        "root_interval": 4,
+                        "base_quality": "minor",
+                        "full_quality": "min7",
+                        "display_suffix": "m7",
+                    },
+                    "IV": {
+                        "root_interval": 5,
+                        "base_quality": "major",
+                        "full_quality": "maj7",
+                        "display_suffix": "maj7",
+                    },
+                    "V": {
+                        "root_interval": 7,
+                        "base_quality": "major",
+                        "full_quality": "dom7",
+                        "display_suffix": "7",
+                    },
+                    "vi": {
+                        "root_interval": 9,
+                        "base_quality": "minor",
+                        "full_quality": "min7",
+                        "display_suffix": "m7",
+                    },
+                    "vii°": {
+                        "root_interval": 11,
+                        "base_quality": "diminished",
+                        "full_quality": "halfdim7",
+                        "display_suffix": "m7b5",
+                    },
+                },
             }
         }
 

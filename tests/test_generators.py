@@ -1,12 +1,11 @@
-import pytest
 import sys
 from unittest.mock import MagicMock
 
 # Mock external dependencies
 sys.modules["mido"] = MagicMock()
 
-from chorderizer.theory_utils import MusicTheory  # noqa: E402
 from chorderizer.generators import ChordGenerator
+from chorderizer.theory_utils import MusicTheory  # noqa: E402
 
 
 def test_chord_generator_happy_path():
@@ -40,9 +39,7 @@ def test_chord_generator_extension_levels():
     scale_info = theory.AVAILABLE_SCALES["1"]  # Major
 
     # Triads (extension_level=0)
-    generated_chords, _, _, _ = generator.generate_scale_chords(
-        "C", scale_info, extension_level=0
-    )
+    generated_chords, _, _, _ = generator.generate_scale_chords("C", scale_info, extension_level=0)
     assert generated_chords["I"] == "C"
     assert generated_chords["ii"] == "Dm"
 
@@ -53,14 +50,10 @@ def test_chord_generator_inversions():
     scale_info = theory.AVAILABLE_SCALES["1"]  # Major
 
     # Root position (inversion=0)
-    _, _, notes_midi_root, _ = generator.generate_scale_chords(
-        "C", scale_info, inversion=0
-    )
+    _, _, notes_midi_root, _ = generator.generate_scale_chords("C", scale_info, inversion=0)
 
     # First inversion (inversion=1)
-    _, _, notes_midi_inv1, _ = generator.generate_scale_chords(
-        "C", scale_info, inversion=1
-    )
+    _, _, notes_midi_inv1, _ = generator.generate_scale_chords("C", scale_info, inversion=1)
 
     # Verify the lowest note in inversion 1 is different and higher than root position lowest note (or shifted)
     # The actual MIDI values depend on the specific octave selection logic, but we can verify
@@ -117,17 +110,10 @@ def test_voice_leader_reduces_motion():
     prev = [60, 64, 67, 71]  # C4, E4, G4, B4
     curr = [65, 69, 72, 76]  # F4, A4, C5, E5
 
-    raw_motion = sum(abs(c - p) for c, p in zip(sorted(curr), sorted(prev)))
-    voiced = VoiceLeader.apply(prev, curr)
-    voiced_motion = sum(
-        abs(v - p)
-        for v in voiced
-        for p in prev
-        if abs(v - p) == min(abs(v - q) for q in prev)
-    )
+    _voiced = VoiceLeader.apply(prev, curr)
 
     # The voice-led version total span should be <= raw version
-    assert max(voiced) - min(voiced) <= max(curr) - min(curr) + 12
+    assert max(_voiced) - min(_voiced) <= max(curr) - min(curr) + 12
 
 
 def test_voice_leader_preserves_bass():
@@ -163,9 +149,7 @@ def test_generate_simple_tab_happy_path():
     theory = MusicTheory()
     generator = TablatureGenerator(theory)
 
-    tab_lines = generator.generate_simple_tab(
-        "C", [48, 52, 55, 60, 64]
-    )  # C3, E3, G3, C4, E4
+    tab_lines = generator.generate_simple_tab("C", [48, 52, 55, 60, 64])  # C3, E3, G3, C4, E4
 
     assert len(tab_lines) == 7  # 1 header + 6 strings
     assert tab_lines[0] == "Chord: C (simple tab)"

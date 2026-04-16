@@ -23,9 +23,7 @@ class ChordGenerator:
         scale_info: Dict[str, Any],
         extension_level: int = 2,
         inversion: int = 0,
-    ) -> Tuple[
-        Dict[str, str], Dict[str, List[str]], Dict[str, List[int]], Dict[str, str]
-    ]:
+    ) -> Tuple[Dict[str, str], Dict[str, List[str]], Dict[str, List[int]], Dict[str, str]]:
         # Initialize cache if it doesn't exist
         if not hasattr(self, "_chord_cache"):
             self._chord_cache = {}
@@ -56,25 +54,19 @@ class ChordGenerator:
         use_flats = MusicTheoryUtils.should_use_flats(scale_tonic_str)
 
         for degree_roman, degree_definition in scale_degrees_info.items():
-            chord_root_abs_idx = (
-                scale_tonic_index + degree_definition["root_interval"]
-            ) % 12
-            chord_root_name = MusicTheoryUtils.get_note_name(
-                chord_root_abs_idx, use_flats
-            )
+            chord_root_abs_idx = (scale_tonic_index + degree_definition["root_interval"]) % 12
+            chord_root_name = MusicTheoryUtils.get_note_name(chord_root_abs_idx, use_flats)
             base_quality = degree_definition["base_quality"]
             degree_display_suffix = degree_definition["display_suffix"]
             chord_type_to_use = degree_definition[
                 "full_quality"
             ]  # Default to full quality (e.g., 7ths)
 
-            chord_type_to_use, degree_display_suffix = (
-                self._determine_chord_type_and_suffix(
-                    base_quality,
-                    chord_type_to_use,
-                    degree_display_suffix,
-                    extension_level,
-                )
+            chord_type_to_use, degree_display_suffix = self._determine_chord_type_and_suffix(
+                base_quality,
+                chord_type_to_use,
+                degree_display_suffix,
+                extension_level,
             )
 
             # Get intervals for the determined chord type
@@ -109,9 +101,7 @@ class ChordGenerator:
                 unique_sorted_intervals, chord_root_abs_idx, initial_octave_offset
             )
 
-            current_midi_notes = sorted(
-                set(current_midi_notes)
-            )  # Final sort and unique
+            current_midi_notes = sorted(set(current_midi_notes))  # Final sort and unique
             current_chord_note_names = [
                 MusicTheoryUtils.get_note_name(n, use_flats) for n in current_midi_notes
             ]
@@ -210,10 +200,7 @@ class ChordGenerator:
             )
 
             # Ensure notes are generally ascending for a simple voicing
-            while (
-                last_added_midi_note != -1
-                and candidate_midi_note <= last_added_midi_note
-            ):
+            while last_added_midi_note != -1 and candidate_midi_note <= last_added_midi_note:
                 candidate_midi_note += 12
 
             # MIDI range adjustments (heuristic to keep notes within a playable/sensible range)
@@ -225,12 +212,9 @@ class ChordGenerator:
             # For wider chords, try to keep upper notes from going excessively high if a lower octave is available
             if (
                 len(unique_sorted_intervals) > 4
-                and candidate_midi_note
-                > self.theory.MIDI_BASE_OCTAVE + 24 + initial_octave_offset
+                and candidate_midi_note > self.theory.MIDI_BASE_OCTAVE + 24 + initial_octave_offset
             ):  # Roughly 2 octaves above C4
-                if (
-                    candidate_midi_note - 12
-                ) > last_added_midi_note or last_added_midi_note == -1:
+                if (candidate_midi_note - 12) > last_added_midi_note or last_added_midi_note == -1:
                     candidate_midi_note -= 12
 
             if 0 <= candidate_midi_note <= 127:  # Valid MIDI note
@@ -245,12 +229,8 @@ class ChordGenerator:
         initial_octave_offset = 0
         if unique_sorted_intervals:
             # Estimate position of the first note if placed directly
-            first_note_in_octave_relative = (
-                chord_root_abs_idx + unique_sorted_intervals[0]
-            ) % 12
-            tentative_first_midi_note = (
-                self.theory.MIDI_BASE_OCTAVE + first_note_in_octave_relative
-            )
+            first_note_in_octave_relative = (chord_root_abs_idx + unique_sorted_intervals[0]) % 12
+            tentative_first_midi_note = self.theory.MIDI_BASE_OCTAVE + first_note_in_octave_relative
 
             # If the first note is too low and it's a root/low interval, shift up
             if (
@@ -266,9 +246,7 @@ class ChordGenerator:
                 initial_octave_offset = -12
         return initial_octave_offset
 
-    def _apply_inversion(
-        self, chord_intervals_relative: List[int], inversion: int
-    ) -> List[int]:
+    def _apply_inversion(self, chord_intervals_relative: List[int], inversion: int) -> List[int]:
         if not (0 < inversion < len(chord_intervals_relative)):
             return chord_intervals_relative
 
@@ -277,9 +255,7 @@ class ChordGenerator:
             if not temp_intervals:
                 break
             bass_relative_interval = temp_intervals.pop(0)
-            temp_intervals.append(
-                bass_relative_interval + 12
-            )  # Add to top, an octave higher
+            temp_intervals.append(bass_relative_interval + 12)  # Add to top, an octave higher
         return sorted(set(temp_intervals))  # Remove duplicates and sort
 
 
@@ -323,15 +299,13 @@ class TablatureGenerator:
         if not chord_midi_notes:
             return []
         # This is a very basic tablature generator, prioritizing lower frets and one note per string.
-        frets_on_strings = {name: "-" for name in self.TAB_STRING_NAMES}
+        frets_on_strings = dict.fromkeys(self.TAB_STRING_NAMES, "-")
         sorted_midi_notes = sorted(set(chord_midi_notes))  # Ascending MIDI notes
         notes_placed_in_tab = [False] * len(sorted_midi_notes)
         max_allowable_frets = 15  # Arbitrary limit for simplicity
 
         # Iterate from highest string (e1) to lowest (E6) to try and place notes
-        for string_name in reversed(
-            self.TAB_STRING_NAMES
-        ):  # e.g. E6, A5, D4, G3, B2, e1
+        for string_name in reversed(self.TAB_STRING_NAMES):  # e.g. E6, A5, D4, G3, B2, e1
             open_string_note_midi = self.GUITAR_OPEN_STRINGS_MIDI[string_name]
             # Try to place an unplaced chord note on this string
             for i, chord_note in enumerate(sorted_midi_notes):
@@ -351,9 +325,7 @@ class TablatureGenerator:
         tab_lines: List[str] = [f"Chord: {chord_display_name} (simple tab)"]
         for string_name in self.TAB_STRING_NAMES:  # Display from e1 (high) to E6 (low)
             fret_display = frets_on_strings[string_name]
-            tab_lines.append(
-                f"{string_name.ljust(2)}|--{fret_display.rjust(2, '-')}--|"
-            )
+            tab_lines.append(f"{string_name.ljust(2)}|--{fret_display.rjust(2, '-')}--|")
         return tab_lines
 
 
@@ -454,9 +426,7 @@ class MidiGenerator:
     ) -> int:
         if midi_options.get("strum_delay_ms", 0) > 0:
             strum_delay_seconds = midi_options["strum_delay_ms"] / 1000.0
-            strum_delay_beats = strum_delay_seconds * (
-                midi_options.get("bpm", 120) / 60.0
-            )
+            strum_delay_beats = strum_delay_seconds * (midi_options.get("bpm", 120) / 60.0)
             return int(strum_delay_beats * ticks_per_beat)
         return 0
 
@@ -475,9 +445,7 @@ class MidiGenerator:
             )
         )
         chord_track.append(
-            MetaMessage(
-                "set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0
-            )
+            MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0)
         )
 
         bass_track: Optional[MidiTrack] = None
@@ -494,9 +462,7 @@ class MidiGenerator:
                 )
             )
             bass_track.append(
-                MetaMessage(
-                    "set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0
-                )
+                MetaMessage("set_tempo", tempo=bpm2tempo(midi_options.get("bpm", 120)), time=0)
             )
 
         return chord_track, bass_track
@@ -541,9 +507,7 @@ class MidiGenerator:
             output_directory = os.path.dirname(output_filename)
             if output_directory and not os.path.exists(output_directory):
                 os.makedirs(output_directory, exist_ok=True)
-                print(
-                    f"{Fore.GREEN}Directory '{output_directory}' created.{Style.RESET_ALL}"
-                )
+                print(f"{Fore.GREEN}Directory '{output_directory}' created.{Style.RESET_ALL}")
             midi_file.save(output_filename)
             print(
                 f"{Fore.GREEN}MIDI file '{output_filename}' generated successfully.{Style.RESET_ALL}"
@@ -561,9 +525,7 @@ class MidiGenerator:
         midi_options: Dict[str, Any],
     ) -> None:
         ticks_per_beat = 480  # Standard resolution
-        strum_delay_ticks = self._calculate_strum_delay_ticks(
-            midi_options, ticks_per_beat
-        )
+        strum_delay_ticks = self._calculate_strum_delay_ticks(midi_options, ticks_per_beat)
 
         midi_file = MidiFile(ticks_per_beat=ticks_per_beat)
         chord_track, bass_track = self._setup_midi_tracks(midi_file, midi_options)
@@ -577,7 +539,7 @@ class MidiGenerator:
         use_voice_leading = midi_options.get("voice_leading", False)
         prev_chord_midi: Optional[List[int]] = None
 
-        for i_chord, chord_data in enumerate(chords_to_process):
+        for chord_data in chords_to_process:
             chord_midi_notes = chord_data["notas_midi"]
             if not chord_midi_notes:
                 continue
@@ -627,9 +589,7 @@ class MidiGenerator:
             arp_notes_sequence.reverse()
         elif midi_options.get("arpeggio_style") == "updown":
             if len(arp_notes_sequence) > 1:
-                arp_notes_sequence += arp_notes_sequence[
-                    len(arp_notes_sequence) - 2 :: -1
-                ]
+                arp_notes_sequence += arp_notes_sequence[len(arp_notes_sequence) - 2 :: -1]
 
         num_arp_notes = len(arp_notes_sequence)
         base_vel = midi_options.get("base_velocity", 70)
@@ -643,18 +603,12 @@ class MidiGenerator:
                     0,
                     min(
                         127,
-                        base_vel
-                        + random.randint(
-                            vel_rand_min,
-                            vel_rand_max,
-                        ),
+                        base_vel + random.randint(vel_rand_min, vel_rand_max),  # nosec
                     ),
                 )
 
                 chord_track.append(
-                    Message(
-                        "note_on", note=note_val, velocity=velocity, channel=0, time=0
-                    )
+                    Message("note_on", note=note_val, velocity=velocity, channel=0, time=0)
                 )
 
                 current_arp_note_actual_duration = arp_note_indiv_duration_ticks
@@ -662,9 +616,7 @@ class MidiGenerator:
                     time_taken_by_prev_arp_notes = (
                         num_arp_notes - 1
                     ) * arp_note_indiv_duration_ticks
-                    remaining_slot_time = (
-                        chord_duration_ticks - time_taken_by_prev_arp_notes
-                    )
+                    remaining_slot_time = chord_duration_ticks - time_taken_by_prev_arp_notes
                     current_arp_note_actual_duration = max(0, remaining_slot_time)
 
                 chord_track.append(
@@ -696,11 +648,7 @@ class MidiGenerator:
                 0,
                 min(
                     127,
-                    base_vel
-                    + random.randint(
-                        vel_rand_min,
-                        vel_rand_max,
-                    ),
+                    base_vel + random.randint(vel_rand_min, vel_rand_max),  # nosec
                 ),
             )
 

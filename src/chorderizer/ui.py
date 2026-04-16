@@ -7,13 +7,12 @@ Provides clean visual design, inline validation, and a streamlined
 """
 
 import shutil
-import sys
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.formatted_text import HTML
-from prompt_toolkit.shortcuts import print_formatted_text, clear
+from prompt_toolkit.shortcuts import clear, print_formatted_text
 from prompt_toolkit.styles import Style
 from prompt_toolkit.validation import ValidationError, Validator
 
@@ -121,11 +120,7 @@ def render_banner() -> None:
     sub = f"Advanced Chord Generator  ·  v{VERSION}"
 
     _pp(f"<banner>{H['tl']}{H['h'] * inner}{H['tr']}</banner>")
-    _pp(
-        f"<banner>{H['v']}</banner>"
-        f"<banner>{title.center(inner)}</banner>"
-        f"<banner>{H['v']}</banner>"
-    )
+    _pp(f"<banner>{H['v']}</banner><banner>{title.center(inner)}</banner><banner>{H['v']}</banner>")
     _pp(
         f"<banner>{H['v']}</banner>"
         f"<banner-sub>{sub.center(inner)}</banner-sub>"
@@ -156,7 +151,7 @@ def render_warn(msg: str) -> None:
 
 
 def render_cancelled() -> None:
-    _pp(f"\n<warn>  ⊘  Operation cancelled.</warn>")
+    _pp("\n<warn>  ⊘  Operation cancelled.</warn>")
 
 
 # ─── Chord Table ──────────────────────────────────────────────────────────────
@@ -206,7 +201,7 @@ def render_chord_table(
     _raw("")
     _pp(f"<border>  {hline(L['tl'], L['mt'], L['tr'])}</border>")
     _pp(
-        f"  "
+        "  "
         + cell(
             f"<th>{'Degree'.center(col_deg)}</th>",
             f"<th>{'Chord':<{col_chord}}</th>",
@@ -230,17 +225,11 @@ def render_chord_table(
         midi_str = ", ".join(str(n) for n in midi_notes.get(degree, []))
 
         # Truncate long strings to fit column
-        notes_str = (
-            (notes_str[: col_notes - 2] + "…")
-            if len(notes_str) > col_notes
-            else notes_str
-        )
-        midi_str = (
-            (midi_str[: col_midi - 2] + "…") if len(midi_str) > col_midi else midi_str
-        )
+        notes_str = (notes_str[: col_notes - 2] + "…") if len(notes_str) > col_notes else notes_str
+        midi_str = (midi_str[: col_midi - 2] + "…") if len(midi_str) > col_midi else midi_str
 
         _pp(
-            f"  "
+            "  "
             + cell(
                 f"<degree>{_escape(degree).center(col_deg)}</degree>",
                 f"<{tag}>{_escape(chord_name):<{col_chord}}</{tag}>",
@@ -296,9 +285,7 @@ def prompt_menu(
         name = v.get("name", v) if isinstance(v, dict) else str(v)
         _pp(f"  <key>{k.rjust(max_kw)}.</key>  <value>{_escape(name)}</value>")
     if allow_cancel:
-        _pp(
-            f"  <cancel>{cancel_key.rjust(max_kw)}.</cancel>  <hint>← Back / Cancel</hint>"
-        )
+        _pp(f"  <cancel>{cancel_key.rjust(max_kw)}.</cancel>  <hint>← Back / Cancel</hint>")
     _pp(f"  <hint>{'─' * 30}</hint>")
 
     valid = set(display.keys())
@@ -309,8 +296,8 @@ def prompt_menu(
     while True:
         try:
             answer = _prompt_raw(completer=completer)
-        except (EOFError, KeyboardInterrupt):
-            raise KeyboardInterrupt
+        except (EOFError, KeyboardInterrupt) as err:
+            raise KeyboardInterrupt from err
 
         if not answer:
             continue
@@ -372,12 +359,10 @@ class RangeValidator(Validator):
             return
         try:
             val = float(text)
-        except ValueError:
-            raise ValidationError(message="Must be a number.")
+        except ValueError as err:
+            raise ValidationError(message="Must be a number.") from err
         if not (self.low <= val <= self.high):
-            raise ValidationError(
-                message=f"Must be between {self.low} and {self.high}."
-            )
+            raise ValidationError(message=f"Must be between {self.low} and {self.high}.")
 
 
 # ─── UIManager ────────────────────────────────────────────────────────────────
@@ -400,9 +385,7 @@ class UIManager:
         """
         render_section("Phase 1  ·  Scale Configuration")
 
-        tonic_opts = {
-            str(i + 1): note for i, note in enumerate(self.theory.CHROMATIC_NOTES)
-        }
+        tonic_opts = {str(i + 1): note for i, note in enumerate(self.theory.CHROMATIC_NOTES)}
         tonic_key = prompt_menu("Select Tonic Key:", tonic_opts)
         if tonic_key is None:
             return None, None
@@ -467,9 +450,7 @@ class UIManager:
             "7": "Thirteenth chords only",
             "8": "Skip  (no tablature)",
         }
-        choice = prompt_menu(
-            "Guitar Tablature — Show tabs for:", tab_opts, allow_cancel=True
-        )
+        choice = prompt_menu("Guitar Tablature — Show tabs for:", tab_opts, allow_cancel=True)
         return choice if choice is not None else "8"
 
     # ── Phase 4a: Progression Input ───────────────────────────────────────────
@@ -517,7 +498,7 @@ class UIManager:
 
         # — Tempo
         bpm_raw = prompt_text(
-            f"Tempo (BPM):",
+            "Tempo (BPM):",
             default=str(options["bpm"]),
             validator=RangeValidator(20, 300),
             hint="20 – 300 · press Enter to keep default",
@@ -549,9 +530,7 @@ class UIManager:
                 validator=RangeValidator(0, 20),
             )
             try:
-                options["velocity_randomization_range"] = max(
-                    0, min(20, int(rand_raw or "5"))
-                )
+                options["velocity_randomization_range"] = max(0, min(20, int(rand_raw or "5")))
             except ValueError:
                 pass
 

@@ -1,5 +1,6 @@
 import pytest
-from chorderizer.theory_utils import MusicTheoryUtils, MusicTheory
+
+from chorderizer.theory_utils import MusicTheoryUtils
 
 
 def test_get_note_index():

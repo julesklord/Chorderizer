@@ -2,12 +2,13 @@
 tui_widgets.py — Custom Textual widgets for Chorderizer
 """
 
-from typing import List, Set, Dict, Any
-from textual.app import ComposeResult
-from textual.widgets import Static, Label, ListItem, ListView
-from rich.text import Text
-from rich.panel import Panel
+from typing import Any, Dict, List, Set
+
 from rich.align import Align
+from rich.panel import Panel
+from rich.text import Text
+from textual.app import ComposeResult
+from textual.widgets import Label, ListItem, ListView, Static
 
 
 class PianoWidget(Static):
@@ -157,9 +158,7 @@ class ProgressionItem(ListItem):
         self.chord_data = chord_data
 
     def compose(self) -> ComposeResult:
-        yield Label(
-            f" {self.chord_data['nombre']} [dim]({self.chord_data['grado']})[/]"
-        )
+        yield Label(f" {self.chord_data['nombre']} [dim]({self.chord_data['grado']})[/]")
 
 
 class ProgressionPanel(Static):

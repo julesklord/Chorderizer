@@ -33,13 +33,14 @@ from .ui import (
     render_warn,
 )
 
-
 # ─── TUI Moderno ──────────────────────────────────────────────────────────────
+
 
 def run_modern_tui():
     """Launch the reactive Textual dashboard."""
     try:
         from .tui_app import ChorderizerApp
+
         app = ChorderizerApp()
         app.run()
     except ImportError as e:
@@ -49,21 +50,20 @@ def run_modern_tui():
     except Exception as e:
         render_error(f"Failed to launch dashboard: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
 
 # ─── File helpers ─────────────────────────────────────────────────────────────
 
-def _midi_filename(tonic: str, scale_info: Dict[str, Any], base_dir: str, prefix: str = "prog_") -> str:
+
+def _midi_filename(
+    tonic: str, scale_info: Dict[str, Any], base_dir: str, prefix: str = "prog_"
+) -> str:
     """Build a safe MIDI filename from tonic + scale."""
     safe_tonic = tonic.replace(" ", "_")
-    safe_scale = (
-        scale_info["name"]
-        .replace(" ", "_")
-        .replace("(", "")
-        .replace(")", "")
-    )
+    safe_scale = scale_info["name"].replace(" ", "_").replace("(", "").replace(")", "")
     return os.path.join(base_dir, f"{prefix}{safe_tonic}_{safe_scale}.mid")
 
 
@@ -87,6 +87,7 @@ _sanitize_midi_path = _sanitize_path
 
 # ─── Chord display helpers ────────────────────────────────────────────────────
 
+
 def _should_show_tab(filter_key: str, chord_name: str, base_quality: str) -> bool:
     """Return True if a guitar tab should be shown for this chord given the filter."""
     if filter_key == "1":
@@ -108,6 +109,7 @@ def _should_show_tab(filter_key: str, chord_name: str, base_quality: str) -> boo
 
 # ─── Core workflow ────────────────────────────────────────────────────────────
 
+
 def _phase3_display_results(
     ui: UIManager,
     tab_builder: TablatureGenerator,
@@ -121,7 +123,9 @@ def _phase3_display_results(
     """Phase 3 — Display chord table and optional guitar tabs."""
     render_section("Phase 3  ·  Scale Results")
 
-    render_chord_table(chord_names, note_names, midi_notes, base_qualities, tonic, scale_info["name"])
+    render_chord_table(
+        chord_names, note_names, midi_notes, base_qualities, tonic, scale_info["name"]
+    )
 
     tab_filter = ui.prompt_tablature_filter()
 
@@ -171,24 +175,28 @@ def _phase4_midi_export(
                     except ValueError:
                         render_warn(f"Invalid duration for '{degree}' — using 4.0 beats.")
                 if degree in chord_names:
-                    chords_for_midi.append({
-                        "grado": degree,
-                        "nombre": chord_names[degree],
-                        "notas_midi": midi_notes[degree],
-                        "duracion_beats": beats,
-                    })
+                    chords_for_midi.append(
+                        {
+                            "grado": degree,
+                            "nombre": chord_names[degree],
+                            "notas_midi": midi_notes[degree],
+                            "duracion_beats": beats,
+                        }
+                    )
                 else:
                     render_warn(f"Degree '{degree}' not found — skipped.")
     else:
         # Use all diatonic chords sequentially
         for deg in scale_info["degrees"]:
             if deg in chord_names:
-                chords_for_midi.append({
-                    "grado": deg,
-                    "nombre": chord_names[deg],
-                    "notas_midi": midi_notes[deg],
-                    "duracion_beats": 2.0,
-                })
+                chords_for_midi.append(
+                    {
+                        "grado": deg,
+                        "nombre": chord_names[deg],
+                        "notas_midi": midi_notes[deg],
+                        "duracion_beats": 2.0,
+                    }
+                )
 
     if not chords_for_midi:
         render_error("No chords available for MIDI export.")
@@ -201,6 +209,7 @@ def _phase4_midi_export(
     suggested = _midi_filename(tonic, scale_info, export_dir)
 
     from .ui import prompt_text  # local import to avoid circular at module level
+
     raw_fname = prompt_text(
         "Output MIDI filename:",
         default=suggested,
@@ -220,7 +229,8 @@ def _phase4_midi_export(
             transposed = MusicTheoryUtils.transpose_chords(chord_names, tonic, new_tonic)
             if transposed:
                 render_section(f"Transposed to  {new_tonic}  ({new_scale['name']})")
-                from .ui import _pp, _escape
+                from .ui import _escape, _pp
+
                 for deg, name in transposed.items():
                     _pp(f"  <key>{_escape(deg.ljust(8))}</key>  <value>{_escape(name)}</value>")
                 print()
@@ -256,6 +266,7 @@ def _phase4_midi_export(
 
 # ─── Main loop ────────────────────────────────────────────────────────────────
 
+
 def process_single_run(
     ui: UIManager,
     chord_builder: ChordGenerator,
@@ -289,17 +300,30 @@ def process_single_run(
 
     # ── Phase 3: Display results ──────────────────────────────────────────────
     _phase3_display_results(
-        ui, tab_builder, tonic, scale_info,
-        chord_names, note_names, midi_notes, base_qualities,
+        ui,
+        tab_builder,
+        tonic,
+        scale_info,
+        chord_names,
+        note_names,
+        midi_notes,
+        base_qualities,
     )
 
     # ── Phase 4: MIDI export ──────────────────────────────────────────────────
     if prompt_confirm("Export to MIDI?", default=True):
         try:
             _phase4_midi_export(
-                ui, midi_builder, chord_builder,
-                tonic, scale_info, chord_names, midi_notes,
-                extension_level, inversion_idx, export_dir,
+                ui,
+                midi_builder,
+                chord_builder,
+                tonic,
+                scale_info,
+                chord_names,
+                midi_notes,
+                extension_level,
+                inversion_idx,
+                export_dir,
             )
         except KeyboardInterrupt:
             print_operation_cancelled()
@@ -310,25 +334,17 @@ def process_single_run(
 def main() -> None:
     """Application entry point."""
     parser = argparse.ArgumentParser(description="Chorderizer — Advanced Chord Generator")
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="Chorderizer 0.2.0"
-    )
+    parser.add_argument("--version", action="version", version="Chorderizer 0.2.0")
     parser.add_argument(
         "--legacy",
         action="store_true",
-        help="Run the sequential prompt-based UI instead of the dashboard"
+        help="Run the sequential prompt-based UI instead of the dashboard",
     )
     parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable detailed logging output"
+        "--verbose", "-v", action="store_true", help="Enable detailed logging output"
     )
     parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Run in debug mode with full tracebacks"
+        "--debug", action="store_true", help="Run in debug mode with full tracebacks"
     )
     args = parser.parse_args()
 
@@ -355,6 +371,7 @@ def main() -> None:
         while True:
             if not process_single_run(ui, chord_builder, tab_builder, midi_builder, export_dir):
                 from .ui import _pp
+
                 _pp("\n<success>  ♩  Thank you for using Chorderizer. Goodbye!</success>\n")
                 break
     except KeyboardInterrupt:

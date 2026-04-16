@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "chorderizer"
 version = "0.2.0"
 authors = [
-  { name="Julio César Martinez", email="julioglez.93@gmail.com" },
+    { name = "Julio César Martinez", email = "julioglez.93@gmail.com" }
 ]
 description = "Generador avanzado de progresiones de acordes MIDI con Dashboard TUI reactivo y visualizadores."
 readme = "README.md"
@@ -17,7 +17,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -32,16 +31,14 @@ dependencies = [
     "colorama>=0.4.6",
     "prompt_toolkit>=3.0.0",
     "textual>=0.86.0",
-    "rich>=13.0.0"
+    "rich>=13.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
-    "flake8>=6.0.0",
-    "black>=23.0.0",
-    "isort>=5.12.0",
+    "ruff>=0.3.0",
 ]
 
 [project.urls]
@@ -57,3 +54,31 @@ include = ["chorderizer*"]
 
 [tool.setuptools.package-data]
 chorderizer = ["data/*.json"]
+
+[tool.ruff]
+# Target Python version
+target-version = "py38"
+
+# Line length compatible with TUI layouts and Rich panels
+line-length = 100
+
+[tool.ruff.lint]
+# Enable Pyflakes (F), Pycodestyle (E, W), Isort (I), and Bandit (S)
+select = ["F", "E", "W", "I", "S", "B", "UP", "C4"]
+
+# Rules to ignore:
+# E501: Line too long (handled by formatter)
+# S101: Use of assert (standard for pytest)
+ignore = ["E501", "S101"]
+
+# Allow unused imports in __init__.py files
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*" = ["S101", "E402"]
+
+[tool.ruff.format]
+# Keep it consistent with the "Black" style
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

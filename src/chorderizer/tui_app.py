@@ -5,33 +5,28 @@ tui_app.py — Premium Harmony Station Dashboard
 import os
 from datetime import datetime
 
-from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical, Container
-from textual.widgets import (
-    Header,
-    Footer,
-    Select,
-    RadioSet,
-    RadioButton,
-    Label,
-    DataTable,
-    Button,
-    RichLog,
-    Static
-)
-from textual.binding import Binding
-from textual.screen import ModalScreen
-from rich.text import Text
 from rich.markup import escape
-
-from .theory_utils import MusicTheory
-from .generators import ChordGenerator, MidiGenerator, TablatureGenerator
-from .tui_widgets import (
-    PianoWidget,
-    GuitarTabWidget,
-    ProgressionPanel,
-    FretboardWidget
+from rich.text import Text
+from textual.app import App, ComposeResult
+from textual.binding import Binding
+from textual.containers import Container, Horizontal, Vertical
+from textual.screen import ModalScreen
+from textual.widgets import (
+    Button,
+    DataTable,
+    Footer,
+    Header,
+    Label,
+    RadioButton,
+    RadioSet,
+    RichLog,
+    Select,
+    Static,
 )
+
+from .generators import ChordGenerator, MidiGenerator, TablatureGenerator
+from .theory_utils import MusicTheory
+from .tui_widgets import FretboardWidget, GuitarTabWidget, PianoWidget, ProgressionPanel
 
 
 class ManualScreen(ModalScreen):
@@ -79,7 +74,7 @@ class ManualScreen(ModalScreen):
                 "• [white][H][/white] o [white][F1][/white] Ver este manual.\n"
                 "• [white][Q][/white] Salir de la aplicación.\n\n"
                 "[dim italic]Presiona cualquier tecla o Esc para volver al dashboard...[/]",
-                markup=True
+                markup=True,
             )
 
     def on_key(self) -> None:
@@ -182,9 +177,15 @@ class ChorderizerApp(App):
         with Horizontal():
             with Vertical(id="sidebar"):
                 yield Label("TÓNICA", classes="config-label")
-                yield Select([(n, n) for n in self.theory.CHROMATIC_NOTES], id="tonic-select", value="C")
+                yield Select(
+                    [(n, n) for n in self.theory.CHROMATIC_NOTES], id="tonic-select", value="C"
+                )
                 yield Label("ESCALA", classes="config-label")
-                yield Select([(v["name"], k) for k, v in self.theory.AVAILABLE_SCALES.items()], id="scale-select", value="1")
+                yield Select(
+                    [(v["name"], k) for k, v in self.theory.AVAILABLE_SCALES.items()],
+                    id="scale-select",
+                    value="1",
+                )
                 yield Label("EXTENSIONES", classes="config-label")
                 with RadioSet(id="extension-set"):
                     yield RadioButton("Tríadas", value=True)
@@ -222,7 +223,7 @@ class ChorderizerApp(App):
             ("chorderizer", "bold cyan"),
             ("> ", "bold white"),
             (f"{title} ", "bold magenta"),
-            Text.from_markup(f"| {msg}")
+            Text.from_markup(f"| {msg}"),
         )
         log.write(prompt)
 
@@ -232,8 +233,7 @@ class ChorderizerApp(App):
         table.add_columns("Grado", "Nombre", "MIDI")
         table.cursor_type = "row"
         self.log_status(
-            "[bold green]Estación iniciada.[/bold green] Carga escalas y tónicas.",
-            "WELCOME"
+            "[bold green]Estación iniciada.[/bold green] Carga escalas y tónicas.", "WELCOME"
         )
         self.update_chords()
 
@@ -261,7 +261,7 @@ class ChorderizerApp(App):
                 "grado": degree,
                 "nombre": name,
                 "notas_midi": midi_notes,
-                "duracion_beats": 4.0
+                "duracion_beats": 4.0,
             }
 
     def action_add_to_progression(self) -> None:
@@ -270,8 +270,7 @@ class ChorderizerApp(App):
                 self.selected_row_data
             )
             self.log_status(
-                f"Acorde [bold cyan]{self.selected_row_data['nombre']}[/] añadido.",
-                "COMPOSER"
+                f"Acorde [bold cyan]{self.selected_row_data['nombre']}[/] añadido.", "COMPOSER"
             )
 
     def action_clear_progression(self) -> None:
@@ -283,12 +282,7 @@ class ChorderizerApp(App):
         prog_data = prog_panel.get_progression_data()
         if not prog_data:
             prog_data = [
-                {
-                    "grado": d,
-                    "nombre": n,
-                    "notas_midi": self.current_midi[d],
-                    "duracion_beats": 4.0
-                }
+                {"grado": d, "nombre": n, "notas_midi": self.current_midi[d], "duracion_beats": 4.0}
                 for d, n in self.current_chords.items()
             ]
 
@@ -306,7 +300,7 @@ class ChorderizerApp(App):
             "add_bass_track": True,
             "bass_instrument": 33,
             "arpeggio_style": None,
-            "voice_leading": True
+            "voice_leading": True,
         }
         self.midi_gen.generate_midi_file(prog_data, filename, midi_opts)
 
@@ -314,7 +308,7 @@ class ChorderizerApp(App):
         export_dir_clean = escape(export_dir)
         self.log_status(
             f"Exportado: [bold green]{filename_clean}[/]\nRuta: [dim]{export_dir_clean}[/]",
-            "MIDI EXPORT"
+            "MIDI EXPORT",
         )
         self.notify("MIDI Exportado")
 
@@ -335,8 +329,7 @@ class ChorderizerApp(App):
 
             tonic_idx = self.theory.note_to_midi(t_sel.value)
             self.scale_notes_pc = {
-                (tonic_idx + d["root_interval"]) % 12
-                for d in scale_info["degrees"].values()
+                (tonic_idx + d["root_interval"]) % 12 for d in scale_info["degrees"].values()
             }
             self.tonic_pc = tonic_idx % 12
 
@@ -345,8 +338,7 @@ class ChorderizerApp(App):
             for deg, name in self.current_chords.items():
                 table.add_row(deg, name, str(self.current_midi[deg]), key=deg)
             self.log_status(
-                f"Escala [bold cyan]{t_sel.value} {scale_info['name']}[/] cargada.",
-                "THEORY"
+                f"Escala [bold cyan]{t_sel.value} {scale_info['name']}[/] cargada.", "THEORY"
             )
         except Exception as e:
             self.log_status(f"[red]Error: {e}[/red]", "THEORY ERROR")

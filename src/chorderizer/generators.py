@@ -603,7 +603,8 @@ class MidiGenerator:
                     0,
                     min(
                         127,
-                        base_vel + random.randint(vel_rand_min, vel_rand_max),  # nosec S311
+                        # trunk-ignore(ruff/S311)
+                        base_vel + random.randint(vel_rand_min, vel_rand_max),  # nosec: S311  # noqa: S311
                     ),
                 )
 
@@ -648,7 +649,8 @@ class MidiGenerator:
                 0,
                 min(
                     127,
-                    base_vel + random.randint(vel_rand_min, vel_rand_max),  # nosec
+                    # trunk-ignore(ruff/S311)
+                    base_vel + random.randint(vel_rand_min, vel_rand_max),  # nosec: S311  # noqa: S311
                 ),
             )
 

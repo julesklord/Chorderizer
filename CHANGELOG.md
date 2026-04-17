@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.4] - 2026-04-16
 
+<!-- trunk-ignore(markdownlint/MD024) -->
 ### Changed
 
 - **Global Search & Replace**: Exhaustive standardization of all internal logic keys and UI strings to English (e.g., `grado` -> `degree`, `nombre` -> `name`).
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.2] - 2026-04-16
 
+<!-- trunk-ignore(markdownlint/MD024) -->
 ### Added
 
 - **Premium TUI Dashboard**: Integrated a reactive dashboard using the Textual framework.
@@ -54,13 +56,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] - 2026-03-29
 
-*(Legacy Branch)*
+_(Legacy Branch)_
 
 ### Added
 
 - Unit tests for theory logic and MIDI range validation [0, 127].
 - `colorama` integration for Windows terminal support.
 
+<!-- trunk-ignore(markdownlint/MD024) -->
 ### Changed
 
 - Migrated build system to `pyproject.toml` (PEP 621).

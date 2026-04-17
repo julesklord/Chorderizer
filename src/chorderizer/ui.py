@@ -322,7 +322,7 @@ def prompt_text(
     try:
         return _prompt_raw(default=default, validator=validator, completer=completer)
     except (EOFError, KeyboardInterrupt):
-        raise KeyboardInterrupt
+        raise KeyboardInterrupt from None
 
 
 def prompt_confirm(message: str, default: bool = False) -> bool:
@@ -335,7 +335,7 @@ def prompt_confirm(message: str, default: bool = False) -> bool:
             return default
         return ans in ("y", "yes", "si", "s")
     except (EOFError, KeyboardInterrupt):
-        raise KeyboardInterrupt
+        raise KeyboardInterrupt from None
 
 
 # ─── Validators ───────────────────────────────────────────────────────────────

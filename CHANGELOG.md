@@ -1,37 +1,50 @@
-# Historial de Cambios (Chorderizer)
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.2.5] - 2026-04-17
+### Added
+- Created professional goodbye message on TUI exit.
+### Changed
+- **Trunk Standardization**: Moved `trunk.yaml` to the root directory for standard compliance.
+- **Repository Sanitization**: Simplified `.gitignore` by grouping `.trunk/` internal files and removing redundant rules.
+- **Documentation**: Finalized **Project Wiki** integration and cross-linked all technical documents.
+
+## [0.2.4] - 2026-04-16
+### Changed
+- **Global Search & Replace**: Exhaustive standardization of all internal logic keys and UI strings to English (e.g., `grado` -> `degree`, `nombre` -> `name`).
+- **User Guide**: Rewrote documentation to include VHS-generated `demo.gif` and detailed 4-phase workflow.
+- **WIKI**: Initialized the project-wide documentation wiki index.
+
+## [0.2.3] - 2026-04-16
+### Fixed
+- **Dependency Stabilization**: Pinned `textual`, `rich`, and `pytest` to stable major version ranges to prevent breaking API changes from automated updates.
+- **CI/CD Reliability**: Resolved build failures in GitHub Actions caused by major version jumps in core dependencies.
+
+## [0.2.2] - 2026-04-16
+### Added
+- **Premium TUI Dashboard**: Integrated a reactive dashboard using the Textual framework.
+- **Visualizers**: 2-octave Piano board and 12-fret Guitar Fretboard widgets with real-time updates.
+- **Guitar Tab Engine**: Automatic ASCII tablature generation for any chord voicing.
+- **Transparency Support**: Configured TUI CSS to allow terminal-inherited background colors.
+### Changed
+- **Performance**: Optimized rendering of block characters for better recording compatibility (`vhs`).
+
+## [0.2.0] - 2026-04-10
+### Added
+- **Core Harmonic Engine**: Support for 11+ scales including Greek Modes and Pentatonic variations.
+- **MIDI Serialization**: Professional MIDI file generation with humanization, arpeggio styles, and automated bass tracks.
 
 ## [1.2.0] - 2026-03-29
-
-### Añadido
-- Archivo `tests/__init__.py` para mejorar la detección de pruebas.
-- Reglas detalladas en `.gitignore` para ignorar archivos MIDI y carpetas de salida de pruebas.
-
-### Cambiado
-- Actualizada la dependencia `mido` a version `>=1.3.3`.
-- Actualizada la guía de uso (`Docs/GUIDE_OF_USE.md`) con instrucciones de ejecución modernas.
-- Realizada una auditoría completa del repositorio para asegurar las mejores prácticas de empaquetado.
-
-### Corregido
-- Corregida la inconsistencia en las instrucciones de ejecución del CLI en la documentación.
-
-## [1.1.0] - 2026-03-29
-
-### Añadido
-- Soporte para colores en la terminal en Windows mediante la integración de `colorama`.
-- Nuevo sistema de construcción basado en `pyproject.toml` (PEP 621).
-- Directorio de pruebas unitarias (`tests/`) con validación de lógica de teoría musical.
-- Comprobaciones de seguridad para asegurar que las notas MIDI se mantengan en el rango válido [0, 127].
-- Dependencia de `colorama` añadida para una mejor experiencia de usuario en terminales Windows.
-
-### Cambiado
-- Reorganización masiva del código: la lógica de transposición se movió de `chorderizer.py` a `theory_utils.py`.
-- Mejorada la lógica de análisis de nombres de acordes (separación de raíz y sufijo).
-- Actualizada la documentación (`README.md`) para reflejar los cambios en el proceso de instalación y dependencias.
-- Eliminado el archivo `setup.py` en favor de `pyproject.toml`.
-
-### Corregido
-- Posibles fallos al trasponer acordes con raíces de dos caracteres (ej. C#, Bb).
-- Advertencias sobre la creación de directorios para exportación MIDI.
+*(Legacy Branch)*
+### Added
+- Unit tests for theory logic and MIDI range validation [0, 127].
+- `colorama` integration for Windows terminal support.
+### Changed
+- Migrated build system to `pyproject.toml` (PEP 621).
 
 ## [1.0.1] - 2025-03-01
-- Versión inicial estable con generación de escalas y exportación MIDI básica.
+- **Initial Release**: Basic scale generation and MIDI export.

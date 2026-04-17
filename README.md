@@ -7,11 +7,13 @@ Chorderizer is a specialized Python-based orchestration tool and harmonic workst
 ![Chorderizer Dashboard Overview](demo.gif)
 
 ## Project Philosophy
+
 The core objective of Chorderizer is to bridge the gap between abstract music theory and digital composition. By providing an interactive, low-latency TUI (Terminal User Interface) dashboard, the tool allows for rapid prototyping of harmonic progressions while maintaining strict adherence to diatonic principles and ergonomic voice leading.
 
 ## Core Capabilities
 
 ### Harmonic Engine & Theory Support
+
 The underlying music theory engine has been expanded to support 11 distinct scales, covering the fundamental building blocks of Western and contemporary harmony:
 * **Diatonic Standards**: Major (Ionian), Natural Minor (Aeolian).
 * **Modal Harmony**: Full support for Greek Modes (Dorian, Phrygian, Lydian, Mixolydian, Locrian).
@@ -19,6 +21,7 @@ The underlying music theory engine has been expanded to support 11 distinct scal
 * **Pentatonic Structures**: Major and Minor Pentatonic variations.
 
 ### Reactive TUI Dashboard
+
 The v0.2.x release introduces a comprehensive dashboard built on the Textual framework, facilitating real-time visualization and interaction:
 * **Piano Visualizer**: A 2-octave responsive keyboard rendering active MIDI notes with precision.
 * **Guitar Fretboard**: A 12-fret interactive diapasón highlighting scale tonics and specific chord positions.
@@ -26,6 +29,7 @@ The v0.2.x release introduces a comprehensive dashboard built on the Textual fra
 * **Diatonic Table**: Real-time calculation of chord names, degrees (Roman Numeral Analysis), and MIDI note arrays based on selected extensions.
 
 ### MIDI Export & Humanization
+
 The MIDI engine (powered by mido) is designed to produce sequences that feel organic and professional:
 * **Note Extensions**: Support for Triads, 6ths, 7ths, 9ths, 11ths, and 13ths.
 * **Inversion Logic**: Precise control over 1st, 2nd, and 3rd inversions.
@@ -35,10 +39,12 @@ The MIDI engine (powered by mido) is designed to produce sequences that feel org
 ## Installation & Execution
 
 ### Prerequisites
+
 * Python 3.8 or higher.
 * Recommended: A terminal with support for true color and UTF-8 characters (e.g., Windows Terminal, iTerm2, Alacritty).
 
 ### Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/julesklord/chorderizer.git
@@ -53,7 +59,9 @@ pip install .
 ```
 
 ### Running the Workstation
+
 To launch the interactive dashboard, execute the module directly:
+
 ```bash
 python -m chorderizer.chorderizer
 ```
@@ -68,18 +76,21 @@ The TUI is designed for keyboard-driven efficiency:
 * **[Q] Terminate**: Safely closes the application.
 
 ## Technical Standards & Quality Assurance
+
 The codebase adheres to PEP 8 standards and utilizes modern tooling to ensure stability and maintainability:
 * **Linting & Formatting**: Managed via Ruff and Trunk for lightning-fast quality control.
 * **Testing Suite**: Comprehensive unit tests managed via `pytest`, ensuring integrity of the theory engine and MIDI generation.
 * **Architecture**: Modular design separating theory logic (`theory_utils.py`), MIDI generation (`generators.py`), and UI orchestration (`tui_app.py`).
 
 ## Supplementary Documentation
+
 For detailed technical specifications, refer to the following documents:
 * [User Guide](Docs/USER_GUIDE.md) — End-user operational details.
 * [Architecture](Docs/ARCHITECTURE.md) — System design and module interactions.
 * [API Reference](Docs/API_REFERENCE.md) — Technical documentation for engine integration.
 
 ## License
+
 This project is licensed under the MIT License - see the LICENSE.md file for details.
 
 ---

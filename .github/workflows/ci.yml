@@ -1,4 +1,4 @@
-name: CI
+name: Compatibility Matrix
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,13 +22,10 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install package and test dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install . pytest flake8 black
-    - name: Lint with flake8
-      run: |
-        flake8 src/ tests/
+        pip install -e ".[dev]"
     - name: Test with pytest
       run: |
         pytest

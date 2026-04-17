@@ -10,6 +10,21 @@ Chorderizer is a specialized Python-based orchestration tool and harmonic workst
 
 The core objective of Chorderizer is to bridge the gap between abstract music theory and digital composition. By providing an interactive, low-latency TUI (Terminal User Interface) dashboard, the tool allows for rapid prototyping of harmonic progressions while maintaining strict adherence to diatonic principles and ergonomic voice leading.
 
+## Supported Scope
+
+Chorderizer is intentionally focused on:
+- interactive harmonic exploration for composers and producers
+- diatonic and modal chord generation
+- MIDI export and quick tablature support
+- terminal-first workflows powered by Textual
+
+It does not currently aim to be:
+- a full DAW replacement
+- a general-purpose notation editor
+- a complete guitar voicing engine for every tuning or fingering strategy
+- a music theory engine for non-Western systems or arbitrary microtonal scales
+- a plugin host or real-time MIDI router
+
 ## Core Capabilities
 
 ### Harmonic Engine & Theory Support
@@ -54,8 +69,14 @@ cd chorderizer
 python -m venv .venv
 source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
 
-# Install development/production dependencies
+# Install the package
 pip install .
+```
+
+For development:
+
+```bash
+pip install -e ".[dev]"
 ```
 
 ### Running the Workstation
@@ -80,7 +101,14 @@ The TUI is designed for keyboard-driven efficiency:
 The codebase adheres to PEP 8 standards and utilizes modern tooling to ensure stability and maintainability:
 * **Linting & Formatting**: Managed via Ruff and Trunk for lightning-fast quality control.
 * **Testing Suite**: Comprehensive unit tests managed via `pytest`, ensuring integrity of the theory engine and MIDI generation.
-* **Architecture**: Modular design separating theory logic (`theory_utils.py`), MIDI generation (`generators.py`), and UI orchestration (`tui_app.py`).
+* **Architecture**: Modular design separating theory logic (`theory_utils.py`), MIDI generation (`generators.py`), the classic orchestration flow (`chorderizer.py` + `ui.py`), and the reactive Textual dashboard (`tui_app.py` + `tui_widgets.py`).
+
+## Maintenance Notes
+
+This repository follows a maintained-project standard:
+- critical repository changes are tracked in `DECISIONS.md`
+- known trade-offs and deferred work live in `TECHNICAL_DEBT.md`
+- notable failures and broken assumptions are recorded in `FAILURES.md`
 
 ## Supplementary Documentation
 
@@ -88,6 +116,9 @@ For detailed technical specifications, refer to the following documents:
 * [User Guide](Docs/USER_GUIDE.md) — End-user operational details.
 * [Architecture](Docs/ARCHITECTURE.md) — System design and module interactions.
 * [API Reference](Docs/API_REFERENCE.md) — Technical documentation for engine integration.
+* [Decisions](DECISIONS.md) — Significant repository and architecture choices.
+* [Technical Debt](TECHNICAL_DEBT.md) — Deferred work with explicit exit conditions.
+* [Failures](FAILURES.md) — Production or development failures worth preserving as calibration data.
 
 ## License
 

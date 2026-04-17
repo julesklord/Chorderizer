@@ -24,23 +24,39 @@ Handles the transition from abstract theory to tangible data.
 - **`MidiGenerator`**: Orchestrates `mido` track creation, arpeggiation, and strumming effects.
 - **`TablatureGenerator`**: Maps MIDI notes to a simplified 6-string guitar neck model.
 
-### 3. CLI Orchestration (`ui.py` & `chorderizer.py`)
+### 3. Classic Orchestration (`ui.py` & `chorderizer.py`)
 
-- **`UIManager`**: Handles all filtered input and colored output using `colorama`.
-- **`chorderizer.py` (Main)**: Acts as the Controller, handling the high-level loop and file system interactions.
+- **`UIManager`**: Handles the traditional terminal prompts and formatted output using `colorama` and `rich`.
+- **`chorderizer.py`**: Coordinates the four-phase workflow for the classic interactive flow and also exposes the modern dashboard launcher.
+
+### 4. Reactive Dashboard (`tui_app.py` & `tui_widgets.py`)
+
+- **`ChorderizerApp`**: Main Textual application. Owns dashboard state, bindings, and screen composition.
+- **Custom widgets**: `PianoWidget`, `FretboardWidget`, `GuitarTabWidget`, and `ProgressionPanel` isolate rendering and interaction concerns from the app shell.
+- *Responsibility*: Providing the modern terminal UI without mixing presentation logic into the theory or generator modules.
 
 ## Data Flow
 
 ```mermaid
 graph TD
-    User([User Input]) --> UI[UIManager]
-    UI --> Controller[Main Loop]
-    Controller --> Theory[MusicTheoryUtils]
-    Controller --> ChordGen[ChordGenerator]
-    ChordGen --> MIDI[MidiGenerator]
-    MIDI --> Filesystem[(MIDI Files)]
+    User([User Input]) --> Entry[chorderizer.py]
+    Entry --> Classic[UIManager]
+    Entry --> TUI[ChorderizerApp]
+    Classic --> Logic[Main Workflow]
+    TUI --> Logic
+    Logic --> Theory[MusicTheoryUtils]
+    Logic --> ChordGen[ChordGenerator]
+    Logic --> TabGen[TablatureGenerator]
+    Logic --> MidiGen[MidiGenerator]
+    MidiGen --> Filesystem[(MIDI Files)]
 ```
 
-## voincing Logic
+## Design Notes
 
-The `ChordGenerator` uses a heuristic to keeps voicings around the C4 (MIDI 60) range. It uses a "last_added_midi_note" strategy to ensure notes are always in ascending order, creating basic but playable "spread" voicings.
+- The repository currently maintains two user-facing interaction models: the classic terminal flow and the reactive Textual dashboard.
+- The theory and generation layers are shared by both paths.
+- Tests primarily protect theory, generators, orchestration helpers, and security-sensitive file handling.
+
+## Voicing Logic
+
+The `ChordGenerator` uses a heuristic to keep voicings around the C4 (MIDI 60) range. It uses a `last_added_midi_note` strategy to ensure notes are always in ascending order, creating basic but playable spread voicings.

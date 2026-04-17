@@ -1,8 +1,6 @@
 # Chorderizer: Advanced Chord Orchestration & MIDI Analysis Dashboard
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![PyPI version](https://badge.fury.io/py/chorderizer.svg)](https://badge.fury.io/py/chorderizer) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![Framework: Textual](https://img.shields.io/badge/framework-Textual-0094d2.svg)](https://textual.textualize.io/) [![Checks: Trunk](https://img.shields.io/badge/checks-Trunk-purple.svg)](https://trunk.io/)
 
 Chorderizer is a specialized Python-based orchestration tool and harmonic workstation designed for professional composers, theorists, and music producers. It provides a robust engine for exploring diatonic relationships across a wide array of musical scales, enabling precise customization of chord voicings and the generation of production-ready MIDI sequences.
 

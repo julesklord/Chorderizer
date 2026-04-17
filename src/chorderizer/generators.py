@@ -603,7 +603,7 @@ class MidiGenerator:
                     0,
                     min(
                         127,
-                        base_vel + random.randint(vel_rand_min, vel_rand_max),  # nosec
+                        base_vel + random.randint(vel_rand_min, vel_rand_max),  # nosec S311
                     ),
                 )
 

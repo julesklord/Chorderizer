@@ -12,3 +12,8 @@
 **Vulnerability:** Raw exception strings (e.g. `except ValueError as e: print(f"...{e}")`) were directly exposed to end users via CLI output.
 **Learning:** Returning or printing exact system exceptions to the user UI interface can unintentionally leak sensitive system paths, execution states, or dependency logic details.
 **Prevention:** Catch the exception, securely log the detailed information using `logging.error(f"...{e}")` for internal monitoring, and display a safe, generalized error message to the end user.
+
+## 2024-10-27 - Prevent Information Exposure in Exception Handling
+**Vulnerability:** Raw exception strings (e.g. `except ValueError as e: print(f"...{e}")`) were directly exposed to end users via CLI output.
+**Learning:** Returning or printing exact system exceptions to the user UI interface can unintentionally leak sensitive system paths, execution states, or dependency logic details.
+**Prevention:** Catch the exception, securely log the detailed information using `logging.error(f"...{e}", exc_info=True)` for internal monitoring, and display a safe, generalized error message to the end user.

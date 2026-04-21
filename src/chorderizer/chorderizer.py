@@ -44,14 +44,13 @@ def run_modern_tui():
         app = ChorderizerApp()
         app.run()
     except ImportError as e:
-        render_error(f"Textual or a dependency is missing: {e}")
+        logging.error(f"Textual or a dependency is missing: {e}")
+        render_error("Textual or a dependency is missing. Check logs for details.")
         render_warn("Make sure you are running from the src directory or have it in PYTHONPATH.")
         sys.exit(1)
     except Exception as e:
-        render_error(f"Failed to launch dashboard: {e}")
-        import traceback
-
-        traceback.print_exc()
+        logging.error(f"Failed to launch dashboard: {e}", exc_info=True)
+        render_error("Failed to launch dashboard. Check logs for details.")
         sys.exit(1)
 
 

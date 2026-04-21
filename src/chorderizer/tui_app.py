@@ -2,6 +2,7 @@
 tui_app.py — Premium Harmony Station Dashboard
 """
 
+import logging
 import os
 from datetime import datetime
 
@@ -342,7 +343,8 @@ class ChorderizerApp(App):
                 f"Scale [bold cyan]{t_sel.value} {scale_info['name']}[/] loaded.", "THEORY"
             )
         except Exception as e:
-            self.log_status(f"[red]Error: {e}[/red]", "THEORY ERROR")
+            logging.error(f"Error updating theory engine: {e}", exc_info=True)
+            self.log_status("[red]An error occurred while updating the theory engine. Check logs for details.[/red]", "THEORY ERROR")
 
 
 if __name__ == "__main__":

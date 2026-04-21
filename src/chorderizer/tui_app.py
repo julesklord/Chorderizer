@@ -179,16 +179,17 @@ class ChorderizerApp(App):
             with Vertical(id="sidebar"):
                 yield Label("TONIC", classes="config-label")
                 yield Select(
-                    [(n, n) for n in self.theory.CHROMATIC_NOTES], id="tonic-select", value="C"
+                    [(n, n) for n in self.theory.CHROMATIC_NOTES], id="tonic-select", value="C", tooltip="Select the root note for your scale"
                 )
                 yield Label("SCALE", classes="config-label")
                 yield Select(
                     [(v["name"], k) for k, v in self.theory.AVAILABLE_SCALES.items()],
                     id="scale-select",
                     value="1",
+                    tooltip="Select the musical mode/scale"
                 )
                 yield Label("EXTENSIONS", classes="config-label")
-                with RadioSet(id="extension-set"):
+                with RadioSet(id="extension-set", tooltip="Choose chord complexity (triads, 7ths, etc.)"):
                     yield RadioButton("Triads", value=True)
                     yield RadioButton("6ths")
                     yield RadioButton("7ths")
@@ -196,18 +197,18 @@ class ChorderizerApp(App):
                     yield RadioButton("11ths")
                     yield RadioButton("13ths")
                 yield Label("INVERSION", classes="config-label")
-                with RadioSet(id="inversion-set"):
+                with RadioSet(id="inversion-set", tooltip="Choose chord inversion (root, 1st, 2nd, 3rd)"):
                     yield RadioButton("Root", value=True)
                     yield RadioButton("1st")
                     yield RadioButton("2nd")
                     yield RadioButton("3rd")
-                yield Button("EXPORT MIDI", variant="primary", id="btn-export", classes="mt-2")
+                yield Button("EXPORT MIDI", variant="primary", id="btn-export", classes="mt-2", tooltip="Export current progression as MIDI file")
 
             with Vertical(id="center-col"):
                 yield PianoWidget(id="piano")
                 yield FretboardWidget(id="fretboard")
                 with Horizontal(id="data-row-container"):
-                    yield DataTable(id="chord-table")
+                    yield DataTable(id="chord-table", tooltip="Select a chord to view on visualizers or add to progression")
                     yield GuitarTabWidget(id="guitar-tab")
                 yield RichLog(id="status-log", markup=True)
 

@@ -179,13 +179,14 @@ class ChorderizerApp(App):
             with Vertical(id="sidebar"):
                 yield Label("TONIC", classes="config-label")
                 yield Select(
-                    [(n, n) for n in self.theory.CHROMATIC_NOTES], id="tonic-select", value="C"
+                    [(n, n) for n in self.theory.CHROMATIC_NOTES], id="tonic-select", value="C", tooltip="Select Root Note"
                 )
                 yield Label("SCALE", classes="config-label")
                 yield Select(
                     [(v["name"], k) for k, v in self.theory.AVAILABLE_SCALES.items()],
                     id="scale-select",
                     value="1",
+                    tooltip="Select Musical Scale"
                 )
                 yield Label("EXTENSIONS", classes="config-label")
                 with RadioSet(id="extension-set"):
@@ -201,7 +202,7 @@ class ChorderizerApp(App):
                     yield RadioButton("1st")
                     yield RadioButton("2nd")
                     yield RadioButton("3rd")
-                yield Button("EXPORT MIDI", variant="primary", id="btn-export", classes="mt-2")
+                yield Button("EXPORT MIDI", variant="primary", id="btn-export", classes="mt-2", tooltip="Export progression to MIDI file (Shortcut: E)")
 
             with Vertical(id="center-col"):
                 yield PianoWidget(id="piano")

@@ -1,0 +1,1 @@
+## 2024-05-24 - Textual TUI Tooltips\n**Learning:** The textual Python TUI library supports `tooltip` keyword argument natively for Widgets, improving accessibility for interactive widgets like `Select` and `Button`.\n**Action:** Add `tooltip` argument on TUI elements where context or keyboard shortcuts could be provided via hover.

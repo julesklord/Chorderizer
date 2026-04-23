@@ -12,3 +12,8 @@
 **Vulnerability:** Raw exception strings (e.g. `except ValueError as e: print(f"...{e}")`) were directly exposed to end users via CLI output.
 **Learning:** Returning or printing exact system exceptions to the user UI interface can unintentionally leak sensitive system paths, execution states, or dependency logic details.
 **Prevention:** Catch the exception, securely log the detailed information using `logging.error(f"...{e}")` for internal monitoring, and display a safe, generalized error message to the end user.
+
+## 2026-04-18 - Stop exposing stack traces
+**Vulnerability:** traceback.print_exc() was exposing local stack traces on failure.
+**Learning:** Even in local CLI/TUI apps, showing traceback.print_exc() violates the principle of not exposing internal stack traces.
+**Prevention:** Use logging.error('...', exc_info=False) and display a user-friendly error instead.

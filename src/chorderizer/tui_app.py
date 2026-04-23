@@ -201,7 +201,13 @@ class ChorderizerApp(App):
                     yield RadioButton("1st")
                     yield RadioButton("2nd")
                     yield RadioButton("3rd")
-                yield Button("EXPORT MIDI", variant="primary", id="btn-export", classes="mt-2")
+                yield Button(
+                    "EXPORT MIDI",
+                    variant="primary",
+                    id="btn-export",
+                    classes="mt-2",
+                    tooltip="Export the current progression to a MIDI file (Hotkey: E)",
+                )
 
             with Vertical(id="center-col"):
                 yield PianoWidget(id="piano")
@@ -243,6 +249,10 @@ class ChorderizerApp(App):
 
     def on_radio_set_changed(self) -> None:
         self.update_chords()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-export":
+            self.action_export_midi()
 
     def on_data_table_row_selected(self) -> None:
         self.action_add_to_progression()

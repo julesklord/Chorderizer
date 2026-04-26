@@ -48,10 +48,9 @@ def run_modern_tui():
         render_warn("Make sure you are running from the src directory or have it in PYTHONPATH.")
         sys.exit(1)
     except Exception as e:
+        # SECURITY: Log error generically to avoid leaking stack traces directly to console output.
         render_error(f"Failed to launch dashboard: {e}")
-        import traceback
-
-        traceback.print_exc()
+        logging.error("Failed to launch dashboard", exc_info=True)
         sys.exit(1)
 
 

@@ -12,3 +12,8 @@
 **Vulnerability:** Raw exception strings (e.g. `except ValueError as e: print(f"...{e}")`) were directly exposed to end users via CLI output.
 **Learning:** Returning or printing exact system exceptions to the user UI interface can unintentionally leak sensitive system paths, execution states, or dependency logic details.
 **Prevention:** Catch the exception, securely log the detailed information using `logging.error(f"...{e}")` for internal monitoring, and display a safe, generalized error message to the end user.
+
+## 2024-04-20 - [Stack Trace Exposure]
+**Vulnerability:** A raw exception stack trace was being printed directly to standard output (`traceback.print_exc()`) in the `run_modern_tui()` function when failing to launch the Textual dashboard.
+**Learning:** This could leak internal implementation details (e.g. library paths or dependency names) to the user when an unexpected error occurs during initialization. Exposing stack traces provides information that could be useful to attackers.
+**Prevention:** Remove `traceback.print_exc()` and rely on generalized error messages, or ensure that debugging details are only output to secure application logs when explicitly running in a debug mode.

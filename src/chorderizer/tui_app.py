@@ -179,16 +179,20 @@ class ChorderizerApp(App):
             with Vertical(id="sidebar"):
                 yield Label("TONIC", classes="config-label")
                 yield Select(
-                    [(n, n) for n in self.theory.CHROMATIC_NOTES], id="tonic-select", value="C"
+                    [(n, n) for n in self.theory.CHROMATIC_NOTES],
+                    id="tonic-select",
+                    value="C",
+                    tooltip="Select tonic note",
                 )
                 yield Label("SCALE", classes="config-label")
                 yield Select(
                     [(v["name"], k) for k, v in self.theory.AVAILABLE_SCALES.items()],
                     id="scale-select",
                     value="1",
+                    tooltip="Select musical scale",
                 )
                 yield Label("EXTENSIONS", classes="config-label")
-                with RadioSet(id="extension-set"):
+                with RadioSet(id="extension-set", tooltip="Select chord extensions"):
                     yield RadioButton("Triads", value=True)
                     yield RadioButton("6ths")
                     yield RadioButton("7ths")
@@ -196,18 +200,24 @@ class ChorderizerApp(App):
                     yield RadioButton("11ths")
                     yield RadioButton("13ths")
                 yield Label("INVERSION", classes="config-label")
-                with RadioSet(id="inversion-set"):
+                with RadioSet(id="inversion-set", tooltip="Select chord inversion"):
                     yield RadioButton("Root", value=True)
                     yield RadioButton("1st")
                     yield RadioButton("2nd")
                     yield RadioButton("3rd")
-                yield Button("EXPORT MIDI", variant="primary", id="btn-export", classes="mt-2")
+                yield Button(
+                    "EXPORT MIDI",
+                    variant="primary",
+                    id="btn-export",
+                    classes="mt-2",
+                    tooltip="Export current progression to MIDI file",
+                )
 
             with Vertical(id="center-col"):
                 yield PianoWidget(id="piano")
                 yield FretboardWidget(id="fretboard")
                 with Horizontal(id="data-row-container"):
-                    yield DataTable(id="chord-table")
+                    yield DataTable(id="chord-table", tooltip="Click a row to add to progression")
                     yield GuitarTabWidget(id="guitar-tab")
                 yield RichLog(id="status-log", markup=True)
 
@@ -246,6 +256,10 @@ class ChorderizerApp(App):
 
     def on_data_table_row_selected(self) -> None:
         self.action_add_to_progression()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-export":
+            self.action_export_midi()
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         degree = event.row_key.value

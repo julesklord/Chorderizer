@@ -190,7 +190,7 @@ class ProgressionPanel(Static):
 
     def compose(self) -> ComposeResult:
         yield Label("PROGRESSION", classes="prog-header")
-        yield ListView(id="prog-list")
+        yield ListView(id="prog-list", tooltip="Current chord progression")
         yield Label(" [bold][A][/bold] Add  [bold][X][/bold] Clear", id="prog-help")
 
     def add_chord(self, chord_data: Dict[str, Any]):

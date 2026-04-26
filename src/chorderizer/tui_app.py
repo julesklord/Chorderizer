@@ -201,7 +201,13 @@ class ChorderizerApp(App):
                     yield RadioButton("1st")
                     yield RadioButton("2nd")
                     yield RadioButton("3rd")
-                yield Button("EXPORT MIDI", variant="primary", id="btn-export", classes="mt-2")
+                yield Button(
+                    "EXPORT MIDI",
+                    variant="primary",
+                    id="btn-export",
+                    classes="mt-2",
+                    tooltip="Export current composition to MIDI",
+                )
 
             with Vertical(id="center-col"):
                 yield PianoWidget(id="piano")

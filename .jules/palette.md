@@ -1,0 +1,3 @@
+## 2024-05-14 - Empty States and Tooltips
+**Learning:** Empty states provide crucial context for user interaction in TUI applications, specifically in the `ProgressionPanel` where users might not realize the need to use a hotkey to start building their progression. Tooltips significantly increase discoverability for icon buttons and configuration selectors.
+**Action:** Always add an empty state for list/collection views and include descriptive tooltips for primary action buttons or dense configuration panels. Use the Textual `display` property to toggle visibility between the empty state and the content.

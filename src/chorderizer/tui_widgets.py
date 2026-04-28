@@ -174,6 +174,12 @@ class ProgressionPanel(Static):
     #prog-list {
         height: 1fr;
     }
+    #prog-empty {
+        height: 1fr;
+        content-align: center middle;
+        text-align: center;
+        color: $text-muted;
+    }
     .prog-header {
         background: $accent;
         color: $text-primary;
@@ -190,14 +196,24 @@ class ProgressionPanel(Static):
 
     def compose(self) -> ComposeResult:
         yield Label("PROGRESSION", classes="prog-header")
+        yield Label("Your progression is empty...\nPress [A] to add chords", id="prog-empty")
         yield ListView(id="prog-list")
         yield Label(" [bold][A][/bold] Add  [bold][X][/bold] Clear", id="prog-help")
 
+    def on_mount(self):
+        self.query_one("#prog-list").display = False
+
     def add_chord(self, chord_data: Dict[str, Any]):
-        self.query_one("#prog-list", ListView).append(ProgressionItem(chord_data))
+        self.query_one("#prog-empty").display = False
+        list_view = self.query_one("#prog-list", ListView)
+        list_view.display = True
+        list_view.append(ProgressionItem(chord_data))
 
     def clear_prog(self):
-        self.query_one("#prog-list", ListView).clear()
+        list_view = self.query_one("#prog-list", ListView)
+        list_view.clear()
+        list_view.display = False
+        self.query_one("#prog-empty").display = True
 
     def get_progression_data(self) -> List[Dict[str, Any]]:
         return [

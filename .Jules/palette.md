@@ -1,0 +1,3 @@
+## 2025-02-17 - Textual Button Interactions
+**Learning:** In Textual TUI applications, buttons don't magically connect to actions unless explicitly wired up using `on_button_pressed` handlers. We had an EXPORT MIDI button that looked interactive but did not trigger an action when clicked via mouse (only worked via keyboard shortcut bindings). Tooltips are also an easy addition to primary buttons via the `tooltip` property to increase accessibility and clarify shortcuts.
+**Action:** Always check if interactive UI components in Textual have actual event handlers backing them, and add tooltips for primary buttons.

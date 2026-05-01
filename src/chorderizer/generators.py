@@ -540,7 +540,7 @@ class MidiGenerator:
         prev_chord_midi: Optional[List[int]] = None
 
         for chord_data in chords_to_process:
-            chord_midi_notes = chord_data["notas_midi"]
+            chord_midi_notes = chord_data.get("notas_midi", chord_data.get("midi_notes", []))
             if not chord_midi_notes:
                 continue
 
@@ -549,7 +549,9 @@ class MidiGenerator:
 
             prev_chord_midi = list(chord_midi_notes)
 
-            chord_duration_beats = chord_data["duracion_beats"]
+            chord_duration_beats = chord_data.get(
+                "duracion_beats", chord_data.get("duration_beats", 4.0)
+            )
             chord_duration_ticks = int(chord_duration_beats * ticks_per_beat)
 
             if bass_track and midi_options.get("add_bass_track", False):

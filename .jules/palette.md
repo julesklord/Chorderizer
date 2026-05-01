@@ -1,0 +1,3 @@
+## 2024-04-29 - Interactive Buttons Need Handlers in Textual
+**Learning:** In Textual TUIs, visual buttons (like `Button("Export", id="btn-export")`) do not automatically execute the app's predefined action bindings even if they visually suggest a global action. They require an explicit `on_button_pressed` event handler to wire them to the underlying action. Additionally, adding `tooltip` properties to these buttons is an excellent way to teach users the equivalent keyboard shortcut (e.g., "Hotkey: E"), bridging the gap between mouse exploration and keyboard efficiency.
+**Action:** Always verify that interactive visual elements in Textual apps have explicit event handlers mapped, and utilize tooltips on buttons to educate users about faster keyboard workflows.

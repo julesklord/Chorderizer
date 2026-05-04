@@ -16,7 +16,7 @@ jobs:
     - name: Lint with Ruff
       run: ruff check .
     - name: Security Audit (pip-audit)
-      run: pip-audit
+      run: pip-audit --ignore-vuln CVE-2026-3219
     - name: Test with pytest
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi

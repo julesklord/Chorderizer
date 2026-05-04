@@ -35,11 +35,18 @@ Chorderizer uses `pytest` for automated testing.
   - `tests/test_generators.py`: Chord and MIDI logic (uses mocks).
   - `tests/test_security.py`: Path sanitization and security checks.
 
-## Coding Standards
+## Quality Control
 
-- **Type Hinting**: All new functions must include type annotations.
-- **Docstrings**: Use descriptive docstrings for public classes and methods.
-- **Clean Code**: Follow PEP 8 guidelines. Prefer modular methods over long functions.
+We use **Ruff** for linting and formatting to ensure a high-quality codebase.
+
+- **Check for issues**:
+  ```bash
+  ruff check src/ tests/
+  ```
+- **Format code**:
+  ```bash
+  ruff format src/ tests/
+  ```
 
 ## Contribution Workflow
 

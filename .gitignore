@@ -52,15 +52,17 @@ Thumbs.db
 
 # Local test outputs
 output_tests/
+.output_tests/
 *.mid
 scratch/
-.specsmd
-.output_tests/
 .pytest_cache/
-.github
+.ruff_cache/
+.venv/
+.vscode/
 *workspace
 prettierrc
 .trunk/
-.editorconfig   
 
-demo.tape
+# Keep demo.tape and .editorconfig in the repo
+# .github should NEVER be ignored in a professional repo
+

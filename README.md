@@ -4,7 +4,7 @@
 
 Chorderizer is a specialized Python-based orchestration tool and harmonic workstation designed for professional composers, theorists, and music producers. It provides a robust engine for exploring diatonic relationships across a wide array of musical scales, enabling precise customization of chord voicings and the generation of production-ready MIDI sequences.
 
-![Chorderizer Dashboard Overview](demo.gif)
+![Chorderizer Dashboard Overview](Docs/assets/demo.gif)
 
 ## Project Philosophy
 

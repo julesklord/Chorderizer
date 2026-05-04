@@ -24,7 +24,7 @@ Customize the structure of your diatonic chords:
 ## 2. Interactive Exploration
 Use the central dashboard to audit your selection before exporting.
 
-![Navigation Demo](demo.gif)
+![Navigation Demo](assets/demo.gif)
 
 *   **Keyboard Navigation**: Use `Tab` and `Arrow Keys` to move between configuration menus and the chord table.
 *   **Visual Audit**: Highlighting a row in the **Chord Table** updates:

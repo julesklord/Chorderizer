@@ -10,9 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - UX tooltips to interactive dashboard elements.
 - Empty state message to progression list when empty.
+- **.editorconfig**: Standardized editor settings for consistency across environments.
+- **CONTRIBUTING.md**: Guidelines for community contributions.
 
 ### Fixed
 - Stack trace leakage vulnerability during TUI initialization gracefully handled with logs.
+
+### Professional Cleanup
+- Sanitized `.gitignore` to preserve essential `.github`, `.editorconfig`, and `.specsmd` files.
+- Removed legacy clutter: `test_file.txt`, `prs.json`, and unused `safe_midi_exports/` directory.
+- Organized documentation: moved security and quality audits to `Docs/audits/`.
+- Standardized codebase formatting using `ruff format`.
+- Relaxed `dev` dependencies in `pyproject.toml` to support modern Python environments.
 
 ## [0.2.7] - 2026-05-03
 

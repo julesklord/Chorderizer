@@ -1,8 +1,8 @@
 """
 test_chorderizer.py — Tests for the main orchestration module.
 """
-
 import os
+import re
 import sys
 from unittest.mock import MagicMock
 
@@ -16,15 +16,28 @@ from chorderizer.chorderizer import (  # noqa: E402
 )
 
 
+def _verify_midi_filename(path, tonic, scale_name, prefix="prog_"):
+    """Verify MIDI filename contains expected components."""
+    filename = os.path.basename(path)
+    # Check prefix
+    assert filename.startswith(prefix), f"Expected prefix '{prefix}', got '{filename}'"
+    # Check tonic
+    assert tonic.replace(" ", "_") in filename, f"Expected tonic in '{filename}'"
+    # Check scale (without special chars)
+    safe_scale = scale_name.replace(" ", "_").replace("(", "").replace(")", "")
+    assert safe_scale in filename, f"Expected scale in '{filename}'"
+    # Check timestamp format (YYYYMMDD_HHMMSS)
+    assert re.search(r"_\d{8}_\d{6}\.mid$", filename), f"Expected timestamp in '{filename}'"
+    return True
+
+
 def test_generate_midi_filename_helper_basic():
     tonic = "C"
     scale_info = {"name": "Major"}
     base_dir = "temp_midi_dir"
 
-    expected_filename = "prog_C_Major.mid"
-    expected_path = os.path.join(base_dir, expected_filename)
-
-    assert _generate_midi_filename_helper(tonic, scale_info, base_dir) == expected_path
+    result = _generate_midi_filename_helper(tonic, scale_info, base_dir)
+    assert _verify_midi_filename(result, tonic, scale_info["name"])
 
 
 def test_generate_midi_filename_helper_with_spaces_in_tonic():
@@ -32,10 +45,8 @@ def test_generate_midi_filename_helper_with_spaces_in_tonic():
     scale_info = {"name": "Major"}
     base_dir = "temp_midi_dir"
 
-    expected_filename = "prog_C_#__Major.mid"
-    expected_path = os.path.join(base_dir, expected_filename)
-
-    assert _generate_midi_filename_helper(tonic, scale_info, base_dir) == expected_path
+    result = _generate_midi_filename_helper(tonic, scale_info, base_dir)
+    assert _verify_midi_filename(result, tonic, scale_info["name"])
 
 
 def test_generate_midi_filename_helper_with_parentheses_and_spaces_in_scale():
@@ -43,10 +54,8 @@ def test_generate_midi_filename_helper_with_parentheses_and_spaces_in_scale():
     scale_info = {"name": "Minor (Harmonic)"}
     base_dir = "temp_midi_dir"
 
-    expected_filename = "prog_D_Minor_Harmonic.mid"
-    expected_path = os.path.join(base_dir, expected_filename)
-
-    assert _generate_midi_filename_helper(tonic, scale_info, base_dir) == expected_path
+    result = _generate_midi_filename_helper(tonic, scale_info, base_dir)
+    assert _verify_midi_filename(result, tonic, scale_info["name"])
 
 
 def test_generate_midi_filename_helper_custom_prefix():
@@ -55,12 +64,8 @@ def test_generate_midi_filename_helper_custom_prefix():
     base_dir = "temp_midi_dir"
     prefix = "custom_"
 
-    expected_filename = "custom_G_Dorian.mid"
-    expected_path = os.path.join(base_dir, expected_filename)
-
-    assert (
-        _generate_midi_filename_helper(tonic, scale_info, base_dir, prefix=prefix) == expected_path
-    )
+    result = _generate_midi_filename_helper(tonic, scale_info, base_dir, prefix=prefix)
+    assert _verify_midi_filename(result, tonic, scale_info["name"], prefix=prefix)
 
 
 def test_generate_midi_filename_helper_empty_base_dir():
@@ -68,10 +73,8 @@ def test_generate_midi_filename_helper_empty_base_dir():
     scale_info = {"name": "Phrygian"}
     base_dir = ""
 
-    expected_filename = "prog_A_Phrygian.mid"
-    expected_path = os.path.join(base_dir, expected_filename)
-
-    assert _generate_midi_filename_helper(tonic, scale_info, base_dir) == expected_path
+    result = _generate_midi_filename_helper(tonic, scale_info, base_dir)
+    assert _verify_midi_filename(result, tonic, scale_info["name"])
 
 
 def test_process_single_run_missing_scale_info():

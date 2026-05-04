@@ -2,8 +2,11 @@
 tui_app.py — Premium Harmony Station Dashboard
 """
 
+import logging
 import os
+import traceback
 from datetime import datetime
+from pathlib import Path
 
 from rich.markup import escape
 from rich.text import Text
@@ -89,6 +92,18 @@ class ChorderizerApp(App):
 
     TITLE = "Chorderizer PRO"
     SUB_TITLE = "Harmonic Workstation"
+
+    def __init__(self, **kwargs):
+        # Configure logging on first app instantiation
+        log_file = Path.home() / "chorderizer.log"
+        logging.basicConfig(
+            filename=log_file,
+            level=logging.WARNING,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+            force=True,
+        )
+        super().__init__(**kwargs)
     BINDINGS = [
         Binding("h", "push_screen('manual')", "Manual", show=True),
         Binding("f1", "push_screen('manual')", "Manual", show=False),
@@ -292,7 +307,10 @@ class ChorderizerApp(App):
         if not os.path.exists(export_dir):
             os.makedirs(export_dir)
 
-        filename = os.path.join(export_dir, f"comp_{len(prog_data)}_chds.mid")
+        # Add timestamp to avoid collisions
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = os.path.join(export_dir, f"comp_{len(prog_data)}_chds_{timestamp}.mid")
+
         midi_opts = {
             "bpm": 120,
             "base_velocity": 85,
@@ -303,15 +321,21 @@ class ChorderizerApp(App):
             "arpeggio_style": None,
             "voice_leading": True,
         }
-        self.midi_gen.generate_midi_file(prog_data, filename, midi_opts)
 
-        filename_clean = escape(os.path.basename(filename))
-        export_dir_clean = escape(export_dir)
-        self.log_status(
-            f"Exported: [bold green]{filename_clean}[/]\nPath: [dim]{export_dir_clean}[/]",
-            "MIDI EXPORT",
-        )
-        self.notify("MIDI Exported")
+        try:
+            self.midi_gen.generate_midi_file(prog_data, filename, midi_opts)
+
+            filename_clean = escape(os.path.basename(filename))
+            export_dir_clean = escape(export_dir)
+            self.log_status(
+                f"Exported: [bold green]{filename_clean}[/]\nPath: [dim]{export_dir_clean}[/]",
+                "MIDI EXPORT",
+            )
+            self.notify("MIDI Exported")
+        except Exception as e:
+            logging.error(f"MIDI export failed: {e}\n{traceback.format_exc()}")
+            self.log_status(f"[red]Export failed: {e}[/red]", "MIDI ERROR")
+            self.notify("MIDI Export Failed", severity="error")
 
     def update_chords(self) -> None:
         t_sel = self.query_one("#tonic-select", Select)
@@ -342,7 +366,9 @@ class ChorderizerApp(App):
                 f"Scale [bold cyan]{t_sel.value} {scale_info['name']}[/] loaded.", "THEORY"
             )
         except Exception as e:
-            self.log_status(f"[red]Error: {e}[/red]", "THEORY ERROR")
+            error_msg = f"Error: {e}"
+            logging.error(f"Chord update failed: {e}\n{traceback.format_exc()}")
+            self.log_status(f"[red]{error_msg}[/red]", "THEORY ERROR")
 
 
 if __name__ == "__main__":

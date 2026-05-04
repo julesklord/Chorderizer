@@ -13,6 +13,7 @@ All generation logic lives in generators.py.
 """
 
 import argparse
+import datetime
 import logging
 import os
 import sys
@@ -45,14 +46,15 @@ def run_modern_tui():
         app.run()
     except ImportError as e:
         render_error(f"Textual or a dependency is missing: {e}")
-        render_warn("Make sure you are running from the src directory or have it in PYTHONPATH.")
-        sys.exit(1)
+        render_warn("Falling back to basic CLI mode...")
+        return False  # Signal to caller to use legacy mode
     except Exception as e:
         render_error(f"Failed to launch dashboard: {e}")
         import traceback
 
         traceback.print_exc()
-        sys.exit(1)
+        return False
+    return True
 
 
 # ─── File helpers ─────────────────────────────────────────────────────────────
@@ -61,10 +63,11 @@ def run_modern_tui():
 def _midi_filename(
     tonic: str, scale_info: Dict[str, Any], base_dir: str, prefix: str = "prog_"
 ) -> str:
-    """Build a safe MIDI filename from tonic + scale."""
+    """Build a safe MIDI filename from tonic + scale with timestamp to avoid collisions."""
     safe_tonic = tonic.replace(" ", "_")
     safe_scale = scale_info["name"].replace(" ", "_").replace("(", "").replace(")", "")
-    return os.path.join(base_dir, f"{prefix}{safe_tonic}_{safe_scale}.mid")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    return os.path.join(base_dir, f"{prefix}{safe_tonic}_{safe_scale}_{timestamp}.mid")
 
 
 # Backward-compat alias used by existing tests
@@ -73,12 +76,25 @@ _generate_midi_filename_helper = _midi_filename
 
 def _sanitize_path(path_input: str, default: str, base_dir: str) -> str:
     """
-    Prevent path-traversal by stripping to filename only.
+    Safely join user-provided path with base_dir, preventing path traversal.
+    Allows subdirectories within base_dir.
     Returns default if path_input is empty.
     """
     if not path_input:
         return default
-    return os.path.join(base_dir, os.path.basename(path_input))
+
+    # Normalize the base directory path
+    base_dir = os.path.abspath(base_dir)
+
+    # Join and resolve the path
+    full_path = os.path.abspath(os.path.join(base_dir, path_input))
+
+    # Ensure the resolved path is within base_dir
+    if not full_path.startswith(base_dir + os.sep) and full_path != base_dir:
+        logging.warning(f"Path traversal detected for '{path_input}', using safe default")
+        return default
+
+    return full_path
 
 
 # Backward-compat alias used by existing tests
@@ -217,6 +233,11 @@ def _phase4_midi_export(
     )
     out_path = _sanitize_path(raw_fname.strip(), suggested, export_dir)
 
+    # Create output directory if needed
+    out_dir = os.path.dirname(out_path)
+    if out_dir and not os.path.exists(out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+
     midi_builder.generate_midi_file(chords_for_midi, out_path, midi_opts)
     render_success(f"MIDI saved → {out_path}")
 
@@ -353,29 +374,33 @@ def main() -> None:
         logging.info("Verbose mode enabled.")
 
     if not args.legacy:
-        run_modern_tui()
-        return
+        tui_started = run_modern_tui()
+        if not tui_started:
+            # Fallback to legacy mode if TUI failed
+            render_warn("Starting legacy CLI mode...")
+            args.legacy = True
 
     # Legacy Sequential Flow
-    theory = MusicTheory()
-    ui = UIManager(theory)
-    chord_builder = ChordGenerator(theory)
-    tab_builder = TablatureGenerator(theory)
-    midi_builder = MidiGenerator(theory)
+    if args.legacy:
+        theory = MusicTheory()
+        ui = UIManager(theory)
+        chord_builder = ChordGenerator(theory)
+        tab_builder = TablatureGenerator(theory)
+        midi_builder = MidiGenerator(theory)
 
-    print_welcome_message()  # renders the banner
+        print_welcome_message()  # renders the banner
 
-    export_dir = os.path.join(os.path.expanduser("~"), "chord_generator_midi_exports")
+        export_dir = os.path.join(os.path.expanduser("~"), "chord_generator_midi_exports")
 
-    try:
-        while True:
-            if not process_single_run(ui, chord_builder, tab_builder, midi_builder, export_dir):
-                from .ui import _pp
+        try:
+            while True:
+                if not process_single_run(ui, chord_builder, tab_builder, midi_builder, export_dir):
+                    from .ui import _pp
 
-                _pp("\n<success>  ♩  Thank you for using Chorderizer. Goodbye!</success>\n")
-                break
-    except KeyboardInterrupt:
-        print_operation_cancelled()
+                    _pp("\n<success>  ♩  Thank you for using Chorderizer. Goodbye!</success>\n")
+                    break
+        except KeyboardInterrupt:
+            print_operation_cancelled()
 
 
 if __name__ == "__main__":

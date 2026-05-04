@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.7] - 2026-05-03
+
+### Added
+- **AGENTS.md**: Compact instruction file for AI agents with repo-specific guidance
+- **File logging**: TUI exceptions now logged to `~/chorderizer.log` with full tracebacks
+- **Timestamped MIDI filenames**: Prevent collisions with `YYYYMMDD_HHMMSS` format
+
+### Changed
+- **Textual fallback**: Failed TUI import now falls back to legacy CLI mode instead of exiting
+- **Path sanitization**: `_sanitize_path()` allows subdirectories within base_dir while blocking traversal
+- **Logging config**: Moved from class definition time to `__init__()` with `force=True`
+
+### Fixed
+- **Import placement**: Moved `datetime` import from function scope to module-level
+- **Side effects**: Removed directory creation from `_sanitize_path()`, added to caller
+- **Code review**: Applied fixes from automated review (logging timing, structure, tests)
+
+### Closed
+- **PR #67**: Dependency update (textual) - no longer needed
+- **PR #68**: Palette empty state - no longer needed
+
 ## [0.2.5] - 2026-04-17
 
 ### Added

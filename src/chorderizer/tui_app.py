@@ -93,17 +93,7 @@ class ChorderizerApp(App):
     TITLE = "Chorderizer PRO"
     SUB_TITLE = "Harmonic Workstation"
 
-    def __init__(self, **kwargs):
-        # Configure logging on first app instantiation
-        log_file = Path.home() / "chorderizer.log"
-        logging.basicConfig(
-            filename=log_file,
-            level=logging.WARNING,
-            format="%(asctime)s - %(levelname)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-            force=True,
-        )
-        super().__init__(**kwargs)
+
     BINDINGS = [
         Binding("h", "push_screen('manual')", "Manual", show=True),
         Binding("f1", "push_screen('manual')", "Manual", show=False),
@@ -177,6 +167,15 @@ class ChorderizerApp(App):
     """
 
     def __init__(self, **kwargs):
+        # Configure logging on first app instantiation
+        log_file = Path.home() / "chorderizer.log"
+        logging.basicConfig(
+            filename=log_file,
+            level=logging.WARNING,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+            force=True,
+        )
         super().__init__(**kwargs)
         self.theory = MusicTheory()
         self.chord_gen = ChordGenerator(self.theory)

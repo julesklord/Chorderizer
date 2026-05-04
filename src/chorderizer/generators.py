@@ -155,6 +155,9 @@ class ChordGenerator:
                 "dom7": {3: "dom9", 4: "dom11", 5: "dom13"},
                 "maj7": {3: "maj9", 4: "maj11", 5: "maj13"},
                 "min7": {3: "min9", 4: "min11", 5: "min13"},
+                "halfdim7": {3: "halfdim9"},
+                "minMaj7": {3: "minMaj9"},
+                "dim7": {3: "dimM9"},
             }
             suffix_map_dict = {
                 "dom9": "9",
@@ -166,6 +169,9 @@ class ChordGenerator:
                 "min9": "m9",
                 "min11": "m11",
                 "min13": "m13",
+                "halfdim9": "m9b5",
+                "minMaj9": "m(maj9)",
+                "dimM9": "dim(maj9)",
             }
             if (
                 chord_type_to_use in extension_map_dict
@@ -540,7 +546,7 @@ class MidiGenerator:
         prev_chord_midi: Optional[List[int]] = None
 
         for chord_data in chords_to_process:
-            chord_midi_notes = chord_data["notas_midi"]
+            chord_midi_notes = chord_data["midi_notes"]
             if not chord_midi_notes:
                 continue
 
@@ -549,7 +555,7 @@ class MidiGenerator:
 
             prev_chord_midi = list(chord_midi_notes)
 
-            chord_duration_beats = chord_data["duracion_beats"]
+            chord_duration_beats = chord_data["duration_beats"]
             chord_duration_ticks = int(chord_duration_beats * ticks_per_beat)
 
             if bass_track and midi_options.get("add_bass_track", False):

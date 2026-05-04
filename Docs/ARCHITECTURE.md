@@ -31,8 +31,9 @@ Handles the transition from abstract theory to tangible data.
 
 ### 4. Reactive Dashboard (`tui_app.py` & `tui_widgets.py`)
 
-- **`ChorderizerApp`**: Main Textual application. Owns dashboard state, bindings, and screen composition.
-- **Custom widgets**: `PianoWidget`, `FretboardWidget`, `GuitarTabWidget`, and `ProgressionPanel` isolate rendering and interaction concerns from the app shell.
+- **`ChorderizerApp`**: Main Textual application. Implements a **Dual-Mode Layout** (Compose/Jam) using `ContentSwitcher`.
+- **Custom widgets**: `PianoWidget`, `FretboardWidget` (Responsive/Adaptive), `GuitarTabWidget`, and `ProgressionPanel`.
+- **Jam Mode Engine**: Implements dynamic scale filtering based on expert "Mood Presets" and an adaptive rendering system for the fretboard.
 - *Responsibility*: Providing the modern terminal UI without mixing presentation logic into the theory or generator modules.
 
 ## Data Flow

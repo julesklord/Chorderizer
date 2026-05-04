@@ -144,4 +144,6 @@ For detailed technical specifications, refer to the following documents:
 This project is licensed under the MIT License - see the LICENSE.md file for details.
 
 ---
-*Created with ❤️ for the musical community. Powered by Python, Textual, and Antigravity*
+
+*Created with ❤️ for the musical community. Powered by Python, Textual, and Antigravity* 
+

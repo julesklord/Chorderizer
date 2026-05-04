@@ -5,18 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-05-04
+
+### Added
+
+- **Persistent Configuration**: New `config.json` system to save user preferences (theme, mouse support, etc.) globally.
+- **Theory-Driven Themes**: Custom palettes ('Chromatic-Pro', 'Harmonic-Gold', 'Dorian-Deep') mapped to musical concepts.
+- **Theme Palette**: New modal selector with 'Live Preview' to test aesthetics on the fly before selecting.
+- **Advanced UX**: Toggle for mouse support and improved keyboard-only navigation for server/legacy environments.
+
+### Fixed
+
+- **Command Palette Stability**: Fully migrated to the latest Textual Provider API, resolving framework compatibility issues.
+- **Performance**: Optimized Fretboard rendering and eliminated redundant theory lookups in hot paths.
+- **Error Transparency**: Disabled silent legacy fallback to provide clear tracebacks for easier debugging.
+
 ## [0.3.0] - 2026-05-04
 
 ### Added
+
 - UX tooltips to interactive dashboard elements.
 - Empty state message to progression list when empty.
 - **.editorconfig**: Standardized editor settings for consistency across environments.
 - **CONTRIBUTING.md**: Guidelines for community contributions.
 
 ### Fixed
+
 - Stack trace leakage vulnerability during TUI initialization gracefully handled with logs.
 
 ### Professional Cleanup
+
 - Sanitized `.gitignore` to preserve essential `.github`, `.editorconfig`, and `.specsmd` files.
 - Removed legacy clutter: `test_file.txt`, `prs.json`, and unused `safe_midi_exports/` directory.
 - Organized documentation: moved security and quality audits to `Docs/audits/`.
@@ -26,21 +44,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.7] - 2026-05-03
 
 ### Added
+
 - **AGENTS.md**: Compact instruction file for AI agents with repo-specific guidance
 - **File logging**: TUI exceptions now logged to `~/chorderizer.log` with full tracebacks
 - **Timestamped MIDI filenames**: Prevent collisions with `YYYYMMDD_HHMMSS` format
 
 ### Changed
+
 - **Textual fallback**: Failed TUI import now falls back to legacy CLI mode instead of exiting
 - **Path sanitization**: `_sanitize_path()` allows subdirectories within base_dir while blocking traversal
 - **Logging config**: Moved from class definition time to `__init__()` with `force=True`
 
 ### Fixed
+
 - **Import placement**: Moved `datetime` import from function scope to module-level
 - **Side effects**: Removed directory creation from `_sanitize_path()`, added to caller
 - **Code review**: Applied fixes from automated review (logging timing, structure, tests)
 
 ### Closed
+
 - **PR #67**: Dependency update (textual) - no longer needed
 - **PR #68**: Palette empty state - no longer needed
 

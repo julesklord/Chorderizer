@@ -62,6 +62,8 @@ scratch/
 *workspace
 prettierrc
 .trunk/
+*.ruff_cache/
+.agents/
 
 # Keep demo.tape and .editorconfig in the repo
 # .github should NEVER be ignored in a professional repo

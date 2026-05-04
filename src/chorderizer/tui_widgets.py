@@ -10,6 +10,9 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.widgets import Label, ListItem, ListView, Static
 
+from .icons import IconManager
+from .translations import Translations
+
 
 class PianoWidget(Static):
     """FAT Piano Keyboard with Note Labels."""
@@ -62,15 +65,30 @@ class PianoWidget(Static):
         full_piano.append(label_row)
         return Panel(
             Align.center(full_piano),
-            title="[bold blue]Piano Board[/bold blue]",
+            title=f"[bold blue]{Translations.t('piano_board')}[/bold blue]",
             border_style="bright_blue",
         )
 
 
 class FretboardWidget(Static):
-    """Refined Guitar Fretboard visualizer using clean dots."""
+    """Refined Guitar Fretboard visualizer using clean dots or note labels."""
 
-    DEFAULT_CSS = "FretboardWidget { height: 9; width: 100%; }"
+    DEFAULT_CSS = "FretboardWidget { height: 11; width: 100%; }"
+
+    INTERVAL_LABELS = {
+        0: "R",
+        1: "b2",
+        2: "2",
+        3: "b3",
+        4: "3",
+        5: "4",
+        6: "b5",
+        7: "5",
+        8: "b6",
+        9: "6",
+        10: "b7",
+        11: "7",
+    }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -79,44 +97,71 @@ class FretboardWidget(Static):
         self.tonic_pc = 0
         self.strings = [64, 59, 55, 50, 45, 40]
         self.string_names = ["e", "B", "G", "D", "A", "E"]
+        self.display_mode = "simple"  # 'simple' or 'advanced'
+        self.theory = None  # Will be set by app
 
-    def update_view(self, scale_pcs: Set[int], chord_midis: List[int], tonic_pc: int):
+    def update_view(
+        self,
+        scale_pcs: Set[int],
+        chord_midis: List[int],
+        tonic_pc: int,
+        display_mode: str = "simple",
+    ):
         self.scale_notes_pc = scale_pcs
         self.chord_notes_midi = set(chord_midis)
         self.tonic_pc = tonic_pc
+        self.display_mode = display_mode
         self.refresh()
 
     def render(self) -> Panel:
+        # Dynamic width calculation
+        width = self.size.width
+        num_frets = (width - 10) // 4
+        num_frets = max(12, min(num_frets, 24))
+
         fretboard = Text()
         header = Text("      ")
-        for f in range(13):
+        for f in range(num_frets + 1):
             header.append(f"{f:<4}", style="dim")
         fretboard.append(header)
         fretboard.append("\n")
 
         for i, start_midi in enumerate(self.strings):
             line = Text(f" {self.string_names[i]} ║")
-            for fret in range(13):
+            for fret in range(num_frets + 1):
                 midi = start_midi + fret
                 pc = midi % 12
-                char = "──"
+                is_chord_note = midi in self.chord_notes_midi
+                is_scale_note = pc in self.scale_notes_pc
+                is_tonic = pc == self.tonic_pc
+
                 style = "grey37"
+                fret_content = "───"
 
-                if midi in self.chord_notes_midi:
-                    char = "● "
-                    style = "bold bright_cyan"
-                elif pc == self.tonic_pc:
-                    char = "● "
-                    style = "bold yellow"
+                if is_chord_note or is_scale_note or is_tonic:
+                    if self.display_mode == "advanced":
+                        # Calculate interval relative to tonic
+                        interval = (pc - self.tonic_pc) % 12
+                        fret_content = f"{self.INTERVAL_LABELS.get(interval, ''):^3}"
+                    else:
+                        fret_content = f" {IconManager.get('dot')} "
 
-                line.append(char, style=style)
+                    if is_chord_note:
+                        style = "bold bright_cyan"
+                    elif is_tonic:
+                        style = "bold yellow"
+                    else:
+                        style = "bold white"
+
+                line.append(fret_content, style=style)
                 line.append("|", style="grey37")
             fretboard.append(line)
             fretboard.append("\n")
 
+        mode_label = f" ({self.display_mode.upper()})"
         return Panel(
             Align.center(fretboard),
-            title="[bold yellow]Guitar Fretboard[/bold yellow]",
+            title=f"[bold yellow]{Translations.t('guitar_fretboard')}{mode_label}[/bold yellow]",
             border_style="yellow",
         )
 
@@ -145,7 +190,7 @@ class GuitarTabWidget(Static):
 
         return Panel(
             Align.center(content, vertical="middle"),
-            title=f"[bold yellow]Tabs: {self.chord_name}[/bold yellow]",
+            title=f"[bold yellow]{Translations.t('tabs_title', chord_name=self.chord_name)}[/bold yellow]",
             border_style="bright_cyan",
         )
 
@@ -166,10 +211,8 @@ class ProgressionPanel(Static):
 
     DEFAULT_CSS = """
     ProgressionPanel {
-        width: 32;
-        border: tall $primary;
         padding: 0;
-        background: $boost;
+        background: transparent;
     }
     #prog-list {
         height: 1fr;
@@ -197,12 +240,15 @@ class ProgressionPanel(Static):
     """
 
     def compose(self) -> ComposeResult:
-        yield Label("PROGRESSION", classes="prog-header")
         yield Label(
-            "No chords yet.\nSelect a chord and\npress [bold][A][/bold] to add it.", id="prog-empty"
+            f"{IconManager.get('list')} {Translations.t('sidebar_title')}", classes="prog-header"
         )
+        yield Label(Translations.t("sidebar_empty_desc"), id="prog-empty")
         yield ListView(id="prog-list")
-        yield Label(" [bold][A][/bold] Add  [bold][X][/bold] Clear", id="prog-help")
+        yield Label(
+            f" [bold][A][/bold] {IconManager.get('plus')} Add  [bold][X][/bold] {IconManager.get('broom')} Clear",
+            id="prog-help",
+        )
 
     def add_chord(self, chord_data: Dict[str, Any]):
         self.query_one("#prog-empty", Label).add_class("hidden")

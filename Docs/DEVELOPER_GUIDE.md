@@ -9,6 +9,7 @@ Documentation for setting up and contributing to the Chorderizer codebase.
    - Pip (Python Package Index)
 
 2. **Clone and Install**:
+
    ```bash
    git clone https://github.com/julesklord/Chorderizer.git
    cd Chorderizer
@@ -17,6 +18,7 @@ Documentation for setting up and contributing to the Chorderizer codebase.
 
 3. **Running in Development Mode**:
    To run the project while making changes without reinstalling:
+
    ```powershell
    $env:PYTHONPATH="src"
    py -m chorderizer.chorderizer
@@ -27,9 +29,11 @@ Documentation for setting up and contributing to the Chorderizer codebase.
 Chorderizer uses `pytest` for automated testing.
 
 - **Running all tests**:
+
   ```bash
   pytest
   ```
+
 - **Test Categories**:
   - `tests/test_theory.py`: Music theory math and parsing.
   - `tests/test_generators.py`: Chord and MIDI logic (uses mocks).
@@ -40,10 +44,13 @@ Chorderizer uses `pytest` for automated testing.
 We use **Ruff** for linting and formatting to ensure a high-quality codebase.
 
 - **Check for issues**:
+
   ```bash
   ruff check src/ tests/
   ```
+
 - **Format code**:
+
   ```bash
   ruff format src/ tests/
   ```

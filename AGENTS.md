@@ -52,8 +52,10 @@ Local recommended order: `ruff format` → `ruff check` → `pytest`
 ## Repository conventions
 
 - Two UIs maintained: classic terminal flow + Textual dashboard (shared theory/generator layer).
+- TUI Dual-Mode: `tui_app.py` manages `Compose` and `Jam` views via `ContentSwitcher`.
 - MIDI exports go to `~/chord_generator_midi_exports/` (hardcoded in `generators.py`).
 - Chord voicing heuristic: keeps notes near C4 (MIDI 60) using `last_added_midi_note` strategy in `ChordGenerator`.
+- Responsive TUI: `FretboardWidget` adapts horizontally (12-24 frets) and vertically.
 - Maintenance docs: `DECISIONS.md` (repo changes), `TECHNICAL_DEBT.md` (deferred work), `FAILURES.md` (broken assumptions).
 
 ## Docs-as-code

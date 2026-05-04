@@ -21,6 +21,7 @@ from typing import Any, Dict, List
 
 from .generators import ChordGenerator, MidiGenerator, TablatureGenerator
 from .theory_utils import MusicTheory, MusicTheoryUtils
+from .translations import Translations
 from .ui import (
     UIManager,
     print_operation_cancelled,
@@ -49,12 +50,12 @@ def run_modern_tui():
         render_warn("Falling back to basic CLI mode...")
         return False  # Signal to caller to use legacy mode
     except Exception as e:
-        # Sentinel Security: Do not expose stack trace or raw exception
-        render_error("Failed to launch dashboard.")
-        import logging
+        # Do not catch everything silently - show the error
+        import traceback
 
-        logging.error(f"Failed to launch dashboard: {e}")
-        return False
+        render_error(f"Failed to launch dashboard: {e}")
+        print(traceback.format_exc())
+        sys.exit(1)
     return True
 
 
@@ -138,7 +139,7 @@ def _phase3_display_results(
     base_qualities: Dict[str, str],
 ) -> None:
     """Phase 3 — Display chord table and optional guitar tabs."""
-    render_section("Phase 3  ·  Scale Results")
+    render_section(Translations.t("legacy_phase3"))
 
     render_chord_table(
         chord_names, note_names, midi_notes, base_qualities, tonic, scale_info["name"]
@@ -169,12 +170,12 @@ def _phase4_midi_export(
     export_dir: str,
 ) -> None:
     """Phase 4 — Build progression, collect MIDI options, and export."""
-    render_section("Phase 4  ·  MIDI Export")
+    render_section(Translations.t("legacy_phase4"))
 
     # ── 4a: Build chord progression ──────────────────────────────────────────
     chords_for_midi: List[Dict[str, Any]] = []
 
-    if prompt_confirm("Define a custom chord progression?", default=False):
+    if prompt_confirm(Translations.t("legacy_confirm_custom"), default=False):
         raw_prog = ui.prompt_progression(chord_names)
         if raw_prog:
             for item_str in raw_prog.strip().upper().split("-"):
@@ -243,7 +244,7 @@ def _phase4_midi_export(
     render_success(f"MIDI saved → {out_path}")
 
     # ── 4d: Optional transposition ────────────────────────────────────────────
-    if prompt_confirm("Transpose chord names to a different tonic?"):
+    if prompt_confirm(Translations.t("legacy_confirm_trans")):
         render_section("Transposition")
         new_configs = ui.select_scale_config()
         if new_configs != (None, None):
@@ -257,7 +258,7 @@ def _phase4_midi_export(
                     _pp(f"  <key>{_escape(deg.ljust(8))}</key>  <value>{_escape(name)}</value>")
                 print()
 
-            if prompt_confirm("Generate MIDI for the transposed chords?"):
+            if prompt_confirm(Translations.t("legacy_confirm_trans_midi")):
                 trans_chord_data, _, trans_midi, _ = chord_builder.generate_scale_chords(
                     new_tonic, new_scale, extension_level, inversion_idx
                 )
@@ -333,7 +334,7 @@ def process_single_run(
     )
 
     # ── Phase 4: MIDI export ──────────────────────────────────────────────────
-    if prompt_confirm("Export to MIDI?", default=True):
+    if prompt_confirm(Translations.t("legacy_confirm_midi"), default=True):
         try:
             _phase4_midi_export(
                 ui,
@@ -350,7 +351,7 @@ def process_single_run(
         except KeyboardInterrupt:
             print_operation_cancelled()
 
-    return prompt_confirm("Start a new session?", default=False)
+    return prompt_confirm(Translations.t("legacy_confirm_new"), default=False)
 
 
 def main() -> None:
@@ -398,7 +399,7 @@ def main() -> None:
                 if not process_single_run(ui, chord_builder, tab_builder, midi_builder, export_dir):
                     from .ui import _pp
 
-                    _pp("\n<success>  ♩  Thank you for using Chorderizer. Goodbye!</success>\n")
+                    _pp(Translations.t("legacy_goodbye"))
                     break
         except KeyboardInterrupt:
             print_operation_cancelled()

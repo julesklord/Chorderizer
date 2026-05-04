@@ -17,6 +17,7 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit.validation import ValidationError, Validator
 
 from .theory_utils import MusicTheory
+from .translations import Translations
 
 # ─── App Metadata ─────────────────────────────────────────────────────────────
 VERSION = "1.2.0"
@@ -116,8 +117,8 @@ def render_banner() -> None:
     clear()
     w = min(_width(), 62)
     inner = w - 2
-    title = "♩  C H O R D E R I Z E R  ♩"
-    sub = f"Advanced Chord Generator  ·  v{VERSION}"
+    title = Translations.t("legacy_welcome")
+    sub = f"{Translations.t('legacy_sub')}  ·  v{VERSION}"
 
     _pp(f"<banner>{H['tl']}{H['h'] * inner}{H['tr']}</banner>")
     _pp(f"<banner>{H['v']}</banner><banner>{title.center(inner)}</banner><banner>{H['v']}</banner>")
@@ -151,7 +152,7 @@ def render_warn(msg: str) -> None:
 
 
 def render_cancelled() -> None:
-    _pp("\n<warn>  ⊘  Operation cancelled.</warn>")
+    _pp(f"\n<warn>  ⊘  {Translations.t('legacy_op_cancelled')}</warn>")
 
 
 # ─── Chord Table ──────────────────────────────────────────────────────────────
@@ -203,10 +204,10 @@ def render_chord_table(
     _pp(
         "  "
         + cell(
-            f"<th>{'Degree'.center(col_deg)}</th>",
-            f"<th>{'Chord':<{col_chord}}</th>",
+            f"<th>{Translations.t('degree').center(col_deg)}</th>",
+            f"<th>{Translations.t('name'):<{col_chord}}</th>",
             f"<th>{'Notes':<{col_notes}}</th>",
-            f"<th>{'MIDI':<{col_midi}}</th>",
+            f"<th>{Translations.t('midi'):<{col_midi}}</th>",
         )
     )
     _pp(f"<border>  {hline(L['ml'], L['x'], L['mr'])}</border>")
@@ -285,7 +286,9 @@ def prompt_menu(
         name = v.get("name", v) if isinstance(v, dict) else str(v)
         _pp(f"  <key>{k.rjust(max_kw)}.</key>  <value>{_escape(name)}</value>")
     if allow_cancel:
-        _pp(f"  <cancel>{cancel_key.rjust(max_kw)}.</cancel>  <hint>← Back / Cancel</hint>")
+        _pp(
+            f"  <cancel>{cancel_key.rjust(max_kw)}.</cancel>  <hint>← {Translations.t('legacy_skip')}</hint>"
+        )
     _pp(f"  <hint>{'─' * 30}</hint>")
 
     valid = set(display.keys())
@@ -383,15 +386,15 @@ class UIManager:
         Phase 1 — Unified tonic + scale selection.
         Returns (full_tonic_name, scale_info_dict) or (None, None) on cancel.
         """
-        render_section("Phase 1  ·  Scale Configuration")
+        render_section(Translations.t("legacy_phase1"))
 
         tonic_opts = {str(i + 1): note for i, note in enumerate(self.theory.CHROMATIC_NOTES)}
-        tonic_key = prompt_menu("Select Tonic Key:", tonic_opts)
+        tonic_key = prompt_menu(Translations.t("legacy_select_tonic"), tonic_opts)
         if tonic_key is None:
             return None, None
         tonic = tonic_opts[tonic_key]
 
-        scale_key = prompt_menu("Select Scale Type:", self.theory.AVAILABLE_SCALES)
+        scale_key = prompt_menu(Translations.t("legacy_select_scale"), self.theory.AVAILABLE_SCALES)
         if scale_key is None:
             return None, None
         scale_info = self.theory.AVAILABLE_SCALES[scale_key]
@@ -407,29 +410,29 @@ class UIManager:
         Phase 2 — Extension level and inversion in one compact section.
         Returns (extension_level, inversion_index) or (None, None) on cancel.
         """
-        render_section("Phase 2  ·  Chord Configuration")
+        render_section(Translations.t("legacy_phase2"))
 
         ext_map = {"1": 0, "2": 1, "3": 2, "4": 3, "5": 4, "6": 5}
         ext_opts = {
-            "1": "Triads            (3 notes — clean & simple)",
-            "2": "Sixths            (4 notes — rich colour)",
-            "3": "Sevenths          (4 notes — jazz / default)",
-            "4": "Ninths            (5 notes — lush)",
-            "5": "Elevenths         (6 notes — dense, modern)",
-            "6": "Thirteenths       (7 notes — full harmonic stack)",
+            "1": f"{Translations.t('ext_triads')}            (3 notes — clean & simple)",
+            "2": f"{Translations.t('ext_6ths')}            (4 notes — rich colour)",
+            "3": f"{Translations.t('ext_7ths')}          (4 notes — jazz / default)",
+            "4": f"{Translations.t('ext_9ths')}            (5 notes — lush)",
+            "5": f"{Translations.t('ext_11ths')}         (6 notes — dense, modern)",
+            "6": f"{Translations.t('ext_13ths')}       (7 notes — full harmonic stack)",
         }
-        ext_key = prompt_menu("Chord Extension:", ext_opts)
+        ext_key = prompt_menu(Translations.t("legacy_chord_ext"), ext_opts)
         if ext_key is None:
             return None, None
         ext_level = ext_map[ext_key]
 
         inv_opts = {
-            "1": "Root Position     (standard)",
-            "2": "1st Inversion     (3rd in bass)",
-            "3": "2nd Inversion     (5th in bass)",
-            "4": "3rd Inversion     (7th in bass — 7ths+)",
+            "1": f"{Translations.t('inv_root')} Position     (standard)",
+            "2": f"{Translations.t('inv_1st')} Inversion     (3rd in bass)",
+            "3": f"{Translations.t('inv_2nd')} Inversion     (5th in bass)",
+            "4": f"{Translations.t('inv_3rd')} Inversion     (7th in bass — 7ths+)",
         }
-        inv_key = prompt_menu("Chord Inversion:", inv_opts)
+        inv_key = prompt_menu(Translations.t("legacy_chord_inv"), inv_opts)
         if inv_key is None:
             return None, None
         inv_idx = int(inv_key) - 1
@@ -441,16 +444,16 @@ class UIManager:
     def prompt_tablature_filter(self) -> str:
         """Return a tab filter key, defaulting to '8' (none)."""
         tab_opts = {
-            "1": "All chords",
+            "1": Translations.t("legacy_all_chords"),
             "2": "Minor chords only",
             "3": "Seventh chords only",
             "4": "Ninth chords only",
             "5": "Sixth chords only",
             "6": "Eleventh chords only",
             "7": "Thirteenth chords only",
-            "8": "Skip  (no tablature)",
+            "8": Translations.t("legacy_skip"),
         }
-        choice = prompt_menu("Guitar Tablature — Show tabs for:", tab_opts, allow_cancel=True)
+        choice = prompt_menu(Translations.t("legacy_tab_filter"), tab_opts, allow_cancel=True)
         return choice if choice is not None else "8"
 
     # ── Phase 4a: Progression Input ───────────────────────────────────────────
@@ -468,7 +471,7 @@ class UIManager:
             example = f"{degrees[0]}:4-{degrees[4]}:2-{degrees[5] if len(degrees) > 5 else degrees[-1]}:4-{degrees[3]}:2"
 
         raw = prompt_text(
-            "Chord Progression (Enter to use all diatonic chords):",
+            Translations.t("legacy_prog_prompt"),
             hint=f"Degrees: {' '.join(degrees)} · Example: {example}",
             completer=completer,
         )
@@ -481,7 +484,7 @@ class UIManager:
         Phase 4 — Collect all MIDI export options in a compact, guided form.
         Returns options dict consumed by MidiGenerator.
         """
-        render_section("Phase 4  ·  MIDI Configuration")
+        render_section(Translations.t("legacy_phase4"))
 
         options: Dict[str, Any] = {
             "bpm": 120,

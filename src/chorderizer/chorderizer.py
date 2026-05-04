@@ -49,10 +49,11 @@ def run_modern_tui():
         render_warn("Falling back to basic CLI mode...")
         return False  # Signal to caller to use legacy mode
     except Exception as e:
-        render_error(f"Failed to launch dashboard: {e}")
-        import traceback
+        # Sentinel Security: Do not expose stack trace or raw exception
+        render_error("Failed to launch dashboard.")
+        import logging
 
-        traceback.print_exc()
+        logging.error(f"Failed to launch dashboard: {e}")
         return False
     return True
 

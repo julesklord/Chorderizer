@@ -1,7 +1,7 @@
-# OpenSSF Audit Report - Chorderizer v0.2.6
+# OpenSSF Audit Report - Chorderizer v0.3.0
 
 **Date:** 2026-04-20  
-**Version:** 0.2.6  
+**Version:** 0.3.0  
 **Auditor:** AI Assistant  
 
 ---

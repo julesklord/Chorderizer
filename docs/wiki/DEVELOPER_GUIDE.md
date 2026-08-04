@@ -13,7 +13,7 @@ Documentation for setting up and contributing to the Chorderizer codebase.
    ```bash
    git clone https://github.com/julesklord/Chorderizer.git
    cd Chorderizer
-   pip install -e .
+   make dev
    ```
 
 3. **Running in Development Mode**:
@@ -23,6 +23,8 @@ Documentation for setting up and contributing to the Chorderizer codebase.
    $env:PYTHONPATH="src"
    py -m chorderizer.chorderizer
    ```
+
+   The repository pins the recommended interpreter to Python 3.10.19 in `.python-version`.
 
 ## Testing Suite
 

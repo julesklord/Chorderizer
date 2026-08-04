@@ -88,13 +88,20 @@ pip install chorderizer
 ```bash
 git clone https://github.com/TropicalDev/chorderizer.git
 cd chorderizer
-python -m venv .venv
-source .venv/bin/activate
-pip install .
+make dev
 ```
 
-For development:
+After bootstrapping, activate the environment and run tests:
 ```bash
+source .venv/bin/activate
+pytest
+```
+
+If you prefer to do it manually, use Python 3.10.19:
+
+```bash
+python3.10 -m venv .venv
+source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 

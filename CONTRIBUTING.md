@@ -41,10 +41,13 @@ By participating in this project, you are expected to uphold our [Code of Conduc
 ## Development Environment
 
 ```bash
-pip install -e ".[dev]"
+make dev
+source .venv/bin/activate
 pytest
-ruff check .
+ruff check src/ tests/
 ```
+
+This repository pins the recommended local interpreter to Python 3.10.19 via `.python-version`.
 
 ---
 
